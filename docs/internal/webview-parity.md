@@ -87,7 +87,7 @@ every engine, Chromium included.**
 ## 4. How to run this on another engine
 
 ```bash
-git clone <this repo> && cd K-Doc
+git clone https://github.com/K-Tech-Labs-Australia/K-Doc.git && cd K-Doc
 npm install
 npm run dev -w @k-doc/app     # serves on http://localhost:5173
 ```

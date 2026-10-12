@@ -1,6 +1,15 @@
 {
   "name": "@k-doc/app",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/K-Tech-Labs-Australia/K-Doc.git",
+    "directory": "packages/app"
+  },
+  "homepage": "https://github.com/K-Tech-Labs-Australia/K-Doc#readme",
+  "bugs": {
+    "url": "https://github.com/K-Tech-Labs-Australia/K-Doc/issues"
+  },
   "license": "Apache-2.0",
   "private": true,
   "type": "module",
@@ -18,9 +27,9 @@
   "dependencies": {
     "@fontsource-variable/roboto-flex": "^5.3.0",
     "@fontsource/sansation": "^5.3.0",
-    "@k-doc/config": "^0.1.0",
-    "@k-doc/core": "^0.1.0",
-    "@k-doc/editor": "^0.1.0",
+    "@k-doc/config": "*",
+    "@k-doc/core": "*",
+    "@k-doc/editor": "*",
     "@tauri-apps/api": "^2.11.1",
     "docx": "9.7.1",
     "mammoth": "1.12.3",

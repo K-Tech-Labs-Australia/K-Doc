@@ -1,6 +1,14 @@
 {
   "name": "k-doc",
   "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/K-Tech-Labs-Australia/K-Doc.git"
+  },
+  "homepage": "https://github.com/K-Tech-Labs-Australia/K-Doc#readme",
+  "bugs": {
+    "url": "https://github.com/K-Tech-Labs-Australia/K-Doc/issues"
+  },
   "license": "Apache-2.0",
   "author": "K-Tech Labs",
   "homepage": "https://ktechlabs.au",
