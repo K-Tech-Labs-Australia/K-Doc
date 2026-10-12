@@ -8,6 +8,13 @@ The detailed development log from before the first public release is kept in
 [docs/internal/development-log.md](docs/internal/development-log.md). From 0.1.0 on, each release's notes are
 written by Release Please from the conventional commits merged since the last one.
 
+## [0.2.0](https://github.com/K-Tech-Labs-Australia/K-Doc/compare/v0.1.0...v0.2.0) (2026-10-12)
+
+
+### Features
+
+* **app:** Open Markdown files from Windows and offer to be the default app ([#2](https://github.com/K-Tech-Labs-Australia/K-Doc/issues/2)) ([63f6b58](https://github.com/K-Tech-Labs-Australia/K-Doc/commit/63f6b587cfc89a8f1d2d2bb5566b7bbcfaba3dda))
+
 ## [0.1.0] - Initial public release
 
 The first public release of K-Doc, a desktop Markdown word processor for Windows. The release date is set when

@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "K-Doc",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "au.ktechlabs.kdoc",
   "build": {
     "frontendDist": "../packages/app/dist",
@@ -42,7 +42,14 @@
     ],
     "fileAssociations": [
       {
-        "ext": ["md", "markdown", "mdown", "mkd", "mkdn", "mdwn"],
+        "ext": [
+          "md",
+          "markdown",
+          "mdown",
+          "mkd",
+          "mkdn",
+          "mdwn"
+        ],
         "name": "K-Doc.Markdown",
         "description": "Markdown document",
         "mimeType": "text/markdown",
