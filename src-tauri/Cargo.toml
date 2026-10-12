@@ -6,6 +6,7 @@ license = "Apache-2.0"
 description = "K-Doc desktop host: the Tauri shell and filesystem adapter for the K-Doc Markdown word processor."
 authors = ["K-Tech Labs"]
 homepage = "https://ktechlabs.au"
+repository = "https://github.com/K-Tech-Labs-Australia/K-Doc"
 rust-version = "1.85"
 
 [build-dependencies]

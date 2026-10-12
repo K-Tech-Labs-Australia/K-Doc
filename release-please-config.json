@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "b0e9126d467630f813b3ce9726cc13d829dccfa0",
+  "include-v-in-tag": true,
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "k-doc",
+      "component": "k-doc",
+      "include-component-in-tag": false,
+      "changelog-path": "CHANGELOG.md",
+      "bump-minor-pre-major": true,
+      "extra-files": [
+        { "type": "json", "path": "packages/app/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/config/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/core/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "packages/editor/package.json", "jsonpath": "$.version" },
+        { "type": "json", "path": "package-lock.json", "jsonpath": "$.packages['packages/app'].version" },
+        { "type": "json", "path": "package-lock.json", "jsonpath": "$.packages['packages/config'].version" },
+        { "type": "json", "path": "package-lock.json", "jsonpath": "$.packages['packages/core'].version" },
+        { "type": "json", "path": "package-lock.json", "jsonpath": "$.packages['packages/editor'].version" },
+        { "type": "json", "path": "src-tauri/tauri.conf.json", "jsonpath": "$.version" },
+        { "type": "toml", "path": "src-tauri/Cargo.toml", "jsonpath": "$.package.version" },
+        { "type": "toml", "path": "src-tauri/Cargo.lock", "jsonpath": "$.package[?(@.name==='k-doc')].version" }
+      ]
+    }
+  }
+}

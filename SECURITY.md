@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please report security issues **privately**, through GitHub's private vulnerability reporting: open the repository's
-**Security** tab and choose **Report a vulnerability**. Do not open a public issue for a vulnerability.
+[**Security** tab](https://github.com/K-Tech-Labs-Australia/K-Doc/security) and choose **Report a vulnerability**. Do not open a public issue for a vulnerability.
 
 Include what you found, how to reproduce it (a sample document or plugin is ideal), the K-Doc version and your
 Windows version. You can expect an acknowledgement within a week. Fixes are released as soon as they are ready,

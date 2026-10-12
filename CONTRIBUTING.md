@@ -24,9 +24,20 @@ npm run tauri dev
 2. Work on a branch named for the change: `feat/<slug>`, `fix/<slug>` or `chore/<slug>`.
 3. Write commits as [Conventional Commits](https://www.conventionalcommits.org/) (`feat(editor): Add …`,
    `fix(files): Keep …`), in the imperative.
-4. Add a bullet for your change under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md), and update
-   [DESIGN.md](DESIGN.md) when the change alters the architecture (a new module, command, data flow or dependency).
-5. Open a pull request describing what changed, why, and how you tested it. CI must pass.
+4. Update [DESIGN.md](DESIGN.md) when the change alters the architecture (a new module, command, data flow or
+   dependency). Do not edit [CHANGELOG.md](CHANGELOG.md): release notes are generated from commit messages.
+5. Open a pull request describing what changed, why, and how you tested it. CI must pass. Pull requests are
+   squash-merged, so the pull request title becomes the commit, and the line in the release notes: write it as a
+   Conventional Commit a reader would understand.
+
+### Releases
+
+[Release Please](https://github.com/googleapis/release-please) keeps a release pull request open on `master`, collecting
+every `feat` and `fix` merged since the last release. Merging it tags the version, publishes the GitHub release, writes
+the notes into CHANGELOG.md and bumps every version field (the root and package `package.json` files,
+`package-lock.json`, `src-tauri/tauri.conf.json`, `Cargo.toml` and `Cargo.lock`). The **Release** workflow then builds
+the Windows installer and attaches it to the release. Before 1.0, a `feat` raises the minor version and a `fix` the
+patch; a breaking change raises the minor version too.
 
 Report security problems privately as described in [SECURITY.md](SECURITY.md), not in a pull request or issue.
 

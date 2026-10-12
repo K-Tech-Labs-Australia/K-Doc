@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| **Doc Version** | 169 |
-| **Last Updated** | 2026-10-08 |
+| **Doc Version** | 170 |
+| **Last Updated** | 2026-10-12 |
 | **Version** | 0.1.0 (first public release) |
 | **Scope** | **Windows only, for now.** macOS and Linux are deferred, not cancelled: portability discipline stays (NFR-9) and nothing may assume Windows in `@k-doc/core`, but neither is a release target and neither is tested. |
 | **Requirements** | [docs/internal/PRELIM-SPEC.md](docs/internal/PRELIM-SPEC.md) — this document says *how*, that one says *what*; per-requirement status is in [docs/internal/FR-STATUS.md](docs/internal/FR-STATUS.md) |
@@ -6897,6 +6897,16 @@ the future plugin API (FR-14.18) exposes.
 | `npm run test:rust` | `cargo test` over the Rust host |
 | `npm run tauri dev` | The desktop host: builds the Rust side and loads the app in WebView2 |
 | `npx tauri build` | Release binary and NSIS installer under `src-tauri/target/release` |
+
+**Continuous integration and releases.** `.github/workflows/ci.yml` type-checks and tests every push and pull request
+on Windows (lint, Vitest, notices, app build, `cargo test`, clippy; plus `npm audit` and `cargo audit`).
+`.github/workflows/release-please.yml` runs Release Please on every push to `master`: it maintains the release pull
+request from Conventional Commits and, when that pull request is merged, tags `vX.Y.Z`, publishes the GitHub release and
+writes its notes into `CHANGELOG.md`. `release-please-config.json` lists every version field it bumps (release type
+`node`, plus the four package manifests, their `package-lock.json` entries, `tauri.conf.json`, `Cargo.toml` and the
+`k-doc` entry in `Cargo.lock`); `.release-please-manifest.json` holds the current version. A second job then builds the
+NSIS installer from the tag and uploads it to the release. The workspace packages depend on each other with `"*"`, so a
+version bump never detaches npm's workspace links (a `^0.x` range stops matching at the next minor version).
 
 ---
 

@@ -30,7 +30,7 @@ how to report a vulnerability is in [SECURITY.md](SECURITY.md), and how to contr
 
 ### Install a release build
 
-Download `K-Doc_<version>_x64-setup.exe` from the project's GitHub Releases page and run it. It installs for your
+Download `K-Doc_<version>_x64-setup.exe` from the [Releases page](https://github.com/K-Tech-Labs-Australia/K-Doc/releases) and run it. It installs for your
 Windows user only, so it needs no administrator rights. The installer is not code-signed yet, so Windows SmartScreen
 may warn that the publisher is unknown; choose **More info**, then **Run anyway**. To make the installer yourself,
 see [Build an installer](#build-an-installer).
@@ -47,6 +47,14 @@ Prerequisites:
 | Pandoc | any recent | Optional; only for LaTeX and EPUB export. K-Doc finds it on your `PATH`. |
 
 Clone the repository, install the workspace and start the desktop app:
+
+```bash
+git clone https://github.com/K-Tech-Labs-Australia/K-Doc.git
+```
+
+```bash
+cd K-Doc
+```
 
 ```bash
 npm install
