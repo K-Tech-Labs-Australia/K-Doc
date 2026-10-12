@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| **Doc Version** | 170 |
-| **Last Updated** | 2026-10-12 |
+| **Doc Version** | 171 |
+| **Last Updated** | 2026-10-13 |
 | **Version** | 0.1.0 (first public release) |
 | **Scope** | **Windows only, for now.** macOS and Linux are deferred, not cancelled: portability discipline stays (NFR-9) and nothing may assume Windows in `@k-doc/core`, but neither is a release target and neither is tested. |
 | **Requirements** | [docs/internal/PRELIM-SPEC.md](docs/internal/PRELIM-SPEC.md) — this document says *how*, that one says *what*; per-requirement status is in [docs/internal/FR-STATUS.md](docs/internal/FR-STATUS.md) |
@@ -104,6 +104,26 @@ dialog permission is message boxes.
 (`.<name>.<pid>-<nanos>-<counter>.kdoc-tmp`) and creates it with `atomic::create_exclusive` (`create_new`), so a file or
 symlink planted beside the target is refused instead of followed. `read_text_file` refuses files over 64 MiB.
 
+**Opening files from Windows.** The installer registers K-Doc for `.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`
+and `.mdwn` (`bundle.fileAssociations`, one class `K-Doc.Markdown`). `src-tauri/windows/installer-hooks.nsh` adds what
+Tauri's template does not: `OpenWithProgids` entries (so K-Doc is in **Open with**), a `Capabilities` key and a
+`RegisteredApplications` value named `K-Doc` (so it is listed in Settings > Default apps), and, once per user and never
+for a silent, passive or `/UPDATE` install, a question that opens `ms-settings:defaultapps?registeredAppUser=K-Doc`.
+Windows lets only the user choose a default, so that page is as far as K-Doc can go. Uninstalling removes the keys.
+
+`src-tauri/src/launch.rs` handles the launches that follow. At startup, `setup` reads the command line
+(`launch_paths`: the executable and flags skipped, relative paths resolved against the working directory,
+normalised, existing files only, duplicates dropped), grants each file and queues it in `LaunchState`.
+`tauri-plugin-single-instance` (registered first) turns a second launch into a call to `handle_second_instance` in the
+running process: its files are granted and queued, the window last focused (tracked from `WindowEvent::Focused`;
+else `main`, else any) is restored and focused, and that window gets a `kdoc://launch-paths` nudge. The webview pulls
+the queue with `take_launch_paths` rather than receiving paths in the event, so a nudge that arrives before its
+listener exists loses nothing. In the shell, `files/launch-files.ts` wraps the two commands and the event, and
+`restoreThenRecover` opens the queued files after session restore (so the double-clicked file ends up in front),
+switching to a file that is already open and dropping the untitled launch document. A window opened for a detached tab
+does not take the startup queue, but every window listens. **Make K-Doc the Default for Markdown…** (Tools menu) calls
+`open_default_apps_settings`.
+
 **File-access grants.** `src-tauri/src/grants.rs` keeps the files and folders the user has chosen
 (`GrantState`, persisted to `<app data>/grants.json`, the 2000 most recent files and 200 folders), and
 every command that takes a path from the webview checks it first, returning an error that starts with
@@ -115,6 +135,7 @@ every command that takes a path from the webview checks it first, returning an e
 - `request_file_access` shows a native "Allow access?" prompt for a path the user never picked (a link to
   another file); `FileService` calls it once when a read is refused, then retries;
 - a file dropped on a window is granted in `main.rs`'s `on_window_event` before the webview sees the drop;
+- a file K-Doc is started to open (a double-clicked Markdown file) is granted by `launch.rs` (below);
 - a rename keeps the grant (and must stay in the same folder).
 
 Three levels of check exist. `require(path)` allows a granted file or anything inside a granted folder.

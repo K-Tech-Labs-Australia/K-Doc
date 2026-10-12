@@ -457,6 +457,7 @@ export const APP_MENU_BAR_SPEC: readonly AppMenuSpec[] = [
         ],
       },
       { kind: 'separator' },
+      { kind: 'command', commandId: 'file:default-markdown-app' },
       { kind: 'command', commandId: 'view:settings' },
     ],
   },

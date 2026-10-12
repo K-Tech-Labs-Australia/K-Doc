@@ -162,6 +162,9 @@ function mountRegistry(markdown: string): { commands: readonly KdocCommand[]; ca
     openVault: (): void => {
       calls.push('openVault');
     },
+    makeDefaultMarkdownApp: (): void => {
+      calls.push('makeDefaultMarkdownApp');
+    },
     openDocumentBeside: (): void => {
       calls.push('openDocumentBeside');
     },
