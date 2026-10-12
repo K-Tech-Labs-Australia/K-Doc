@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Type-check and test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install
+        run: npm ci
+
+      - name: Type-check
+        run: npm run lint
+
+      - name: Vitest
+        run: npm test
+
+      # The Rust host embeds the built front end and bundles the generated licence notices at compile time,
+      # so both exist before cargo runs.
+      - name: Generate third-party notices
+        run: npm run notices
+
+      - name: Build the app bundle
+        run: npm run build --workspace @k-doc/app
+
+      - name: Rust tests
+        run: npm run test:rust
+
+      - name: Clippy
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets
+
+  audit:
+    name: Dependency audit
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Shipped (non-dev) npm dependencies with a high or critical advisory fail the build.
+      - name: npm audit
+        run: npm audit --omit=dev --audit-level=high
+
+      - uses: taiki-e/install-action@cargo-audit
+
+      - name: cargo audit
+        run: cargo audit --file src-tauri/Cargo.lock

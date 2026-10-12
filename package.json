@@ -1,0 +1,30 @@
+{
+  "name": "k-doc",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "author": "K-Tech Labs",
+  "homepage": "https://ktechlabs.au",
+  "private": true,
+  "type": "module",
+  "description": "A desktop Markdown word processor: WYSIWYG editing over plain .md files.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "vitest run packages scripts --test-timeout=30000",
+    "test:roundtrip": "vitest run packages/core/test/roundtrip.spec.ts",
+    "lint": "tsc --noEmit -p packages/core/tsconfig.json && tsc --noEmit -p packages/config/tsconfig.json && tsc --noEmit -p packages/editor/tsconfig.json && tsc --noEmit -p packages/app/tsconfig.json",
+    "test:rust": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "tauri": "tauri",
+    "fetch-dictionary": "node scripts/fetch-dictionary.mjs",
+    "notices": "node scripts/third-party-notices.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  }
+}

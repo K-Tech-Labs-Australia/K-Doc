@@ -1,0 +1,36 @@
+{
+  "name": "@k-doc/editor",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "description": "Editor engine adapters for K-Doc: mdast to ProseMirror and back.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@codemirror/commands": "^6.11.0",
+    "@codemirror/lang-css": "^6.3.1",
+    "@codemirror/lang-html": "^6.4.11",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.3",
+    "@codemirror/view": "^6.43.11",
+    "@k-doc/core": "^0.1.0",
+    "@lezer/common": "^1.2.3",
+    "@lezer/highlight": "^1.2.1",
+    "prosemirror-commands": "^1.7.2",
+    "prosemirror-inputrules": "^1.5.1",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-model": "^1.25.11",
+    "prosemirror-schema-list": "^1.5.1",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.42.3"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1"
+  }
+}

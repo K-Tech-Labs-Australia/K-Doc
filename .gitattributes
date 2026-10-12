@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+# Batch files must keep CRLF. A .cmd checked out with LF endings can break label
+# resolution and `goto` in cmd.exe, and this one is the entry point a non-developer
+# double-clicks, so it is the worst possible place for a subtle newline bug.
+*.cmd text eol=crlf
+*.bat text eol=crlf

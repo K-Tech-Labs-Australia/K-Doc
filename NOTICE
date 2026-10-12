@@ -1,0 +1,28 @@
+K-Doc
+Copyright 2026 K-Tech Labs
+
+This product includes software developed at K-Tech Labs (https://ktechlabs.au).
+
+Trademarks
+----------
+"K-Tech", "K-Doc", the K-Tech sliced-K mark and the K-Tech logos are trademarks
+of K-Tech Labs. The Apache License, Version 2.0 does not grant permission to use
+them, except as required for reasonable and customary use in describing the
+origin of the Work (see section 6 of the License).
+
+Third-party components
+----------------------
+K-Doc bundles the following third-party works, each under its own license:
+
+- Roboto Flex typeface (@fontsource-variable/roboto-flex), SIL Open Font
+  License 1.1.
+- Sansation typeface (@fontsource/sansation), SIL Open Font License 1.1.
+- en-GB Hunspell dictionary, derived from SCOWL (http://wordlist.sourceforge.net),
+  MIT and BSD licenses; fetched from https://github.com/wooorm/dictionaries.
+- JSZip, used under the MIT license (it is dual-licensed MIT or GPL-3.0).
+- The Rust crates cssparser, cssparser-macros, dtoa-short, option-ext,
+  selectors and spellbook, under the Mozilla Public License 2.0, unmodified.
+  Their source is available from https://crates.io.
+- Other JavaScript packages and Rust crates under the MIT, Apache-2.0, ISC,
+  BSD, Zlib, Unicode-3.0 and BlueOak-1.0.0 licenses. Their copyright notices
+  are kept in their package sources.

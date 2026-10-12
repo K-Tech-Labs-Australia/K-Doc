@@ -1,0 +1,56 @@
+{
+  "about": "Licence texts for packages that ship none of their own, copied from upstream. scripts/third-party-notices.mjs uses a folder when a package listed here has no licence file.",
+  "packages": {
+    "alloc-stdlib": "rust-alloc-no-stdlib",
+    "defmt-parser": "defmt",
+    "unic-char-property": "rust-unic",
+    "unic-char-range": "rust-unic",
+    "unic-common": "rust-unic",
+    "unic-ucd-ident": "rust-unic",
+    "unic-ucd-version": "rust-unic",
+    "webview2-com": "webview2-rs",
+    "webview2-com-macros": "webview2-rs",
+    "webview2-com-sys": "webview2-rs",
+    "dingbat-to-unicode": "dingbat-to-unicode",
+    "format": "format",
+    "isarray": "isarray",
+    "remark-math": "remark-math",
+    "hash.js": "hash.js",
+    "selectors": "stylo"
+  },
+  "sources": {
+    "rust-alloc-no-stdlib": [
+      "https://github.com/dropbox/rust-alloc-no-stdlib/blob/master/LICENSE"
+    ],
+    "defmt": [
+      "https://github.com/knurling-rs/defmt/blob/main/LICENSE-MIT",
+      "https://github.com/knurling-rs/defmt/blob/main/LICENSE-APACHE"
+    ],
+    "rust-unic": [
+      "https://github.com/open-i18n/rust-unic/blob/master/LICENSE-MIT",
+      "https://github.com/open-i18n/rust-unic/blob/master/LICENSE-APACHE"
+    ],
+    "webview2-rs": [
+      "https://github.com/wravery/webview2-rs/blob/main/LICENSE"
+    ],
+    "dingbat-to-unicode": [
+      "https://github.com/mwilliamson/dingbat-to-unicode/blob/main/js/LICENSE"
+    ],
+    "format": [
+      "https://github.com/samsonjs/format/blob/main/License.md"
+    ],
+    "isarray": [
+      "https://github.com/juliangruber/isarray/blob/master/LICENSE"
+    ],
+    "remark-math": [
+      "https://github.com/remarkjs/remark-math/blob/main/license"
+    ],
+    "hash.js": [
+      "https://github.com/indutny/hash.js/blob/master/README.md#license"
+    ],
+    "stylo": [
+      "https://www.mozilla.org/media/MPL/2.0/index.txt",
+      "https://github.com/servo/stylo (MPL-2.0 headers in the source files)"
+    ]
+  }
+}

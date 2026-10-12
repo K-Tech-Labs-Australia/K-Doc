@@ -1,0 +1,3 @@
+- [ ] An unchecked task
+- [x] A completed task
+- [ ] Another unchecked task

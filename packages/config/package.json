@@ -1,0 +1,13 @@
+{
+  "name": "@k-doc/config",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless settings schema and theme tokens for K-Doc.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Capabilities K-Doc's webview needs. Deliberately minimal: file pickers run in the host (src-tauri/src/access.rs), which records what the user chose, so the webview is granted no dialog permission beyond message boxes. All filesystem access goes through K-Doc's own validated Rust commands rather than a filesystem plugin, so the webview is never granted direct disk access. The window list covers the main window and the doc-* windows a dragged-out tab opens (FR-6.8); creating those windows is a Rust command rather than a webview permission, so core:webview:allow-create-webview-window stays ungranted and the webview cannot open windows of its own accord. The windows are frameless (K-Doc draws its own title bar), so the webview may drag, minimise, maximise and close its own window and nothing more. Destroy is part of closing: the webview listens for close requests to ask about unsaved work, and once the user agrees it is the webview that destroys the window.",
+  "windows": [
+    "main",
+    "doc-*"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-start-dragging",
+    "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-is-maximized",
+    "core:window:allow-close",
+    "core:window:allow-destroy",
+    "dialog:allow-message"
+  ]
+}

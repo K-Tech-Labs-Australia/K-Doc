@@ -1,0 +1,32 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "node",
+      "vite/client"
+    ],
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@k-doc/core": [
+        "../core/src/index.ts"
+      ],
+      "@k-doc/config": [
+        "../config/src/index.ts"
+      ],
+      "@k-doc/editor": [
+        "../editor/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ]
+}
