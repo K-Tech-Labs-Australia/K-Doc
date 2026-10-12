@@ -114,6 +114,8 @@ export interface CommandRegistryDeps {
   readonly showGraph: () => void;
   /** Asks for a folder and opens it as the vault (FR-6.11). */
   readonly openVault: () => void;
+  /** Opens Windows Settings at K-Doc's Default apps page, where the user can make it open Markdown files. */
+  readonly makeDefaultMarkdownApp: () => void;
   /** Opens another document in the second pane, beside the one being edited (FR-6.9). */
   readonly openDocumentBeside: () => void;
   /** Writes the document out in a format a plugin added (FR-14.18). */
@@ -529,6 +531,7 @@ export function buildCommandRegistry(deps: CommandRegistryDeps): readonly KdocCo
     appCommand('view:customise-ribbon', 'Customise Ribbon…', 'View', '', deps.customiseRibbon),
     appCommand('view:graph', 'Graph…', 'View', '', deps.showGraph),
     appCommand('vault:open', 'Open Vault Folder…', 'File', '', deps.openVault),
+    appCommand('file:default-markdown-app', 'Make K-Doc the Default for Markdown…', 'File', '', deps.makeDefaultMarkdownApp),
     appCommand('view:document-beside', 'Another Document Beside This One…', 'View', '', deps.openDocumentBeside),
     appCommand('view:reload-plugins', 'Reload Plugins', 'View', '', deps.reloadPlugins),
     appCommand('file:export-plugin', 'Export with a Plugin…', 'File', '', deps.exportThroughPlugin),

@@ -48,6 +48,7 @@ mod navigation;
 mod grants;
 mod access;
 mod atomic;
+mod launch;
 
 /// The largest text document K-Doc reads, in bytes (64 MiB): reading a bigger file whole would stall the app.
 const MAX_TEXT_BYTES: u64 = 64 * 1024 * 1024;
@@ -264,6 +265,11 @@ fn write_text_file_at(path: String, contents: String, encoding: String) -> Resul
 /// @controlflow Initialize default builder -> register dialog plugin -> register invoke handlers -> run with generated context -> expect unrecoverable startup errors.
 fn main() {
     tauri::Builder::default()
+        // Registered first, so a second launch (a double-clicked file while K-Doc is open) hands its arguments to
+        // this process and exits before it builds anything.
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            launch::handle_second_instance(app, argv, cwd);
+        }))
         .plugin(tauri_plugin_dialog::init())
         .plugin(navigation::guard())
         // A file dropped on a window is the user choosing it, exactly as a picker is, so it is granted here in the
@@ -279,6 +285,10 @@ fn main() {
                     }
                 }
             }
+            // The window last brought to the front is where a file opened from Windows goes.
+            if let tauri::WindowEvent::Focused(true) = event {
+                window.state::<launch::LaunchState>().focused(window.label());
+            }
             // A closed window's file watch goes with it.
             if let tauri::WindowEvent::Destroyed = event {
                 window.state::<watcher::WatcherState>().forget_window(window.label());
@@ -288,6 +298,7 @@ fn main() {
         .manage(windows::HandoffState::default())
         .manage(spell::SpellState::new())
         .manage(css_themes::ThemeWatchState::new())
+        .manage(launch::LaunchState::default())
         // The page draws K-Doc's only menu bar. Clear any native menu at startup so a platform default can
         // never appear above the frameless window.
         .setup(|app| {
@@ -295,6 +306,13 @@ fn main() {
             // session restore and recovery keep working. Without an app-data folder it lives in memory only.
             let store = app.path().app_data_dir().ok().map(|dir| dir.join(grants::GRANTS_FILE_NAME));
             app.manage(grants::GrantState::new(store));
+            // Files on the command line (a double-clicked Markdown file) are the user's choice, like a drop: grant them
+            // and hold them until the window has restored its session and asks for them.
+            let args: Vec<String> = std::env::args_os().map(|arg| arg.to_string_lossy().into_owned()).collect();
+            match std::env::current_dir() {
+                Ok(cwd) => launch::grant_and_queue(app.handle(), launch::launch_paths(&args, &cwd)),
+                Err(error) => eprintln!("Could not read the working directory for files to open: {error}"),
+            }
             app.handle().remove_menu()?;
             Ok(())
         })
@@ -369,6 +387,8 @@ fn main() {
             access::pick_folder,
             access::request_file_access,
             windows::set_window_fullscreen,
+            launch::take_launch_paths,
+            launch::open_default_apps_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running K-Doc");

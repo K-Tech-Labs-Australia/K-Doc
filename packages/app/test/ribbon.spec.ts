@@ -175,6 +175,9 @@ function mountRibbon(
     openVault: (): void => {
       calls.push('openVault');
     },
+    makeDefaultMarkdownApp: (): void => {
+      calls.push('makeDefaultMarkdownApp');
+    },
     openDocumentBeside: (): void => {
       calls.push('openDocumentBeside');
     },

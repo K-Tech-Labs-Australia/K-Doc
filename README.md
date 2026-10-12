@@ -35,6 +35,11 @@ Windows user only, so it needs no administrator rights. The installer is not cod
 may warn that the publisher is unknown; choose **More info**, then **Run anyway**. To make the installer yourself,
 see [Build an installer](#build-an-installer).
 
+The installer registers K-Doc for Markdown files (`.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdwn`), so it appears
+under **Open with**. The first time you install, it asks whether to make K-Doc the default app for them; answering
+**Yes** opens Windows' Default apps settings for K-Doc, where you confirm (Windows lets only you change a default). You
+can do this later with **Tools → Make K-Doc the Default for Markdown…**.
+
 ### Run from source
 
 Prerequisites:
@@ -122,6 +127,8 @@ Word preset); **View → Keyboard Shortcuts** lists them all and lets you change
 - Open documents appear as tabs below the ribbon once a second one is open. Drag a tab out of the strip to open it in
   its own window.
 - **Another Document Beside This One…** in the **View** menu opens a second file next to the first.
+- Double-clicking a Markdown file while K-Doc is open opens it as a tab in the K-Doc window you used last, or switches
+  to it if it is already open. K-Doc runs as a single app, so it never starts a second copy.
 - Focus, Typewriter, Zen and Presentation modes are under **View → Focus Mode**.
 
 ### Vaults

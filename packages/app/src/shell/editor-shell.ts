@@ -40,6 +40,7 @@ import { installFilesPanel, FILES_PANEL_STYLES, type FilesPanel } from './files-
 import { installLinkHoverCard, LINK_HOVER_CARD_STYLES, type LinkCardContent, type LinkHoverCard } from './link-hover-card.js';
 import { canonicalFilePath, classifyLink, findHeadingBySlug, type LinkContext } from './link-target.js';
 import { createExternalOpener, type ExternalOpener } from '../files/external-links.js';
+import { defaultLaunchFiles, openLaunchFiles, type LaunchFiles } from '../files/launch-files.js';
 import { installBacklinksPanel, BACKLINKS_PANEL_STYLES, type BacklinksPanel } from './backlinks-panel.js';
 import { installHistoryPanel, HISTORY_PANEL_STYLES, type HistoryPanel } from './history-panel.js';
 import {
@@ -1258,6 +1259,8 @@ export class EditorShell {
   private readonly originalBody: HTMLElement;
   private pageSetup: PageSetup = DEFAULT_PAGE_SETUP;
   private readonly fileService: FileService;
+  /** Files K-Doc is asked to open from outside: a double-clicked Markdown file, at launch or later. */
+  private readonly launchFiles: LaunchFiles = defaultLaunchFiles();
   /** Local version snapshots (FR-11.8). */
   private readonly snapshotStore: SnapshotStore;
   /** The document's git history and stage/commit (FR-11.11). */
@@ -4329,6 +4332,8 @@ export class EditorShell {
    *   afterwards either way, and a failure to restore never stops it being offered.
    */
   private async restoreThenRecover(): Promise<void> {
+    // The untitled document the launch started with, replaced if a restored or double-clicked file opens.
+    const startingTab = this.activeTabId;
     try {
       await this.loadSettings();
       await this.restoreSession();
@@ -4336,6 +4341,8 @@ export class EditorShell {
       const message = error instanceof Error ? error.message : String(error);
       this.showMessage(`The previous session could not be restored. ${message}`);
     }
+    // A file the user double-clicked opens after the restored ones, so it ends up in front.
+    await this.openFilesAskedFor(startingTab);
     // Whether it restored or failed, the launch is done reading the stored arrangement, so what happens
     // from here is worth remembering.
     this.sessionRestored = true;
@@ -4353,6 +4360,53 @@ export class EditorShell {
       this.showMessage(`${this.pluginHost.problems.length} plugin problem(s). See the Plugins panel.`);
     } else {
       // Every plugin that was there loaded, or there were none.
+    }
+  }
+
+  /**
+   * @purpose Opens the files K-Doc was started to open (a double-clicked Markdown file), then listens for more.
+   * @inputs startingTab - The untitled tab the launch began with, or null.
+   * @outputs Promise<void> - Resolves once the waiting files are open and the listener is installed.
+   * @dataflow launchFiles.take -> openNoteFromVault per path; later requests -> the same.
+   * @controlflow A window opened for a detached tab does not take the launch's files; every window listens,
+   *   because the host sends a later file to whichever window was used last.
+   */
+  private async openFilesAskedFor(startingTab: string | null): Promise<void> {
+    // The launch's files belong to the window the launch opened, not to a detached tab's window.
+    if (!this.handedOff) {
+      await this.openWaitingLaunchFiles(startingTab);
+    } else {
+      // A detached tab's window: it was asked for that tab only.
+    }
+    try {
+      await this.launchFiles.onRequest((): void => {
+        void this.openWaitingLaunchFiles(null);
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.showMessage(`Could not listen for files opened from Windows. ${message}`);
+    }
+  }
+
+  /**
+   * @purpose Opens every file waiting to be opened, switching to any that is already open.
+   * @inputs startingTab - The untitled launch tab to drop once a file has opened, or null.
+   * @outputs Promise<void>.
+   * @dataflow take_launch_paths -> openNoteFromVault (reads, opens, records as recent) -> tab strip.
+   * @controlflow The placeholder is dropped only when a file opened; a failure is reported, never thrown.
+   */
+  private async openWaitingLaunchFiles(startingTab: string | null): Promise<void> {
+    try {
+      const opened = await openLaunchFiles(this.launchFiles, (path: string): Promise<void> => this.openNoteFromVault(path));
+      // Check whether a file replaced the untitled document the launch started with.
+      if (opened > 0 && startingTab !== null) {
+        this.dropLaunchPlaceholder(startingTab);
+      } else {
+        // Nothing opened, or no placeholder to drop.
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.showMessage(`Could not open the file you asked for. ${message}`);
     }
   }
 
@@ -5771,6 +5825,11 @@ export class EditorShell {
           },
           openVault: (): void => {
             void this.openVaultFolder();
+          },
+          makeDefaultMarkdownApp: (): void => {
+            this.launchFiles.openDefaultAppsSettings().catch((error: unknown): void => {
+              this.showMessage(error instanceof Error ? error.message : String(error), true);
+            });
           },
           openDocumentBeside: (): void => {
             void this.openDocumentBeside();
