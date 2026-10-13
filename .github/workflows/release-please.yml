@@ -84,18 +84,16 @@ jobs:
           if grep -q '^## Install' notes.md; then
             echo "The release notes already have an Install section."
           else
-            cat >> notes.md <<'EOF'
+            # One line per paragraph: GitHub shows every line break in release notes as a break.
+          cat >> notes.md <<'EOF'
 
           ## Install
 
-          Download **`__NAME__`** below and run it. K-Doc installs for your Windows user only, so it needs no
-          administrator rights. It runs on Windows 10 and 11; if WebView2 is missing, the installer downloads it.
+          Download **`__NAME__`** below and run it. K-Doc installs for your Windows user only, so it needs no administrator rights. It runs on Windows 10 and 11; if WebView2 is missing, the installer downloads it.
 
-          The installer is not code-signed yet, so Windows SmartScreen may say the publisher is unknown. Choose
-          **More info**, then **Run anyway**.
+          The installer is not code-signed yet, so Windows SmartScreen may say the publisher is unknown. Choose **More info**, then **Run anyway**.
 
-          To check the download is the file this release built, compare its SHA-256 checksum. In PowerShell, run
-          `Get-FileHash .\__NAME__` in the folder you saved it to; the hash should be:
+          To check the download is the file this release built, compare its SHA-256 checksum. In PowerShell, run `Get-FileHash .\__NAME__` in the folder you saved it to; the hash should be:
 
           ```
           __SUM__
