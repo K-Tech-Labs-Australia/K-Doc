@@ -8,6 +8,18 @@ The detailed development log from before the first public release is kept in
 [docs/internal/development-log.md](docs/internal/development-log.md). From 0.1.0 on, each release's notes are
 written by Release Please from the conventional commits merged since the last one.
 
+## [0.3.0](https://github.com/K-Tech-Labs-Australia/K-Doc/compare/v0.2.0...v0.3.0) (2026-10-13)
+
+
+### Features
+
+* Rename the WYSIWYG view to K-Doc, remove the Preview view, and make the Default view setting work ([#5](https://github.com/K-Tech-Labs-Australia/K-Doc/issues/5)) ([bf18d34](https://github.com/K-Tech-Labs-Australia/K-Doc/commit/bf18d34aa3b0d3ee2e9545007c5ebafda16d952a))
+
+
+### Bug Fixes
+
+* Stop the status bar naming the view twice ([#7](https://github.com/K-Tech-Labs-Australia/K-Doc/issues/7)) ([03e381d](https://github.com/K-Tech-Labs-Australia/K-Doc/commit/03e381d61f41bae3fc725ad368c487246381165f))
+
 ## [0.2.0](https://github.com/K-Tech-Labs-Australia/K-Doc/compare/v0.1.0...v0.2.0) (2026-10-12)
 
 
