@@ -338,7 +338,6 @@ export const APP_MENU_BAR_SPEC: readonly AppMenuSpec[] = [
       { kind: 'command', commandId: 'view:wysiwyg' },
       { kind: 'command', commandId: 'view:split' },
       { kind: 'command', commandId: 'view:source' },
-      { kind: 'command', commandId: 'view:preview' },
       { kind: 'command', commandId: 'view:cycle-view-mode' },
       { kind: 'separator' },
       {

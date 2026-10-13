@@ -1070,7 +1070,6 @@ export function installSettingsDialog(options: SettingsDialogOptions): SettingsD
         { value: 'wysiwyg', label: 'WYSIWYG' },
         { value: 'source', label: 'Source' },
         { value: 'split', label: 'Split' },
-        { value: 'preview', label: 'Preview' },
       ],
       currentSettings.editor.defaultViewMode,
       (v: ViewMode): void => {

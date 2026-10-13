@@ -509,9 +509,6 @@ export function buildCommandRegistry(deps: CommandRegistryDeps): readonly KdocCo
     appCommand('view:source', 'Source', 'View', '', (): void => {
       deps.setViewMode('source');
     }),
-    appCommand('view:preview', 'Preview', 'View', '', (): void => {
-      deps.setViewMode('preview');
-    }),
     appCommand('view:toggle-outline', 'Toggle Outline', 'View', '', deps.toggleOutline),
     appCommand('view:toggle-sync-scroll', 'Sync Scroll', 'View', '', deps.toggleSyncScroll),
     appCommand('view:toggle-status-bar', 'Status Bar', 'View', '', deps.toggleStatusBar),

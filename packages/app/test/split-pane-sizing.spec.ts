@@ -69,7 +69,7 @@ interface ShellHarness {
  * Instantiates an EditorShell in document.body with specified initial view mode and tracks it for afterEach teardown.
  *
  * @purpose Mounts an isolated EditorShell fixture in jsdom and provides typed handles to internal pane elements.
- * @inputs initialViewMode - Optional target ViewMode ('wysiwyg' | 'split' | 'source' | 'preview') defaulting to 'split'.
+ * @inputs initialViewMode - Optional target ViewMode ('wysiwyg' | 'split' | 'source') defaulting to 'split'.
  * @outputs ShellHarness - Handle containing shell instance and DOM element references.
  * @dataflow createElement -> append to body -> instantiate EditorShell -> extract pane references -> return ShellHarness.
  * @controlflow Create mount div -> push to mounts -> instantiate EditorShell -> push to shells -> cast to access pane references -> return harness.
@@ -157,10 +157,10 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
     expect(wysiwygPane.style.flexGrow).toBe('0.5');
     expect(sourcePane.style.flexGrow).toBe('0.5');
 
-    // Switch to preview mode.
-    shell.setViewMode('preview');
+    // Switch to WYSIWYG mode.
+    shell.setViewMode('wysiwyg');
 
-    // In Preview mode, both panes must have inline flex cleared so preview (WYSIWYG pane) takes full width.
+    // In WYSIWYG mode, both panes must have inline flex cleared so the WYSIWYG pane takes full width.
     expect(wysiwygPane.style.flex).toBe('');
     expect(wysiwygPane.style.flexGrow).toBe('');
     expect(sourcePane.style.flex).toBe('');
@@ -224,8 +224,8 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
     expect(secondaryDividerElement.hidden).toBe(false);
     expect(secondaryPane.style.flexGrow).toBe('0.5');
 
-    // Transition to preview mode.
-    shell.setViewMode('preview');
+    // Transition to WYSIWYG mode.
+    shell.setViewMode('wysiwyg');
 
     // Secondary pane must still remain open and sized.
     expect(secondaryPane.hidden).toBe(false);

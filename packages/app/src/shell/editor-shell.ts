@@ -342,7 +342,7 @@ import { BRAND_STYLES, createProductWordmark } from './brand.js';
 import { ABOUT_DIALOG_STYLES, installAboutDialog, type AboutDialog } from './about-dialog.js';
 import { getVersion } from '@tauri-apps/api/app';
 
-export type ViewMode = 'wysiwyg' | 'split' | 'source' | 'preview';
+export type ViewMode = 'wysiwyg' | 'split' | 'source';
 
 /**
  * What a background tab remembers about its document.
@@ -371,11 +371,8 @@ export interface DocumentState {
   readonly locked?: boolean;
 }
 
-/**
- * The order Ctrl+/ cycles through. Preview sits last because it is the only mode you cannot type in,
- * so a user cycling to find a writing layout passes every editable one before reaching it.
- */
-export const VIEW_MODE_CYCLE: readonly ViewMode[] = ['wysiwyg', 'split', 'source', 'preview'];
+/** The order Ctrl+/ cycles through, matching the order of the view buttons. */
+export const VIEW_MODE_CYCLE: readonly ViewMode[] = ['wysiwyg', 'split', 'source'];
 
 /**
  * @purpose Returns the mode that follows the given one in the cycle, wrapping at the end.
@@ -734,18 +731,6 @@ html, body {
   box-shadow: var(--kdoc-elevation-raised);
   margin: 8px;
   box-sizing: border-box;
-}
-
-/* Preview (FR-5.4): reading-optimised, and every editing affordance suppressed. The rules live here
-   rather than on a separate preview component because Preview *is* the WYSIWYG pane with editing off,
-   and a second component would be a second renderer to keep in step. */
-.kdoc-shell.kdoc-preview .ProseMirror {
-  /* A comfortable measure for reading. Prose set to the full pane width is harder to read than prose
-     set to roughly 70 characters, which is the only reason Preview differs visually at all. */
-  max-width: 42rem;
-  margin: 0 auto;
-  caret-color: transparent;
-  cursor: default;
 }
 
 .kdoc-pane[hidden] {
@@ -1124,7 +1109,6 @@ export class EditorShell {
   private readonly wysiwygButton: HTMLButtonElement;
   private readonly splitButton: HTMLButtonElement;
   private readonly sourceButton: HTMLButtonElement;
-  private readonly previewButton: HTMLButtonElement;
   private readonly themeButton: HTMLButtonElement;
   private readonly themeMenu: ThemeMenu;
   private readonly panesElement: HTMLElement;
@@ -1574,16 +1558,6 @@ export class EditorShell {
       this.setViewMode('source');
     });
     segmented.appendChild(this.sourceButton);
-
-    this.previewButton = document.createElement('button');
-    this.previewButton.type = 'button';
-    this.previewButton.textContent = 'Preview';
-    this.previewButton.title = 'Read-only rendered view (Ctrl+/ cycles modes)';
-    this.previewButton.setAttribute('aria-pressed', 'false');
-    this.previewButton.addEventListener('click', (): void => {
-      this.setViewMode('preview');
-    });
-    segmented.appendChild(this.previewButton);
 
     this.toolbarElement.appendChild(segmented);
 
@@ -8301,15 +8275,12 @@ export class EditorShell {
   }
 
   private applyLock(): void {
-    // Preview mode already refuses edits, and a locked document must stay locked when it leaves preview.
-    const preview = this.currentViewMode === 'preview';
-    this.proseMirrorBinding.setEditable(!preview && !this.locked);
+    this.proseMirrorBinding.setEditable(!this.locked);
     this.codeMirrorBinding.setEditable(!this.locked);
     // Check whether the second pane holds a document of its own. The open document's lock is about the
     // open document, so applying it to another file would refuse writes to a file nothing has locked.
     if (this.secondaryDocument === null) {
-      // Another view of the open document: it takes the same lock. Preview does not reach it, because it
-      // is not the pane Preview renders into.
+      // Another view of the open document: it takes the same lock.
       this.secondaryBinding?.setEditable(!this.locked);
     } else {
       // Its own document: only the file's own read-only flag decides whether it can be edited.
@@ -9409,7 +9380,7 @@ export class EditorShell {
       // Source has focus: the CodeMirror head is already a character offset into the text.
       return this.codeMirrorBinding.view.state.selection.main.head;
     } else {
-      // Wysiwyg/preview has focus: map the ProseMirror selection to Source coordinates via the position index.
+      // Wysiwyg has focus: map the ProseMirror selection to Source coordinates via the position index.
       const pmView = this.proseMirrorBinding.view;
       const snapshot = this.documentSession.snapshot;
       const index = buildPositionIndex(snapshot.document.root, pmView.state.doc);
@@ -9428,7 +9399,7 @@ export class EditorShell {
    * @controlflow If in a non-line pane, switch to Split first; then set the CodeMirror selection and focus it.
    */
   private revealSourceOffset(offset: number): void {
-    if (this.currentViewMode === 'wysiwyg' || this.currentViewMode === 'preview') {
+    if (this.currentViewMode === 'wysiwyg') {
       // A line number is meaningless in a pane that does not show lines, so switch to Split first.
       this.setViewMode('split');
     }
@@ -9453,7 +9424,7 @@ export class EditorShell {
       return;
     }
 
-    // Wysiwyg/preview has focus: map the Source offset to a ProseMirror TextSelection via the position index.
+    // Wysiwyg has focus: map the Source offset to a ProseMirror TextSelection via the position index.
     const pmView = this.proseMirrorBinding.view;
     const index = buildPositionIndex(this.documentSession.snapshot.document.root, pmView.state.doc);
     const selection = sourceSelectionToProseMirror(index, pmView.state.doc, { anchor: offset, head: offset });
@@ -9683,11 +9654,6 @@ export class EditorShell {
       // In Source mode, hide the ProseMirror pane and show the CodeMirror source pane.
       this.wysiwygPane.hidden = true;
       this.sourcePane.hidden = false;
-    } else if (mode === 'preview') {
-      // Preview reuses the WYSIWYG pane rather than adding a third one. One renderer means the preview
-      // cannot drift from what the editor shows, which a separate HTML renderer would do within a release.
-      this.wysiwygPane.hidden = false;
-      this.sourcePane.hidden = true;
     } else {
       // In Split mode, show both editor panes side-by-side.
       this.wysiwygPane.hidden = false;
@@ -9708,28 +9674,20 @@ export class EditorShell {
         // Divider not yet installed during early construction: sizing will be applied upon installation.
       }
     } else {
-      // In non-split modes (WYSIWYG, Source, or Preview), clear inline flex on both panes
+      // In non-split modes (WYSIWYG or Source), clear inline flex on both panes
       // so stylesheet rules take over and the visible pane occupies all available width.
       this.wysiwygPane.style.flex = '';
       this.sourcePane.style.flex = '';
     }
 
-    // Preview is read-only (FR-5.4). The pane is made non-editable rather than swapped for a different
-    // renderer, so the caret disappears and typing does nothing while the rendering stays identical.
-    const preview = mode === 'preview';
-    // Preview is never editable, and neither is a locked document (FR-6.7); the mode must not unlock one.
-    this.proseMirrorBinding.setEditable(!preview && !this.locked);
+    // A locked document (FR-6.7) stays read-only in every mode.
+    this.proseMirrorBinding.setEditable(!this.locked);
     this.codeMirrorBinding.setEditable(!this.locked);
-
-    // The editing chrome is suppressed in Preview because every control on it would act on a pane that
-    // refuses edits: buttons that look live but do nothing are worse than buttons that are not there.
-    this.shellElement.classList.toggle('kdoc-preview', preview);
 
     // Update aria-pressed attributes on segmented mode buttons to reflect active selection.
     this.wysiwygButton.setAttribute('aria-pressed', mode === 'wysiwyg' ? 'true' : 'false');
     this.splitButton.setAttribute('aria-pressed', mode === 'split' ? 'true' : 'false');
     this.sourceButton.setAttribute('aria-pressed', mode === 'source' ? 'true' : 'false');
-    this.previewButton.setAttribute('aria-pressed', preview ? 'true' : 'false');
 
     // CRITICAL FOCUS TRANSFER ON PANE VISIBILITY CHANGE:
     // K-Doc enforces single-pane edit locking (FR-3.1), where DocumentSession.applyTree and applyText
@@ -9744,13 +9702,7 @@ export class EditorShell {
     // Carry the caret into the pane being revealed before focus moves there, so focus arrives at the
     // place the user was rather than wherever that pane's caret happened to be left (FR-5.6).
     this.carrySelectionAcross(previousMode, mode, currentFocusedPane);
-    if (mode === 'preview') {
-      // Preview hides the Source pane and refuses edits in the WYSIWYG one, so no pane should hold the
-      // lock for typing. The lock still has to point at a visible pane, because the session refuses
-      // edits from a pane that does not hold it and leaving it on the hidden Source pane would make the
-      // first keystroke after leaving Preview throw.
-      this.documentSession.focusPane('wysiwyg');
-    } else if (mode === 'wysiwyg' && currentFocusedPane === 'source') {
+    if (mode === 'wysiwyg' && currentFocusedPane === 'source') {
       // Source pane is now hidden but held the edit lock: transfer focus to visible ProseMirror pane.
       this.proseMirrorBinding.focus();
     } else if (mode === 'source' && currentFocusedPane === 'wysiwyg') {
@@ -10293,10 +10245,6 @@ export class EditorShell {
       this.statusViewMode.textContent = 'WYSIWYG';
     } else if (this.currentViewMode === 'split') {
       this.statusViewMode.textContent = 'Split';
-    } else if (this.currentViewMode === 'preview') {
-      // Named explicitly rather than falling into the trailing else, which used to label every
-      // non-WYSIWYG, non-split mode 'Source' and so reported Preview as Source.
-      this.statusViewMode.textContent = 'Preview';
     } else {
       this.statusViewMode.textContent = 'Source';
     }

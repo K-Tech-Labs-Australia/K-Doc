@@ -37,7 +37,7 @@ export type { RibbonGroupSetting, RibbonTabSetting } from './ribbon-setting.js';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type AutosaveMode = 'off' | 'on-blur' | 'interval' | 'idle';
-export type ViewMode = 'wysiwyg' | 'source' | 'split' | 'preview';
+export type ViewMode = 'wysiwyg' | 'source' | 'split';
 export type SplitOrientation = 'vertical' | 'horizontal';
 export type ReadingWidth = 'narrow' | 'medium' | 'wide' | 'full';
 
@@ -178,7 +178,6 @@ const VIEW_MODES: readonly ViewMode[] = Object.freeze<readonly ViewMode[]>([
   'wysiwyg',
   'source',
   'split',
-  'preview',
 ]);
 
 /** Allowed values for SplitOrientation. */

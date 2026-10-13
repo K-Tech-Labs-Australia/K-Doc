@@ -1,18 +1,18 @@
 // @vitest-environment jsdom
 
 /**
- * @file preview-mode.spec.ts
- * @purpose Vitest test suite for K-Doc's Preview mode and view-mode cycle transitions (FR-5.4, FR-5.7).
- *   Validates view mode cycle ordering, circular wraparound, unknown mode fallback, preview positioning,
- *   ProseMirrorBinding read-only toggle, DOM contenteditable reflection, and document text preservation.
+ * @file view-mode.spec.ts
+ * @purpose Vitest test suite for the view-mode cycle (FR-5.7) and the ProseMirror read-only switch the document
+ *   lock uses (FR-6.7). Validates cycle ordering, circular wraparound, unknown mode fallback, the binding's
+ *   read-only toggle, DOM contenteditable reflection, and document text preservation.
  * @inputs Markdown test fixtures, ViewMode cycle enumerations, and ProseMirrorBinding editable state toggles.
  * @outputs Vitest test assertions verifying view mode cycle behavior, DOM contenteditable attributes, isEditable state, and document content stability across read-only mode transitions.
  * @functions
  *   - mountBinding: Creates a DOM container on document.body, initializes a DocumentSession and ProseMirrorBinding, claims WYSIWYG focus, records them for afterEach teardown, and returns the binding instance.
  * @dataflow Markdown fixture -> DocumentSession -> ProseMirrorBinding -> setEditable DOM mutations -> attribute & document assertions.
  * @controlflow Mount DOM elements & bindings -> execute test assertions across cycle behavior and read-only switches -> assert DOM attributes and session text -> tear down bindings and mounts in afterEach.
- * @version 1
- * @date 2026-09-05
+ * @version 2
+ * @date 2026-10-13
  */
 
 import { describe, expect, it, afterEach } from 'vitest';
@@ -72,23 +72,22 @@ function mountBinding(markdown: string): ProseMirrorBinding {
 // the harness more than the feature.
 
 describe('the view mode cycle', () => {
-  it('contains exactly wysiwyg, split, source, preview in that order', () => {
-    expect(VIEW_MODE_CYCLE).toEqual(['wysiwyg', 'split', 'source', 'preview']);
+  it('contains exactly wysiwyg, split, source in that order', () => {
+    expect(VIEW_MODE_CYCLE).toEqual(['wysiwyg', 'split', 'source']);
   });
 
   it('steps through each mode in order and wraps from the last back to the first', () => {
     // Assert every step explicitly rather than looping, so a reordering names which pair broke.
     expect(nextViewMode('wysiwyg')).toBe('split');
     expect(nextViewMode('split')).toBe('source');
-    expect(nextViewMode('source')).toBe('preview');
-    expect(nextViewMode('preview')).toBe('wysiwyg');
+    expect(nextViewMode('source')).toBe('wysiwyg');
   });
 
-  it('returns to the starting mode after cycling four times from any starting mode', () => {
+  it('returns to the starting mode after one full cycle from any starting mode', () => {
     // A cycle which does not close would strand the user in a subset of the modes.
     for (const mode of VIEW_MODE_CYCLE) {
       let current: ViewMode = mode;
-      for (let step = 0; step < 4; step++) {
+      for (let step = 0; step < VIEW_MODE_CYCLE.length; step++) {
         current = nextViewMode(current);
       }
       expect(current).toBe(mode);
@@ -110,22 +109,6 @@ describe('the view mode cycle', () => {
       throw new Error('VIEW_MODE_CYCLE must contain at least one entry');
     }
     expect(result).toBe('wysiwyg');
-  });
-
-  it('positions preview last in the cycle', () => {
-    // It sits last deliberately: it is the only mode you cannot type in,
-    // so someone cycling to find a writing layout passes every editable one first.
-    const lastIndex = VIEW_MODE_CYCLE.length - 1;
-    const lastMode = VIEW_MODE_CYCLE[lastIndex];
-
-    // Check that the last element is defined under noUncheckedIndexedAccess before asserting.
-    if (lastMode !== undefined) {
-      // Last mode exists: assert it is 'preview'.
-      expect(lastMode).toBe('preview');
-    } else {
-      // Last mode undefined: fail fast on empty cycle array.
-      throw new Error('VIEW_MODE_CYCLE must not be empty');
-    }
   });
 });
 

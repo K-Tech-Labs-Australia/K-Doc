@@ -17,7 +17,7 @@
  * @dataflow Stored string -> validated against VIEW_MODES -> SessionViewMode in the restored session.
  * @controlflow Closed literal union; no branching within this declaration.
  */
-export type SessionViewMode = 'wysiwyg' | 'split' | 'source' | 'preview';
+export type SessionViewMode = 'wysiwyg' | 'split' | 'source';
 
 /**
  * @purpose One sidebar's persisted state: either collapsed or showing a single panel by id.
@@ -74,7 +74,6 @@ const VIEW_MODES: readonly SessionViewMode[] = Object.freeze<readonly SessionVie
   'wysiwyg',
   'split',
   'source',
-  'preview',
 ]);
 
 /**
