@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * @file image-loader.spec.ts
- * @purpose Tests mimeForPath, bytesToBase64, and createImageLoader — the loader that reads local images through the Tauri host for WYSIWYG display (FR-8.14) and HTML export embedding as data URIs (FR-13.1).
+ * @purpose Tests mimeForPath, bytesToBase64, and createImageLoader — the loader that reads local images through the Tauri host for K-Doc display (FR-8.14) and HTML export embedding as data URIs (FR-13.1).
  * @inputs Mocked Tauri invoke result/rejection (ipc.result / ipc.reject); a fake Tauri Window carrying __TAURI_INTERNALS__ and a plain browser Window; absolute image paths handed to the loader methods.
  * @outputs MIME strings, base64 encodings, and an ImageLoader whose objectUrl()/dataUri()/clear() behave correctly inside the desktop app or refuse outside it.
  * @functions none exported — describe('mimeForPath'), describe('bytesToBase64'), and describe('createImageLoader') group extension mapping, chunked encoding, availability detection, read caching, failure retry, byte-shape normalization, URL revocation, and browser refusal.

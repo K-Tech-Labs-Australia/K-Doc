@@ -117,7 +117,7 @@ export const RIBBON_LAYOUT: readonly RibbonTabSpec[] = [
     groups: [
       {
         title: 'Views',
-        commandIds: ['view:wysiwyg', 'view:split', 'view:source', 'view:preview'],
+        commandIds: ['view:kdoc', 'view:split', 'view:source'],
       },
       {
         title: 'Zoom',

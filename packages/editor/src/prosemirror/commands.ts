@@ -1,6 +1,6 @@
 /**
  * @file commands.ts
- * @purpose Pure ProseMirror editing commands for K-Doc's WYSIWYG pane, implementing Word-parity formatting operations (FR-8.1 to FR-8.9).
+ * @purpose Pure ProseMirror editing commands for the K-Doc pane, implementing Word-parity formatting operations (FR-8.1 to FR-8.9).
  *   Every structural command tags its transaction with the kdocStructural meta to opt the edit out of undo coalescing in ProseMirrorBinding.
  *   These commands are pure functions over EditorState and Transaction, requiring no DOM, enabling direct headless Node testing.
  * @inputs ProseMirror EditorState instances, target mark/block identifiers, heading levels, list kinds, and optional dispatch callbacks.

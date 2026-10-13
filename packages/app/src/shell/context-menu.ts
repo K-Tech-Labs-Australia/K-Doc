@@ -1,6 +1,6 @@
 /**
  * @file context-menu.ts
- * @purpose Implements the context menu for K-Doc's WYSIWYG editor pane (FR-14.2), built on popup-menu.ts.
+ * @purpose Implements the context menu for the K-Doc editor pane (FR-14.2), built on popup-menu.ts.
  *   Provides caret-aware contextual actions for clipboard, formatting, hyperlinks, and tables.
  * @inputs ContextMenuOptions containing PopupMenu instance, EditorView, pane element, Document, and link navigation callbacks.
  * @outputs ContextMenu controller interface exposing destroy(), ContextTarget interface, describeTarget(), buildEntries(), and installContextMenu().
@@ -309,7 +309,7 @@ export function buildEntries(
 }
 
 /**
- * Installs the right-click context menu on the WYSIWYG editor pane.
+ * Installs the right-click context menu on the K-Doc editor pane.
  *
  * @purpose Attaches a contextmenu listener to the editor pane that describes the caret target, builds entries, and opens the popup menu.
  * @inputs options: ContextMenuOptions - Configuration containing the popup menu, view, pane element, doc, and link navigation callbacks.

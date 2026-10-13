@@ -1,6 +1,6 @@
 /**
  * @file list-commands.ts
- * @purpose Pure ProseMirror list editing commands and depth queries for K-Doc's WYSIWYG pane (FR-8.6).
+ * @purpose Pure ProseMirror list editing commands and depth queries for the K-Doc pane (FR-8.6).
  *
  *   Indent and outdent already existed as Tab and Shift-Tab bindings in the keymap, and only there. A
  *   binding is not a command: it cannot be put on a toolbar, offered in the command palette, or asked whether it

@@ -7,7 +7,7 @@
  *   - isNode: narrows an EventTarget to Node via the nodeType property.
  *   - isElement: narrows a Node to Element via the ELEMENT_NODE type code.
  *   - scopeAllows: decides whether a command of a given scope may run from a focus context.
- *   - focusContextOf: classifies an event target as wysiwyg, source, field, widget, or other.
+ *   - focusContextOf: classifies an event target as kdoc, source, field, widget, or other.
  * @dataflow DOM event → focusContextOf → FocusContext; (scope, context, chord) → scopeAllows → boolean.
  * @controlflow focusContextOf narrows the target then walks containment checks; scopeAllows branches on scope then context/chord.
  * @version 1
@@ -16,7 +16,7 @@
 
 import type { KeymapScope } from '@k-doc/config';
 
-export type FocusContext = 'wysiwyg' | 'source' | 'field' | 'widget' | 'other';
+export type FocusContext = 'kdoc' | 'source' | 'field' | 'widget' | 'other';
 
 // ELEMENT_NODE is the numeric node type for element nodes; compared directly so no DOM constant import is required.
 const ELEMENT_NODE = 1;
@@ -46,16 +46,16 @@ function isElement(node: Node): node is Element {
 /**
  * @purpose Determines whether a command of the given scope may run from the current focus context.
  * @inputs scope - The command's scope (editor, document, or global).
- *         context - Where the key was pressed (wysiwyg, source, field, widget, other).
+ *         context - Where the key was pressed (kdoc, source, field, widget, other).
  *         chord - The full key combination as typed (e.g. 'Ctrl+B').
  * @outputs boolean - True when the command may run from this context.
  * @dataflow scope, context, chord → branch on scope then context/chord → allowed flag.
- * @controlflow editor checks wysiwyg; document rejects field; widget requires Ctrl/Alt; otherwise always allowed.
+ * @controlflow editor checks kdoc; document rejects field; widget requires Ctrl/Alt; otherwise always allowed.
  */
 export function scopeAllows(scope: KeymapScope, context: FocusContext, chord: string): boolean {
-  // Editor commands act on the WYSIWYG pane's selection, so they only mean something while it has focus.
+  // Editor commands act on the K-Doc pane's selection, so they only mean something while it has focus.
   if (scope === 'editor') {
-    return context === 'wysiwyg';
+    return context === 'kdoc';
   } else if (scope === 'document') {
     // Document commands (undo, redo) must not take a keystroke away from a text field's own undo.
     return context !== 'field';
@@ -71,13 +71,13 @@ export function scopeAllows(scope: KeymapScope, context: FocusContext, chord: st
 /**
  * @purpose Classifies an event target as one of the five focus contexts used by scopeAllows.
  * @inputs target - The event's target (possibly null or from another window).
- *         wysiwyg - The WYSIWYG editor root element for containment checks.
+ *         kdoc - The K-Doc editor root element for containment checks.
  *         source - The source-editor root element for containment checks.
- * @outputs FocusContext - wysiwyg, source, field, widget, or other.
+ * @outputs FocusContext - kdoc, source, field, widget, or other.
  * @dataflow target → node/element narrowing → containment walk → context string.
  * @controlflow reject non-nodes; fall back to parentElement; test editors then fields then widgets; default other.
  */
-export function focusContextOf(target: EventTarget | null, wysiwyg: Element, source: Element): FocusContext {
+export function focusContextOf(target: EventTarget | null, kdoc: Element, source: Element): FocusContext {
   // Anything that is not a node (the document itself, or a text node's parent used by the browser) is outside every surface.
   if (target === null || !isNode(target) || target.ownerDocument === null) { return 'other'; } else { /* Target is a real node inside a document; proceed to classification. */ }
 
@@ -87,8 +87,8 @@ export function focusContextOf(target: EventTarget | null, wysiwyg: Element, sou
   // Only continue when an element was actually resolved in the tree rather than a detached or parentless node.
   if (element === null) { return 'other'; } else { /* Element present; fall through to surface checks below. */ }
 
-  // Containment decides whether the element lives inside the WYSIWYG pane or the source pane.
-  if (wysiwyg.contains(element)) { return 'wysiwyg'; } else if (source.contains(element)) { return 'source'; } else { /* Neither editor root contains it; keep searching for a field or widget. */ }
+  // Containment decides whether the element lives inside the K-Doc pane or the source pane.
+  if (kdoc.contains(element)) { return 'kdoc'; } else if (source.contains(element)) { return 'source'; } else { /* Neither editor root contains it; keep searching for a field or widget. */ }
 
   // Form fields and editable elements outside both editors own their editing keys. Tag names rather than instanceof, so an element from another window (a jsdom test, an iframe) is recognised too.
   const tag = element.tagName.toLowerCase();

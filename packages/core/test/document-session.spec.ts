@@ -83,13 +83,13 @@ function withLastReplaced(session: DocumentSession, text: string): Root {
 const SOURCE = '# Title\n\n*   Weird bullet\n\nLast paragraph.\n';
 
 describe('construction', () => {
-  it('initializes with source text, clean state, empty history, and default wysiwyg focus', () => {
+  it('initializes with source text, clean state, empty history, and default kdoc focus', () => {
     const session = new DocumentSession(SOURCE);
     expect(session.snapshot.text).toBe(SOURCE);
     expect(session.snapshot.dirty).toBe(false);
     expect(session.snapshot.canUndo).toBe(false);
     expect(session.snapshot.canRedo).toBe(false);
-    expect(session.snapshot.focusedPane).toBe('wysiwyg');
+    expect(session.snapshot.focusedPane).toBe('kdoc');
   });
 });
 
@@ -97,15 +97,15 @@ describe('the edit lock (FR-3.1)', () => {
   it('prevents unfocused pane from applying edits and permits focused pane edits', () => {
     const session = new DocumentSession(SOURCE);
 
-    // On a fresh session, the WYSIWYG pane holds focus. Applying text from the Source pane must throw.
+    // On a fresh session, the K-Doc pane holds focus. Applying text from the Source pane must throw.
     // This invariant is what stops the two document models diverging silently.
-    expect(() => session.applyText('x')).toThrow(/wysiwyg/);
+    expect(() => session.applyText('x')).toThrow(/kdoc/);
 
     // Transfer edit focus to the Source pane.
     session.focusPane('source');
     expect(session.snapshot.focusedPane).toBe('source');
 
-    // While Source is focused, applying a WYSIWYG AST tree edit must throw and mention 'source'.
+    // While Source is focused, applying a K-Doc AST tree edit must throw and mention 'source'.
     const updatedTree = withLastReplaced(session, 'Updated.');
     expect(() => session.applyTree(updatedTree)).toThrow(/source/);
 
@@ -120,7 +120,7 @@ describe('applyTree preserves untouched bytes', () => {
     const session = new DocumentSession(SOURCE);
     const updatedTree = withLastReplaced(session, 'Replaced paragraph.');
 
-    // Apply the tree edit from the focused WYSIWYG pane.
+    // Apply the tree edit from the focused K-Doc pane.
     const change = session.applyTree(updatedTree);
 
     // The bridge inherits byte preservation from the incremental serializer,
@@ -275,9 +275,9 @@ describe('coalescing through the session', () => {
       coalesceWindowMs: 500,
     });
 
-    // Edit in WYSIWYG pane at t = 1000.
-    session.applyTree(withLastReplaced(session, 'WYSIWYG edit.'));
-    const textAfterWysiwygEdit = session.snapshot.text;
+    // Edit in K-Doc pane at t = 1000.
+    session.applyTree(withLastReplaced(session, 'K-Doc edit.'));
+    const textAfterKdocEdit = session.snapshot.text;
 
     // Advance clock by 10ms (well within window).
     clock.advance(10);
@@ -291,8 +291,8 @@ describe('coalescing through the session', () => {
 
     // Assert two undos are needed to reach SOURCE.
     const firstUndo = session.undo();
-    expect(firstUndo?.snapshot.text).toBe(textAfterWysiwygEdit);
-    expect(session.snapshot.text).toBe(textAfterWysiwygEdit);
+    expect(firstUndo?.snapshot.text).toBe(textAfterKdocEdit);
+    expect(session.snapshot.text).toBe(textAfterKdocEdit);
 
     const secondUndo = session.undo();
     expect(secondUndo?.snapshot.text).toBe(SOURCE);
@@ -358,9 +358,9 @@ describe('subscribers', () => {
       callCount += 1;
     });
 
-    // Record call count before focusing already-focused 'wysiwyg' pane.
+    // Record call count before focusing already-focused 'kdoc' pane.
     const beforeCount = callCount;
-    session.focusPane('wysiwyg');
+    session.focusPane('kdoc');
     const afterCount = callCount;
 
     expect(afterCount).toBe(beforeCount);
@@ -486,15 +486,15 @@ describe('dirty tracks the saved text, not a flag', () => {
     expect(seen).toEqual([undefined, 'view-1', 'view-2']);
   });
 
-  it('reports back the identity a WYSIWYG view gave (FR-6.9)', () => {
+  it('reports back the identity a K-Doc view gave (FR-6.9)', () => {
     const session = new DocumentSession('Body.\n');
     const seen: (string | undefined)[] = [];
     session.subscribe((change) => {
       seen.push(change.originId);
     });
 
-    // applyTree is the WYSIWYG path and applyText the Source one; both carry the identity, or the
-    // second WYSIWYG view would be told nothing about edits made in the first.
+    // applyTree is the K-Doc path and applyText the Source one; both carry the identity, or the
+    // second K-Doc view would be told nothing about edits made in the first.
     session.applyTree(session.snapshot.document.root, { originId: 'tree-view' });
 
     expect(seen).toEqual(['tree-view']);

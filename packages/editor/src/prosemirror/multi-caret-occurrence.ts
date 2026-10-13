@@ -1,6 +1,6 @@
 /**
  * @file multi-caret-occurrence.ts
- * @purpose Implements the Ctrl+D "add a caret at the next occurrence" command for the WYSIWYG pane (FR-7.2).
+ * @purpose Implements the Ctrl+D "add a caret at the next occurrence" command for the K-Doc pane (FR-7.2).
  *   Locates words around carets, identifies whole-word occurrences across textblocks, and manages multi-caret transactions.
  * @inputs ProseMirror EditorState instances, document positions, word strings, and user keystroke commands.
  * @outputs WordAt descriptors, document occurrence positions, and ProseMirror Command implementations.

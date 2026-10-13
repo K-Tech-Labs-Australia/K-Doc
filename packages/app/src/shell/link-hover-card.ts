@@ -1,5 +1,5 @@
 /**
- * @file link-hover-card.ts — renders a tooltip card when the pointer rests on a link in the WYSIWYG pane.
+ * @file link-hover-card.ts — renders a tooltip card when the pointer rests on a link in the K-Doc pane.
  * @purpose Shows where a hovered link goes, describing its destination and offering an Open action.
  * @inputs DOM doc/win/pane plus describe(href) and follow(href) callbacks supplied via options.
  * @outputs A LinkHoverCard handle exposing isOpen, hide, and destroy.

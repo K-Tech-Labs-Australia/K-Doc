@@ -1,6 +1,6 @@
 /**
  * @file table-of-contents.ts
- * @purpose Inserts and refreshes a table of contents (FR-8.30) inside a WYSIWYG document, operating on raw HTML marker blocks that delimit an auto-generated outline list.
+ * @purpose Inserts and refreshes a table of contents (FR-8.30) inside a K-Doc document, operating on raw HTML marker blocks that delimit an auto-generated outline list.
  * @inputs ProseMirror document state; heading nodes and raw HTML unknownBlock nodes already present in the document.
  * @outputs Boolean guards and ProseMirror Commands that mutate the document via dispatched transactions.
  * @functions

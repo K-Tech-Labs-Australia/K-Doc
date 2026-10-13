@@ -1,6 +1,6 @@
 /**
  * @file reference-links.ts
- * @purpose Helpers that let the WYSIWYG pane show reference-style links as real links and link definitions as readable text, while the round trip writes both back as they were.
+ * @purpose Helpers that let the K-Doc pane show reference-style links as real links and link definitions as readable text, while the round trip writes both back as they were.
  * @inputs mdast trees and nodes, link mark attributes.
  * @outputs definition maps, reference attributes, linkReference nodes, display text.
  * @functions

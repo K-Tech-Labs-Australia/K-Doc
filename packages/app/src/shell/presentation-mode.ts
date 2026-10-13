@@ -213,7 +213,7 @@ export function installPresentation(options: PresentationOptions): Presentation 
    * @purpose Writes slides[index] into the slide element, updates the counter, and asks resolveImage for each image source.
    * @inputs none (reads internal `slides`, `index`, `renderToken`).
    * @outputs none; mutates the DOM in place.
-   * @dataflow The slide HTML comes from K-Doc's own renderer, the same path Preview and export use; each render gets a token so an image resolved for a slide already left is not written into the next one; an image without a source is skipped; an image that cannot be resolved keeps its written address (the renderer's own src), so failures are deliberately silent.
+   * @dataflow The slide HTML comes from K-Doc's own renderer, the same path export uses; each render gets a token so an image resolved for a slide already left is not written into the next one; an image without a source is skipped; an image that cannot be resolved keeps its written address (the renderer's own src), so failures are deliberately silent.
    * @controlflow Bumps renderToken, sets innerHTML and counter text, then iterates images; each branch either continues or schedules a resolution.
    */
   function render(): void {

@@ -1,6 +1,6 @@
 /**
  * @file link-follow-plugin.ts
- * @purpose ProseMirror plugin enabling Ctrl+Click / Cmd+Click link following in K-Doc's WYSIWYG pane (FR-8.13).
+ * @purpose ProseMirror plugin enabling Ctrl+Click / Cmd+Click link following in the K-Doc pane (FR-8.13).
  *   Intercepts modified clicks on rendered anchor elements and dispatches follow callbacks.
  *   Ordering contract: This plugin must be installed BEFORE the multi-caret plugin, because ProseMirror
  *   asks plugins in order and the first handleClick to return true wins; installed after, every Ctrl+Click

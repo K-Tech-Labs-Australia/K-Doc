@@ -1,10 +1,10 @@
 /**
  * @file pane-anchors.ts
- * @purpose Provides pane-specific BlockAnchor providers for ProseMirror (WYSIWYG) and CodeMirror (Source) editor views and resolves the active scrolling element for CodeMirror, powering block-boundary scroll synchronization (FR-5.5).
- * @inputs ProseMirrorView and scroller HTMLElement for WYSIWYG pane; CodeMirrorView and AST block character offset array for Source pane.
- * @outputs Readonly arrays of BlockAnchor objects for WYSIWYG and Source panes, and the active scrolling HTMLElement for CodeMirror.
+ * @purpose Provides pane-specific BlockAnchor providers for ProseMirror (K-Doc) and CodeMirror (Source) editor views and resolves the active scrolling element for CodeMirror, powering block-boundary scroll synchronization (FR-5.5).
+ * @inputs ProseMirrorView and scroller HTMLElement for K-Doc pane; CodeMirrorView and AST block character offset array for Source pane.
+ * @outputs Readonly arrays of BlockAnchor objects for K-Doc and Source panes, and the active scrolling HTMLElement for CodeMirror.
  * @functions
- *   - wysiwygAnchors: Computes block anchors for top-level children of the ProseMirror document DOM relative to the scroller's scrollable content frame.
+ *   - kdocAnchors: Computes block anchors for top-level children of the ProseMirror document DOM relative to the scroller's scrollable content frame.
  *   - sourceAnchors: Computes block anchors for CodeMirror lines based on AST block start offsets relative to the scrollable content frame.
  *   - sourceScroller: Resolves the active scrollable container element for a CodeMirror view (.cm-scroller or fallback).
  * @dataflow DOM hierarchy / AST block offsets -> position mapping -> BlockAnchor records ({ index, top }).
@@ -18,7 +18,7 @@ import type { EditorView as CodeMirrorView } from '@codemirror/view';
 import type { BlockAnchor } from './scroll-sync.js';
 
 /**
- * Computes block anchors for the ProseMirror WYSIWYG editor pane.
+ * Computes block anchors for the ProseMirror K-Doc editor pane.
  *
  * One anchor per top-level child of the ProseMirror content DOM — those children
  * are exactly the document's top-level blocks, so their index is the block index
@@ -26,12 +26,12 @@ import type { BlockAnchor } from './scroll-sync.js';
  *
  * @purpose Extracts block anchors for top-level children of the ProseMirror document DOM relative to the scroller's scrollable content frame.
  * @inputs view - ProseMirrorView (EditorView) providing access to the content DOM hierarchy (view.dom).
- * @inputs scroller - HTMLElement representing the scrollable container enclosing the WYSIWYG editor.
+ * @inputs scroller - HTMLElement representing the scrollable container enclosing the K-Doc editor.
  * @outputs readonly BlockAnchor[] - Array of block anchor records containing block index and scroll-relative top offset.
  * @dataflow view.dom.children -> HTMLElement filtering -> child and scroller getBoundingClientRect() + scroller.scrollTop -> BlockAnchor array.
  * @controlflow Access view.dom -> iterate child elements with strict undefined guard -> filter non-HTMLElements -> calculate top offset relative to scrollable content -> append anchor -> return array.
  */
-export function wysiwygAnchors(
+export function kdocAnchors(
   view: ProseMirrorView,
   scroller: HTMLElement,
 ): readonly BlockAnchor[] {
@@ -105,7 +105,7 @@ export function sourceAnchors(
 
       // Query CodeMirror for the line block at the clamped character offset.
       // CodeMirror already reports this relative to the top of the scrollable content, so unlike
-      // the WYSIWYG side it needs no rect arithmetic — the two functions return values in the same
+      // the K-Doc side it needs no rect arithmetic — the two functions return values in the same
       // frame despite computing them completely differently, and that equivalence is the whole
       // contract between them.
       const block = view.lineBlockAt(clamped);

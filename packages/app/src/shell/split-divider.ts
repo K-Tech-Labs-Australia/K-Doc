@@ -1,6 +1,6 @@
 /**
  * @file split-divider.ts
- * @purpose Implements SplitDivider, an accessible draggable divider that resizes the dual editor panes (WYSIWYG and Source) in split view for K-Doc.
+ * @purpose Implements SplitDivider, an accessible draggable divider that resizes the dual editor panes (K-Doc and Source) in split view for K-Doc.
  *   Resizing updates pane flex proportions rather than fixed pixel widths to preserve window responsiveness, while pointer capture prevents drag-sticking on fast cursor movements.
  *   Includes full keyboard accessibility via arrow keys and ARIA separator attributes per WCAG 2.2 guidelines.
  * @inputs SplitDividerOptions containing divider HTMLElement, Document context, first pane HTMLElement, second pane HTMLElement, and container HTMLElement.

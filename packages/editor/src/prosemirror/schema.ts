@@ -1,6 +1,6 @@
 /**
  * @file schema.ts
- * @purpose Defines the ProseMirror schema for K-Doc's WYSIWYG pane, mirroring the mdast AST subset
+ * @purpose Defines the ProseMirror schema for the K-Doc pane, mirroring the mdast AST subset
  *   supported by the engine (CommonMark + GFM).
  *
  *   This schema is one third of the contract DESIGN.md §7 describes. A node that can be represented
@@ -23,7 +23,7 @@
  * @inputs ProseMirror node and mark specifications and mdast AST representations.
  * @outputs The unified `kdocSchema` instance, along with `KdocNodeName` and `KdocMarkName` type unions.
  * @functions None (schema specification and type definitions module).
- * @dataflow mdast nodes ⇄ ProseMirror schema definitions ⇄ WYSIWYG editor state.
+ * @dataflow mdast nodes ⇄ ProseMirror schema definitions ⇄ K-Doc editor state.
  * @controlflow Static schema and type definitions instantiated on module evaluation.
  * @version 9
  * @date 2026-09-18
@@ -61,7 +61,7 @@ function alignAttributes(node: ProsemirrorNode): Record<string, string> {
 }
 
 /**
- * Node specifications defining the document structure for K-Doc's WYSIWYG editor.
+ * Node specifications defining the document structure for the K-Doc view's editor.
  *
  * NOTE: The declaration order of nodes is significant in ProseMirror. The first node in the
  * 'block' group (`paragraph`) serves as the default block type for commands and operations.
@@ -419,7 +419,7 @@ const nodes = {
 } as const satisfies Record<string, NodeSpec>;
 
 /**
- * Mark specifications defining inline formatting for K-Doc's WYSIWYG editor.
+ * Mark specifications defining inline formatting for the K-Doc view's editor.
  */
 const marks = {
   // Mirrors mdast `strong` (bold text formatting).
@@ -516,6 +516,6 @@ export type KdocNodeName = keyof typeof nodes;
 export type KdocMarkName = keyof typeof marks;
 
 /**
- * The canonical ProseMirror schema for K-Doc's WYSIWYG pane.
+ * The canonical ProseMirror schema for the K-Doc pane.
  */
 export const kdocSchema: Schema<KdocNodeName, KdocMarkName> = new Schema({ nodes, marks });

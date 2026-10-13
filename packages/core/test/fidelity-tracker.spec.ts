@@ -1,6 +1,6 @@
 /**
  * @file fidelity-tracker.spec.ts
- * @purpose Verifies the touched-range bookkeeping behind the Fidelity Check (FR-4.5): diffRegion span computation, shiftRanges coordinate translation, mergeRanges coalescing, and the FidelityTracker record/rebase/check lifecycle that separates user-authored text edits from WYSIWYG tree edits.
+ * @purpose Verifies the touched-range bookkeeping behind the Fidelity Check (FR-4.5): diffRegion span computation, shiftRanges coordinate translation, mergeRanges coalescing, and the FidelityTracker record/rebase/check lifecycle that separates user-authored text edits from K-Doc tree edits.
  * @inputs Source texts for diff assertions; OffsetRange arrays fed to shiftRanges and mergeRanges; FidelityTracker baseline and working texts exercised through constructor, record, rebase, and check.
  * @outputs Expectation results asserting DiffRegion descriptors, shifted/merged OffsetRange arrays, touched range snapshots, and fidelity finding counts.
  * @functions
@@ -147,7 +147,7 @@ describe('FidelityTracker', () => {
   });
 
   it('reports a tree edit that reformats an unedited block', () => {
-    // A WYSIWYG reformat of untouched text is flagged as a fidelity finding.
+    // A K-Doc reformat of untouched text is flagged as a fidelity finding.
     const tracker = new FidelityTracker('* a\n* b\n\nText\n');
     tracker.record('- a\n- b\n\nText\n', false);
     expect(tracker.check('- a\n- b\n\nText\n')).toHaveLength(1);

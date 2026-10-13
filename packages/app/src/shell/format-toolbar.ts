@@ -1,6 +1,6 @@
 /**
  * @file format-toolbar.ts
- * @purpose Implements the formatting toolbar for K-Doc's WYSIWYG editor pane, providing controls for inline marks, block formatting, lists, links, and thematic breaks that execute ProseMirror commands and dynamically reflect active caret state.
+ * @purpose Implements the formatting toolbar for the K-Doc editor pane, providing controls for inline marks, block formatting, lists, links, and thematic breaks that execute ProseMirror commands and dynamically reflect active caret state.
  * @inputs FormatToolbarOptions containing container element, ProseMirror EditorView instance, Document context, and requestLink modal callback.
  * @outputs FormatToolbar interface with refresh() and destroy() lifecycle methods, alongside FORMAT_TOOLBAR_STYLES CSS stylesheet definition.
  * @functions

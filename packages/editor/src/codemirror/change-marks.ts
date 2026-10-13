@@ -1,6 +1,6 @@
 /**
  * @file change-marks.ts
- * @purpose CodeMirror 6 decorations for tracked plan changes in K-Doc's Source pane (FR-11.1, FR-11.6): a state field holding a DecorationSet of insertion marks and deletion widgets, an effect that replaces it with a freshly computed authoritative plan, and the theme rules that colour those marks — so every change reads identically whether painted here or by the ProseMirror plugin in the WYSIWYG pane.
+ * @purpose CodeMirror 6 decorations for tracked plan changes in K-Doc's Source pane (FR-11.1, FR-11.6): a state field holding a DecorationSet of insertion marks and deletion widgets, an effect that replaces it with a freshly computed authoritative plan, and the theme rules that colour those marks — so every change reads identically whether painted here or by the ProseMirror plugin in the K-Doc pane.
  * @inputs setChangeSpansEffect carries readonly ChangeSpan[] (source offsets from the plan); EditorView when dispatching; document length derived at build time to drop stale spans.
  * @outputs a DecorationSet of change marks on editor state, two CSS class constants consumed by the theme, and extensions embeddable in the Source pane's extension list.
  * @functions
@@ -9,11 +9,11 @@
  *   - buildChangeMarks: Assembles a DecorationSet from validated spans for a document length (module-level helper).
  *   - DeletionWidget: WidgetType rendering removed text that no longer lives in the document as a zero-width widget.
  *   - changeMarks: Extension composing just the state field for embedding in a pane's extension list.
- *   - changeSpanTheme: Extension providing CSS rules colouring insert and delete marks to match the WYSIWYG plugin.
+ *   - changeSpanTheme: Extension providing CSS rules colouring insert and delete marks to match the K-Doc plugin.
  *   - setChangeSpansIn: Dispatches the span effect on behalf of callers who need not know about it.
  * @dataflow plan source offsets -> setChangeSpansEffect.of(spans) -> changeMarksField rebuilds DecorationSet via buildChangeMarks -> EditorView.decorations reads it and paints insertion marks (in-document) and deletion widgets (out-of-document).
  * @controlflow create returns an empty set; update replaces the set on a span effect (the authoritative plan wins, no merge) or maps changes otherwise so typed edits keep ranges steady until the debounced re-plan arrives again — briefly approximate beats briefly absent. Insertions paint as marks because their characters are in the document; deletions paint as widgets because they were removed and live only in the overlay.
- * @note ChangeSpan offsets are source offsets — exactly what a CodeMirror document is indexed by — so this Source pane can paint the plan directly with no translation; the WYSIWYG pane cannot because ProseMirror positions differ from source offsets (markup characters are absent from its tree) and that mapping does not exist yet. An insertion's characters remain in the document and therefore render as a mark, while a deletion's were removed and live only in the overlay, so it renders as a widget at a zero-width point — text the document does not contain.
+ * @note ChangeSpan offsets are source offsets — exactly what a CodeMirror document is indexed by — so this Source pane can paint the plan directly with no translation; the K-Doc pane cannot because ProseMirror positions differ from source offsets (markup characters are absent from its tree) and that mapping does not exist yet. An insertion's characters remain in the document and therefore render as a mark, while a deletion's were removed and live only in the overlay, so it renders as a widget at a zero-width point — text the document does not contain.
  * @version 1
  * @date 2026-09-07
  */
@@ -151,7 +151,7 @@ class DeletionWidget extends WidgetType {
 
   toDOM(): HTMLElement {
     const span = document.createElement('span'); // The widget is not part of the document, so a plain element suffices and it renders between characters without occupying an offset — which is what makes the deletion visible at all (FR-11.6).
-    span.className = CM_CHANGE_DELETE_CLASS; // styling comes from changeSpanTheme keyed on this class to match the WYSIWYG plugin exactly.
+    span.className = CM_CHANGE_DELETE_CLASS; // styling comes from changeSpanTheme keyed on this class to match the K-Doc plugin exactly.
     span.setAttribute('data-change-id', this.changeId); // lets a click recover which change owns this removed run.
     span.style.setProperty('--kdoc-author-hue', String(authorHue(this.author))); // injects the author's hue so insert and delete share one colour per change (FR-11.6).
     span.textContent = this.text; // textContent is used rather than innerHTML because the deleted run is arbitrary document text that must never be parsed as markup, which would risk both rendering errors and injection (FR-11.6).
@@ -176,7 +176,7 @@ export function changeMarks(): Extension {
 }
 
 /**
- * @purpose Provides CSS rules that colour insert and delete marks in the Source pane so they match the WYSIWYG plugin exactly (FR-11.1, FR-11.6).
+ * @purpose Provides CSS rules that colour insert and delete marks in the Source pane so they match the K-Doc plugin exactly (FR-11.1, FR-11.6).
  * @inputs void — theme variables (--kdoc-author-hue) are expected to be defined on a host element or :root by the surrounding design tokens; each rule injects its own hue inline via --kdoc-author-hue set on the node (see DeletionWidget and buildChangeMarks).
  * @outputs an Extension wrapping EditorView.theme with two selector rules keyed by the exported class constants.
  * @dataflow None — pure descriptor; CodeMirror injects the CSS into the document head when the extension mounts and applies it to every mark or widget carrying these classes.

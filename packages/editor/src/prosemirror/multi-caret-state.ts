@@ -1,6 +1,6 @@
 /**
  * @file multi-caret-state.ts
- * @purpose Pure state representations and transaction builders for multi-caret editing in K-Doc's WYSIWYG pane (FR-7.2).
+ * @purpose Pure state representations and transaction builders for multi-caret editing in the K-Doc pane (FR-7.2).
  *   Extra carets live in plugin state as document positions, while the primary caret remains state.selection;
  *   edits apply across all carets in single atomic transactions.
  *

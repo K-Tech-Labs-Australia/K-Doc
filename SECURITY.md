@@ -27,7 +27,7 @@ script in the webview could act with your user account's permissions. The design
 - Raw HTML in a document is kept in the file exactly as written, but everything K-Doc *renders* from it
   (Presentation, Print, the track-changes Original view, HTML export) passes through an allow-list sanitiser that
   removes scripts, event handlers, `javascript:` links, forms, foreign frames and similar.
-- The WYSIWYG view never turns raw HTML into live elements: it shows it as source.
+- The K-Doc view never turns raw HTML into live elements: it shows it as source.
 - The application runs under a Content Security Policy that forbids inline script and `eval`, and the window
   cannot be navigated to any page outside K-Doc.
 - The host only touches files you chose: every file command checks a list of the files and folders you

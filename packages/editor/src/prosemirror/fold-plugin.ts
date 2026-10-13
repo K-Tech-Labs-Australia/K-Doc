@@ -1,6 +1,6 @@
 /**
  * @file fold-plugin.ts
- * @purpose ProseMirror plugin implementing FR-8.29 folding of heading sections and list subtrees in the WYSIWYG pane. Fold state lives in an externally owned FoldStore (not plugin state) because the shell rebuilds EditorState on external changes; the plugin only renders decorations from the document plus the store, and exposes a toggle widget per fold target.
+ * @purpose ProseMirror plugin implementing FR-8.29 folding of heading sections and list subtrees in the K-Doc pane. Fold state lives in an externally owned FoldStore (not plugin state) because the shell rebuilds EditorState on external changes; the plugin only renders decorations from the document plus the store, and exposes a toggle widget per fold target.
  * @inputs ProseMirror EditorState/Transaction/doc nodes, a FoldStore instance, user click/mousedown events, and the kdocFold decoration set.
  * @outputs Plugin<DecorationSet> managing kdocFold decorations; exported FoldStore interface, foldPluginKey, CSS class constants, ProseMirrorFoldTarget type, toggle command, and FOLD_STYLES stylesheet.
  * @functions

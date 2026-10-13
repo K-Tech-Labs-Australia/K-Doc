@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * @file table-of-contents.test.ts
- * @purpose Verifies inserting and refreshing a table of contents in the WYSIWYG document and its Markdown form (FR-8.30).
+ * @purpose Verifies inserting and refreshing a table of contents in the K-Doc document and its Markdown form (FR-8.30).
  * @inputs Markdown fixtures; ProseMirror editor state helpers.
  * @outputs vitest assertions covering insertTableOfContents, refreshTableOfContents, and documentHeadings.
  * @functions

@@ -2,14 +2,14 @@
 
 /**
  * @file context-menu.spec.ts
- * @purpose Vitest test suite for K-Doc's anchored popup menu and WYSIWYG right-click context menu (@k-doc/app, FR-14.2).
+ * @purpose Vitest test suite for K-Doc's anchored popup menu and K-Doc right-click context menu (@k-doc/app, FR-14.2).
  *   Validates caret context inspection (describeTarget), contextual menu entries construction (buildEntries),
  *   pane contextmenu event interception and default prevention (installContextMenu), and PopupMenu DOM rendering,
  *   filtering, ARIA attributes, and lifecycle teardown under jsdom.
  * @inputs Markdown test fixtures, ProseMirrorBinding instances, synthetic MouseEvents (contextmenu), and PopupMenuEntry arrays.
  * @outputs Vitest assertions verifying context descriptors, menu entries, event prevention, ARIA disabled/activedescendant attributes, and idempotent cleanup.
  * @functions
- *   - mountBinding: Allocates a mount DOM container, initializes a DocumentSession, focuses the wysiwyg pane, and constructs a ProseMirrorBinding.
+ *   - mountBinding: Allocates a mount DOM container, initializes a DocumentSession, focuses the kdoc pane, and constructs a ProseMirrorBinding.
  *   - selectAll: Sets a TextSelection spanning the entire document content so hasSelection evaluates to true.
  *   - labels: Extracts user-visible display labels from an array of popup menu entries, skipping separators.
  *   - menuOptionsFor: Constructs a ContextMenuOptions configuration object with recorded action spy callbacks and binding pane reference.
@@ -104,13 +104,13 @@ afterEach(() => {
 });
 
 /**
- * Instantiates a DocumentSession, focuses the wysiwyg pane, and mounts a ProseMirrorBinding.
+ * Instantiates a DocumentSession, focuses the kdoc pane, and mounts a ProseMirrorBinding.
  *
  * @purpose Allocates a DOM mount container, initializes the session and editor binding, and records them for teardown.
  * @inputs markdown - Raw Markdown source string used to initialize the document session.
  * @outputs ProseMirrorBinding - The configured editor binding attached to the mounted element.
  * @dataflow markdown -> DocumentSession -> focusPane -> ProseMirrorBinding -> active arrays -> return binding.
- * @controlflow Create mount div -> append to body -> initialize session and focus wysiwyg pane -> create ProseMirrorBinding -> record references for teardown -> return binding.
+ * @controlflow Create mount div -> append to body -> initialize session and focus kdoc pane -> create ProseMirrorBinding -> record references for teardown -> return binding.
  */
 function mountBinding(markdown: string): ProseMirrorBinding {
   const mount = document.createElement('div');
@@ -118,7 +118,7 @@ function mountBinding(markdown: string): ProseMirrorBinding {
   activeMounts.push(mount);
 
   const session = new DocumentSession(markdown);
-  session.focusPane('wysiwyg');
+  session.focusPane('kdoc');
 
   const binding = new ProseMirrorBinding({ session, mount });
   activeBindings.push(binding);
@@ -501,7 +501,7 @@ describe('buildEntries', () => {
     document.body.appendChild(mount);
     activeMounts.push(mount);
     const session = new DocumentSession('Before ![Logo](https://x.example/l.png) after.\n');
-    session.focusPane('wysiwyg');
+    session.focusPane('kdoc');
     const binding = new ProseMirrorBinding({ session, mount, loadImage: () => Promise.resolve(null) });
     activeBindings.push(binding);
     bindingMounts.set(binding, mount);

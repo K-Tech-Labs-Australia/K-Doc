@@ -18,7 +18,7 @@ import { mdastToProseMirror, proseMirrorToMdast } from '../src/index.js';
 import type { Node as ProsemirrorNode } from 'prosemirror-model';
 
 function throughEditor(source: string): string {
-  // Parses, converts to ProseMirror and back, then serializes — the path every WYSIWYG edit takes.
+  // Parses, converts to ProseMirror and back, then serializes — the path every K-Doc edit takes.
   const doc = parseMarkdown(source);
   const root = proseMirrorToMdast(mdastToProseMirror(doc.root));
   return serializeDocument({ text: source, root, frontMatter: null });

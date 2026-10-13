@@ -19,7 +19,7 @@ import { EditorState, TextSelection } from 'prosemirror-state';
 import type { Node as ProsemirrorNode } from 'prosemirror-model';
 
 /**
- * @purpose Parses markdown, converts to ProseMirror and back, then serializes — the path every WYSIWYG edit takes.
+ * @purpose Parses markdown, converts to ProseMirror and back, then serializes — the path every K-Doc edit takes.
  * @inputs source - Raw markdown string that should round-trip unchanged when untouched by an edit.
  * @outputs string - The serialized document after a full parse → ProseMirror → mdast → serialize cycle.
  * @dataflow Source text → parseMarkdown root → mdastToProseMirror → proseMirrorToMdast → serializeDocument output.

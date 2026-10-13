@@ -4,7 +4,7 @@
  *
  *   K-Doc's undo history is owned by the DocumentSession and shared by both panes (FR-3.5), so that
  *   Ctrl+Z means the same thing wherever the caret happens to be and an undo survives a pane switch. The
- *   WYSIWYG side already honours that: prosemirror-history is deliberately never imported, and
+ *   K-Doc side already honours that: prosemirror-history is deliberately never imported, and
  *   prosemirror/keymap.ts binds Mod-z straight to session.undo().
  *
  *   The Source pane previously installed history() and historyKeymap from @codemirror/commands,

@@ -86,7 +86,7 @@ afterEach(() => {
  * @inputs extraOptions - Optional partial overrides for RibbonOptions (e.g. isActive predicate).
  * @outputs Object containing ribbon controller, container element, commands array, calls recorder array, and states recorder array.
  * @dataflow markdown -> DocumentSession -> ProseMirrorBinding -> buildCommandRegistry -> installRibbon -> harness record.
- * @controlflow Mount editor and ribbon containers -> initialize session and focus wysiwyg -> bind editor view -> build command registry with recording dependency closures -> install ribbon -> record instances in active tracking arrays -> return harness record.
+ * @controlflow Mount editor and ribbon containers -> initialize session and focus kdoc -> bind editor view -> build command registry with recording dependency closures -> install ribbon -> record instances in active tracking arrays -> return harness record.
  */
 function mountRibbon(
   markdown: string,
@@ -107,7 +107,7 @@ function mountRibbon(
   activeMounts.push(container);
 
   const session = new DocumentSession(markdown);
-  session.focusPane('wysiwyg');
+  session.focusPane('kdoc');
 
   const binding = new ProseMirrorBinding({ session, mount: editorMount });
   activeBindings.push(binding);

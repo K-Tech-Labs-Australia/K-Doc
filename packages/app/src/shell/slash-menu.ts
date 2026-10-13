@@ -1,6 +1,6 @@
 /**
  * @file slash-menu.ts
- * @purpose Implements the slash (/) insert menu for K-Doc's WYSIWYG editor pane (FR-14.4), reusing PopupMenu.
+ * @purpose Implements the slash (/) insert menu for the K-Doc editor pane (FR-14.4), reusing PopupMenu.
  *   Enables quick insertion and conversion of blocks via typed slash queries on empty paragraphs.
  * @inputs SlashMenuOptions containing PopupMenu instance and EditorView, editor state change notifications.
  * @outputs SlashContext descriptor, slashContextAt trigger detector, buildSlashEntries menu items factory, and installSlashMenu controller.

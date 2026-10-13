@@ -1,6 +1,6 @@
 /**
  * @file section-at-caret.ts
- * @purpose Finds which top-level heading section holds the WYSIWYG caret, as an index into the document outline, for commands that act on the section at the caret such as Split Document at Heading (FR-8.31).
+ * @purpose Finds which top-level heading section holds the K-Doc caret, as an index into the document outline, for commands that act on the section at the caret such as Split Document at Heading (FR-8.31).
  * @inputs state - The EditorState whose doc and selection are inspected to locate the caret's block.
  * @outputs number - Outline index of the top-level heading section containing the caret, or -1 when the caret precedes the first heading.
  * @functions sectionIndexAtCaret - Counts top-level heading children up to and including the caret's block.

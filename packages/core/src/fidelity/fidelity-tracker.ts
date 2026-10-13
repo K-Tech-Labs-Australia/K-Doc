@@ -1,6 +1,6 @@
 /**
  * @file fidelity-tracker.ts
- * @purpose Tracks which character regions of a document were edited as raw Markdown text since it was last saved, feeding K-Doc's Fidelity Check (FR-4.5) so that WYSIWYG-only edits are not mistaken for user-authored text changes.
+ * @purpose Tracks which character regions of a document were edited as raw Markdown text since it was last saved, feeding K-Doc's Fidelity Check (FR-4.5) so that K-Doc-view-only edits are not mistaken for user-authored text changes.
  * @inputs Base (last-saved) document text, the current document text, per-edit OffsetRange records, and a boolean flag distinguishing the user's text edits from edits whose bytes the check must judge.
  * @outputs DiffRegion descriptors of changed spans, shifted and merged OffsetRange arrays marking touched regions, and FidelityFinding results produced by the companion fidelity-check module.
  * @functions
@@ -158,7 +158,7 @@ export function mergeRanges(ranges: readonly OffsetRange[]): OffsetRange[] {
 /**
  * Tracks character regions edited as raw Markdown text since the document was last saved.
  *
- * @purpose Accumulates the set of touched offset ranges across successive edits so the companion fidelity check can distinguish user-authored text changes from WYSIWYG tree edits.
+ * @purpose Accumulates the set of touched offset ranges across successive edits so the companion fidelity check can distinguish user-authored text changes from K-Doc tree edits.
  * @inputs baseText - The last-saved document text that defines the fidelity baseline.
  * @inputs currentText - Optional unsaved working text; defaults to baseText when omitted.
  * @outputs Touched ranges exposed via touched and findings produced by check against the baseline.
@@ -227,7 +227,7 @@ export class FidelityTracker {
    *
    * @purpose Shifts previously tracked ranges to follow the edit, optionally marks the new span as user text, and merges for a compact representation.
    * @inputs newText - The document text after this edit.
-   * @inputs textEdit - True when the change was authored in Markdown text (source typing, find/replace, version restore, undo, redo); false for WYSIWYG tree edits.
+   * @inputs textEdit - True when the change was authored in Markdown text (source typing, find/replace, version restore, undo, redo); false for K-Doc tree edits.
    * @outputs void.
    * @dataflow Compare with lastText -> diffRegion span -> shiftRanges prior ranges -> optionally append new span -> mergeRanges -> update lastText.
    * @controlflow Early return when unchanged -> compute region (early return if null) -> shift ranges -> push span iff textEdit -> merge -> assign lastText.
@@ -253,7 +253,7 @@ export class FidelityTracker {
         // User-authored text change: mark the full changed span as touched.
         this.ranges.push({ start: region.start, end: region.newEnd });
       } else {
-        // A WYSIWYG tree edit: do not attribute these bytes to the user, so the check judges them.
+        // A K-Doc tree edit: do not attribute these bytes to the user, so the check judges them.
       }
 
       // Coalesce overlapping or adjacent ranges into a minimal disjoint set.

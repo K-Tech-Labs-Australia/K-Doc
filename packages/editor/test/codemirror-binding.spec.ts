@@ -126,7 +126,7 @@ describe('CodeMirrorBinding', () => {
   });
 
   describe('the edit lock (FR-3.1)', () => {
-    it('rejects edits when unfocused, reports error with wysiwyg mention, and restores view and session to SOURCE', () => {
+    it('rejects edits when unfocused, reports error with kdoc mention, and restores view and session to SOURCE', () => {
       const errors: Error[] = [];
       const session = new DocumentSession(SOURCE);
       cmBinding = new CodeMirrorBinding({
@@ -137,12 +137,12 @@ describe('CodeMirrorBinding', () => {
         },
       });
 
-      // Attempt to type while session remains focused on 'wysiwyg'.
+      // Attempt to type while session remains focused on 'kdoc'.
       typeInSource(cmBinding, ' Invalid edit.');
 
       expect(errors.length).toBe(1);
       const firstError = errors[0];
-      expect(firstError?.message).toContain('wysiwyg');
+      expect(firstError?.message).toContain('kdoc');
       expect(session.snapshot.text).toBe(SOURCE);
 
       // Proving the pane resynchronised rather than continuing to show text the document does not contain.
@@ -173,7 +173,7 @@ describe('CodeMirrorBinding', () => {
   });
 
   describe('two panes over one session', () => {
-    it('reflects an edit in Source in the WYSIWYG pane', () => {
+    it('reflects an edit in Source in the K-Doc pane', () => {
       const session = new DocumentSession(SOURCE);
       cmBinding = new CodeMirrorBinding({ session, mount: cmMount });
       pmBinding = new ProseMirrorBinding({ session, mount: pmMount });
@@ -186,20 +186,20 @@ describe('CodeMirrorBinding', () => {
       expect(pmBinding.view.state.doc.textContent).toContain('Added in source.');
     });
 
-    it('reflects an edit in WYSIWYG in the Source pane', () => {
+    it('reflects an edit in K-Doc in the Source pane', () => {
       const session = new DocumentSession(SOURCE);
       cmBinding = new CodeMirrorBinding({ session, mount: cmMount });
       pmBinding = new ProseMirrorBinding({ session, mount: pmMount });
 
-      session.focusPane('wysiwyg');
+      session.focusPane('kdoc');
       pmBinding.view.dispatch(
         pmBinding.view.state.tr.insertText(
-          ' Added in wysiwyg.',
+          ' Added in kdoc.',
           Math.max(0, pmBinding.view.state.doc.content.size - 1),
         ),
       );
 
-      expect(cmBinding.view.state.doc.toString()).toContain('Added in wysiwyg.');
+      expect(cmBinding.view.state.doc.toString()).toContain('Added in kdoc.');
     });
 
     it('executes bidirectional edits without entering an infinite loop', () => {
@@ -210,10 +210,10 @@ describe('CodeMirrorBinding', () => {
       session.focusPane('source');
       typeInSource(cmBinding, ' Added in source.');
 
-      session.focusPane('wysiwyg');
+      session.focusPane('kdoc');
       pmBinding.view.dispatch(
         pmBinding.view.state.tr.insertText(
-          ' Added in wysiwyg.',
+          ' Added in kdoc.',
           Math.max(0, pmBinding.view.state.doc.content.size - 1),
         ),
       );
@@ -224,7 +224,7 @@ describe('CodeMirrorBinding', () => {
       // a space at the start of a block is insignificant in CommonMark and is normalised away on
       // serialization. That is the serializer behaving correctly, not content being lost — hence no leading space.
       expect(session.snapshot.text).toContain('Added in source.');
-      expect(session.snapshot.text).toContain('Added in wysiwyg.');
+      expect(session.snapshot.text).toContain('Added in kdoc.');
     });
 
     it('preserves untouched bytes across bidirectional edits in both panes', () => {
@@ -235,10 +235,10 @@ describe('CodeMirrorBinding', () => {
       session.focusPane('source');
       typeInSource(cmBinding, ' Added in source.');
 
-      session.focusPane('wysiwyg');
+      session.focusPane('kdoc');
       pmBinding.view.dispatch(
         pmBinding.view.state.tr.insertText(
-          ' Added in wysiwyg.',
+          ' Added in kdoc.',
           Math.max(0, pmBinding.view.state.doc.content.size - 1),
         ),
       );
@@ -279,10 +279,10 @@ describe('CodeMirrorBinding', () => {
       session.focusPane('source');
       typeInSource(cmBinding, ' Added in source.');
 
-      session.focusPane('wysiwyg');
+      session.focusPane('kdoc');
       pmBinding.view.dispatch(
         pmBinding.view.state.tr.insertText(
-          ' Added in wysiwyg.',
+          ' Added in kdoc.',
           Math.max(0, pmBinding.view.state.doc.content.size - 1),
         ),
       );
@@ -292,7 +292,7 @@ describe('CodeMirrorBinding', () => {
       session.undo();
 
       expect(pmBinding.view.state.doc.textContent).not.toContain('Added in source.');
-      expect(pmBinding.view.state.doc.textContent).not.toContain('Added in wysiwyg.');
+      expect(pmBinding.view.state.doc.textContent).not.toContain('Added in kdoc.');
       expect(cmBinding.view.state.doc.toString()).toBe(SOURCE);
     });
   });
@@ -344,21 +344,21 @@ describe('CodeMirrorBinding', () => {
       cmBinding = new CodeMirrorBinding({ session, mount: cmMount });
       pmBinding = new ProseMirrorBinding({ session, mount: pmMount });
 
-      session.focusPane('wysiwyg');
+      session.focusPane('kdoc');
       pmBinding.view.dispatch(
         pmBinding.view.state.tr.insertText(
-          ' Added in wysiwyg.',
+          ' Added in kdoc.',
           Math.max(0, pmBinding.view.state.doc.content.size - 1),
         ),
       );
-      expect(session.snapshot.text).toContain('Added in wysiwyg.');
+      expect(session.snapshot.text).toContain('Added in kdoc.');
 
       // The point of a session-owned history: an edit made in one pane is undoable from the other.
       // A pane-local CodeMirror history knows nothing about it and this would do nothing at all.
       session.focusPane('source');
       pressCtrlZ(cmBinding);
 
-      expect(session.snapshot.text).not.toContain('Added in wysiwyg.');
+      expect(session.snapshot.text).not.toContain('Added in kdoc.');
     });
   });
 
@@ -367,8 +367,8 @@ describe('CodeMirrorBinding', () => {
       const session = new DocumentSession(SOURCE);
       cmBinding = new CodeMirrorBinding({ session, mount: cmMount });
 
-      // Session starts focused on 'wysiwyg'.
-      expect(session.snapshot.focusedPane).toBe('wysiwyg');
+      // Session starts focused on 'kdoc'.
+      expect(session.snapshot.focusedPane).toBe('kdoc');
 
       cmBinding.view.contentDOM.dispatchEvent(new Event('focus'));
       expect(session.snapshot.focusedPane).toBe('source');

@@ -31,8 +31,8 @@ const CHANGED: KdocSettings = {
     recentFiles: [{ path: 'C:/notes/a.md', pinned: true, openedAt: 1700000000000 }],
   },
   editor: {
-    // Picks a view mode unlike the default (flips source↔wysiwyg).
-    defaultViewMode: DEFAULT_SETTINGS.editor.defaultViewMode === 'source' ? 'wysiwyg' : 'source',
+    // Picks a view mode unlike the default (flips source↔kdoc).
+    defaultViewMode: DEFAULT_SETTINGS.editor.defaultViewMode === 'source' ? 'kdoc' : 'source',
     // Picks a split orientation unlike the default (flips horizontal↔vertical).
     splitOrientation: DEFAULT_SETTINGS.editor.splitOrientation === 'horizontal' ? 'vertical' : 'horizontal',
     revealSyntaxMarkers: !DEFAULT_SETTINGS.editor.revealSyntaxMarkers,

@@ -37,7 +37,7 @@ export type { RibbonGroupSetting, RibbonTabSetting } from './ribbon-setting.js';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 export type AutosaveMode = 'off' | 'on-blur' | 'interval' | 'idle';
-export type ViewMode = 'wysiwyg' | 'source' | 'split' | 'preview';
+export type ViewMode = 'kdoc' | 'source' | 'split';
 export type SplitOrientation = 'vertical' | 'horizontal';
 export type ReadingWidth = 'narrow' | 'medium' | 'wide' | 'full';
 
@@ -139,7 +139,7 @@ export interface KdocSettings {
   readonly keyboard: KeyboardSettings;
   /** Smart substitutions and the replacement table (FR-7.8); editor.smartSubstitutions switches them all. */
   readonly autocorrect: AutocorrectSettings;
-  /** Snippets that a prefix plus Tab expands in WYSIWYG (FR-7.10). */
+  /** Snippets that a prefix plus Tab expands in K-Doc (FR-7.10). */
   readonly snippets: SnippetSettings;
   /** When local snapshots are taken and how long they are kept (FR-11.8). */
   readonly history: HistorySettings;
@@ -175,10 +175,9 @@ const AUTOSAVE_MODES: readonly AutosaveMode[] = Object.freeze<readonly AutosaveM
 
 /** Allowed values for ViewMode. */
 const VIEW_MODES: readonly ViewMode[] = Object.freeze<readonly ViewMode[]>([
-  'wysiwyg',
+  'kdoc',
   'source',
   'split',
-  'preview',
 ]);
 
 /** Allowed values for SplitOrientation. */
@@ -293,7 +292,7 @@ export const DEFAULT_SETTINGS: KdocSettings = Object.freeze<KdocSettings>({
     recentFiles: Object.freeze([]),
   }),
   editor: Object.freeze<EditorSettings>({
-    defaultViewMode: 'wysiwyg',
+    defaultViewMode: 'split',
     splitOrientation: 'vertical',
     revealSyntaxMarkers: true,
     smartSubstitutions: true,
@@ -761,7 +760,8 @@ export function parseSettings(json: string): LoadedSettings {
 
       // Check if 'defaultViewMode' is specified in editor settings.
       if ('defaultViewMode' in editorVal && editorVal.defaultViewMode !== undefined) {
-        const val = editorVal.defaultViewMode;
+        // Settings saved before 0.3 call the K-Doc view 'wysiwyg' and may name the removed Preview view; both mean K-Doc.
+        const val = editorVal.defaultViewMode === 'wysiwyg' || editorVal.defaultViewMode === 'preview' ? 'kdoc' : editorVal.defaultViewMode;
         // Check if received value is a member of VIEW_MODES.
         if (isMemberOf(val, VIEW_MODES)) {
           defaultViewMode = val;

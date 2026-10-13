@@ -1,6 +1,6 @@
 /**
  * @file footnotes.ts
- * @purpose WYSIWYG footnote support for K-Doc's editor: an Insert Footnote command (FR-8.x), click navigation between a
+ * @purpose K-Doc footnote support for K-Doc's editor: an Insert Footnote command (FR-8.x), click navigation between a
  *   reference and its note, the definition node view that renders a non-editable label outside the editable body, and the
  *   stylesheet those pieces depend on. Like insert-commands.ts, every command is a pure function over EditorState/Transaction
  *   returning false instead of throwing so the editor never breaks on a click handler; structural transactions are tagged with

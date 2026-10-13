@@ -12,7 +12,7 @@
  */
 
 export type KeymapScope = 'global' | 'document' | 'editor';
-/** global: works anywhere. document: works unless typing in a form field. editor: only while the WYSIWYG pane has focus. */
+/** global: works anywhere. document: works unless typing in a form field. editor: only while the K-Doc pane has focus. */
 export interface KeymapCommandSpec { readonly id: string; readonly scope: KeymapScope; }
 export type KeymapPresetId = 'word' | 'vscode' | 'typora' | 'obsidian';
 export const KEYMAP_PRESET_IDS: readonly KeymapPresetId[] = ['word', 'vscode', 'typora', 'obsidian'];

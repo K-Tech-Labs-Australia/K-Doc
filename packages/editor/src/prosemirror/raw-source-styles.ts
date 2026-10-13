@@ -1,6 +1,6 @@
 /**
  * @file raw-source-styles.ts
- * @purpose Styles for the embedded raw-HTML source widgets in the WYSIWYG pane (FR-7.9).
+ * @purpose Styles for the embedded raw-HTML source widgets in the K-Doc pane (FR-7.9).
  * @inputs None.
  * @outputs RAW_SOURCE_STYLES stylesheet string.
  * @functions None (constant only).

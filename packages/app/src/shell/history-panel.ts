@@ -22,7 +22,7 @@ export interface HistoryRow {
   /** When it was recorded, in epoch milliseconds. */
   readonly at: number;
   /** The pane the edit was made in. */
-  readonly pane: 'wysiwyg' | 'source';
+  readonly pane: 'kdoc' | 'source';
   /** How many words the document held at that point. */
   readonly words: number;
 }
@@ -357,8 +357,8 @@ export function installHistoryPanel(options: HistoryPanelOptions): HistoryPanel 
     whenSpan.className = 'kdoc-history-when';
     whenSpan.textContent = formatRelativeTime(row.at, now);
 
-    // Check whether the edit was made in the WYSIWYG pane; use 'Editor' for it and 'Source' otherwise.
-    const paneLabel: string = row.pane === 'wysiwyg' ? 'Editor' : 'Source';
+    // Check whether the edit was made in the K-Doc pane; use 'Editor' for it and 'Source' otherwise.
+    const paneLabel: string = row.pane === 'kdoc' ? 'Editor' : 'Source';
 
     const detailSpan = doc.createElement('span');
     detailSpan.className = 'kdoc-history-detail';

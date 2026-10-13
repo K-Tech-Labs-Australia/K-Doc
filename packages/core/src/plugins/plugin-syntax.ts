@@ -204,7 +204,7 @@ function drawn(matched: string, syntax: PluginSyntax): PhrasingContent {
   const textChild: Text = { type: 'text', value: matched };
 
   // emphasis is only the shape borrowed to hold the children; hName in data is what mdast-util-to-hast actually draws,
-  // so the preview, exports and printouts all render it with no renderer change, exactly as block alignment does.
+  // so exports, printouts and slides all render it with no renderer change, exactly as block alignment does.
   const nodeData = {
     hName: syntax.tag,
     hProperties: { className: [syntax.className] },

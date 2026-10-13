@@ -5,7 +5,7 @@
  *   The callout is styling over a plain blockquote, applied as node decorations rather than as a schema
  *   node. The document keeps the [!NOTE] line the file on disk has, and the pane makes it look like a title.
  *
- *   The marker line is decorated, not hidden. A marker that is invisible in the WYSIWYG pane but present in
+ *   The marker line is decorated, not hidden. A marker that is invisible in the K-Doc pane but present in
  *   the Source pane is a difference between the two views of one document that the user can see the effect of
  *   and not the cause — they would delete the word they can see and wonder why the colour stayed.
  *

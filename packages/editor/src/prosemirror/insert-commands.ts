@@ -1,6 +1,6 @@
 /**
  * @file insert-commands.ts
- * @purpose ProseMirror commands backing K-Doc's insert affordances in the WYSIWYG pane — inserting/editing images
+ * @purpose ProseMirror commands backing K-Doc's insert affordances in the K-Doc pane — inserting/editing images
  *   (FR-8.14) and setting a code block's language (FR-8.8). Like commands.ts, every command is a pure function over
  *   EditorState/Transaction that returns false instead of throwing when it cannot apply, so the editor never breaks on a
  *   keystroke handler; structural transactions are tagged with kdocStructural to opt out of undo coalescing exactly as

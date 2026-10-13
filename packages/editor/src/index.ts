@@ -4,7 +4,7 @@
  *
  *   @k-doc/editor adapts K-Doc's document model to concrete editor engines. The ProseMirror conversion
  *   layer is deliberately DOM-free — it uses only `prosemirror-model`, never `prosemirror-view` — so
- *   the hardest and most correctness-critical part of the WYSIWYG pane is testable in a bare Node process.
+ *   the hardest and most correctness-critical part of the K-Doc pane is testable in a bare Node process.
  *   The schema and the two converters form the triple DESIGN.md §7 requires and must always change together:
  *   a node the schema can express but a converter cannot restore would silently break the round-trip guarantee.
  *   Anything mdast can express that the schema does not model richly is carried by the `unknownBlock` and

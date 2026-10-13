@@ -1,6 +1,6 @@
 /**
  * @file input-rules.ts
- * @purpose Pure ProseMirror input rules for K-Doc's WYSIWYG pane, implementing Markdown auto-formatting as you type (FR-7.7).
+ * @purpose Pure ProseMirror input rules for the K-Doc pane, implementing Markdown auto-formatting as you type (FR-7.7).
  *   Transforms typed Markdown patterns (headings, code blocks, blockquotes, lists, horizontal rules, and inline marks)
  *   into corresponding ProseMirror document nodes and marks without DOM dependencies, supporting headless testing.
  * @inputs KdocInputRulesOptions with optional custom Schema, and user text insertion events via ProseMirror's inputrules plugin.

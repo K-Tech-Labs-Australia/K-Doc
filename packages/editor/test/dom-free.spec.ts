@@ -1,7 +1,7 @@
 /**
  * @file dom-free.spec.ts
  * @purpose Architectural guard test suite verifying the ProseMirror conversion layer in @k-doc/editor remains DOM-free.
- *   DESIGN.md claims the ProseMirror conversion layer is DOM-free, which is what lets the most correctness-critical part of the WYSIWYG pane be tested in a bare Node process.
+ *   DESIGN.md claims the ProseMirror conversion layer is DOM-free, which is what lets the most correctness-critical part of the K-Doc pane be tested in a bare Node process.
  *   That claim used to be enforced by the compiler, because the package's lib excluded DOM. Adding ProseMirrorBinding forced DOM types into the package's lib, so the compiler
  *   now accepts DOM usage anywhere in it. This suite restores the guarantee by reading the source files directly: an architectural claim nobody checks is a comment, not a constraint.
  * @inputs Source code files in the prosemirror package directory (schema.ts, from-mdast.ts, to-mdast.ts, binding.ts).

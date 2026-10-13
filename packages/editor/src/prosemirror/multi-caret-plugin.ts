@@ -1,6 +1,6 @@
 /**
  * @file multi-caret-plugin.ts
- * @purpose ProseMirror plugin enabling multi-caret editing in K-Doc's WYSIWYG pane (FR-7.2).
+ * @purpose ProseMirror plugin enabling multi-caret editing in the K-Doc pane (FR-7.2).
  *   Manages extra caret positions, zero-width widget decorations, mouse click toggles, text insertions, and deletions.
  *   Note: This plugin must be installed before the keymap plugins, because handleKeyDown is consulted in plugin
  *   order and a Backspace reaching the base keymap first would delete at the primary caret only.
@@ -185,7 +185,7 @@ export function clearCarets(): Command {
 }
 
 /**
- * Creates the ProseMirror plugin that manages multi-caret editing in the WYSIWYG pane (FR-7.2).
+ * Creates the ProseMirror plugin that manages multi-caret editing in the K-Doc pane (FR-7.2).
  *
  * @purpose Instantiates the plugin handling extra caret state, decoration rendering, mouse clicks, and multi-caret typing/deletion.
  * @inputs None.

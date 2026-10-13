@@ -154,7 +154,7 @@ export function createFidelityController(options: FidelityControllerOptions): Fi
         // A real text change: classify its origin before recording it with the tracker.
         const textEdit =
           // Source-pane typing, tool-applied text (find/replace, restore), undo and redo are the user's bytes;
-          // only a WYSIWYG edit is serializer output the check must judge. Undo counts as the user's because it
+          // only a K-Doc edit is serializer output the check must judge. Undo counts as the user's because it
           // can reach back past a save to text the user typed, which the tracker has already forgotten.
           change.reason === 'external' ||
           change.reason === 'undo' ||

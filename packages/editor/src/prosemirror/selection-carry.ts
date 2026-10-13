@@ -1,6 +1,6 @@
 /**
  * @file selection-carry.ts
- * @purpose Pure functions that carry a selection between the Source pane (raw Markdown character offsets) and the WYSIWYG pane (ProseMirror document positions) through a PositionIndex.
+ * @purpose Pure functions that carry a selection between the Source pane (raw Markdown character offsets) and the K-Doc pane (ProseMirror document positions) through a PositionIndex.
  *
  *   Carrying selection across the two panes allows switching view modes or synchronizing active selections
  *   without stranding or resetting the user's cursor. Because Markdown source contains syntax characters

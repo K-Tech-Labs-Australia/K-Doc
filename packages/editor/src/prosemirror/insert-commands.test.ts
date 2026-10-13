@@ -1,6 +1,6 @@
 /**
  * @file insert-commands.test.ts
- * @purpose Vitest test suite for K-Doc's WYSIWYG insert commands and query predicates (insert-commands.ts, FR-8.14, FR-8.8).
+ * @purpose Vitest test suite for the K-Doc view's insert commands and query predicates (insert-commands.ts, FR-8.14, FR-8.8).
  *   Verifies image insertion, replacement, query predicates, empty/whitespace validation, and code block language updates with meta preservation.
  * @inputs ProseMirror EditorState instances initialized with kdocSchema, ImageAttrs payloads, and language strings.
  * @outputs Vitest assertions verifying command applicability, transaction effects, AST modifications, and attribute queries.

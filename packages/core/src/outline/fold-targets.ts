@@ -1,6 +1,6 @@
 /**
  * @file fold-targets.ts
- * @purpose Assigns every foldable region in a Markdown document — top-level heading sections and list items at any depth — a stable string key plus its source offset range, so the WYSIWYG ProseMirror pane and the Source CodeMirror pane agree on which regions are folded. Fold keys derive purely from document content (heading anchors and normalized list-item text), never from pane state, so a fold made in one pane is visible and savable per document in the other.
+ * @purpose Assigns every foldable region in a Markdown document — top-level heading sections and list items at any depth — a stable string key plus its source offset range, so the K-Doc ProseMirror pane and the Source CodeMirror pane agree on which regions are folded. Fold keys derive purely from document content (heading anchors and normalized list-item text), never from pane state, so a fold made in one pane is visible and savable per document in the other.
  * @inputs KdocDocument instances containing parsed mdast Root nodes and source text; readonly arrays of FoldEntry records carrying a kind and display text.
  * @outputs Arrays of FoldTarget records (key, kind, start, end) describing every foldable region, plus pure key-derivation and offset-lookup helpers.
  * @functions

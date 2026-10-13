@@ -1,6 +1,6 @@
 /**
  * @file scroll-sync.ts
- * @purpose Implements synchronised scrolling between WYSIWYG and Source editor panes in K-Doc (FR-5.5),
+ * @purpose Implements synchronised scrolling between K-Doc and Source editor panes in K-Doc (FR-5.5),
  *   anchoring alignment on block boundaries rather than line ratios to prevent drift across differing block heights.
  * @inputs ScrollSyncOptions containing DocumentSession, Window context, first HTMLElement, second HTMLElement, and anchorsFor extractor.
  * @outputs ScrollSync controller interface exposing locked status, setLocked, refresh, and destroy lifecycle methods, alongside alignedScrollTop and installScrollSync functions.

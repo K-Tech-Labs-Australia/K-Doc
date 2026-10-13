@@ -1,6 +1,6 @@
 /**
  * @file focus-range.ts
- * @purpose Finds the stretch of text Focus mode leaves undimmed (FR-5.8): the paragraph holding the caret, or the sentence within it; shared by the WYSIWYG and Source panes so both dim the same way.
+ * @purpose Finds the stretch of text Focus mode leaves undimmed (FR-5.8): the paragraph holding the caret, or the sentence within it; shared by the K-Doc and Source panes so both dim the same way.
  * @inputs A text string, a caret offset, and a scope to search within.
  * @outputs Half-open [start, end) character offsets delimiting the undimmed region.
  * @functions

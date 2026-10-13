@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * @file snippets.test.ts
- * @purpose Tests snippet expansion and tab-stop navigation in WYSIWYG (FR-7.10).
+ * @purpose Tests snippet expansion and tab-stop navigation in K-Doc (FR-7.10).
  * @inputs markdown fixtures and simulated Tab/Escape key events.
  * @outputs vitest assertions.
  * @functions

@@ -2,7 +2,7 @@
  * @file binding.ts
  * @purpose Implements CodeMirrorBinding, the live wiring between a K-Doc DocumentSession and a CodeMirror 6 EditorView showing raw Markdown (FR-3.1 to FR-3.5).
  *   The DocumentSession is authoritative and the EditorView is a client of it. This class coordinates bidirectional updates:
- *   view edits are forwarded to the session without echo bounces, and session changes (undo, redo, reset, or edits from the WYSIWYG pane)
+ *   view edits are forwarded to the session without echo bounces, and session changes (undo, redo, reset, or edits from the K-Doc pane)
  *   are synchronized into the view without fighting the user's cursor or being mistaken for fresh user edits.
  * @inputs DocumentSession state and SessionChange events, DOM container HTMLElement, optional CodeMirror Extensions, optional onError handler, and CodeMirror ViewUpdates.
  * @outputs CodeMirrorBinding instance, live CodeMirror EditorView, synchronized DocumentSession text updates, and error notifications.
@@ -312,7 +312,7 @@ export class CodeMirrorBinding {
    * @inputs change - The SessionChange notification object emitted by DocumentSession.
    * @outputs void.
    * @dataflow change inspection → syncFromSession() on external document changes.
-   * @controlflow Check change.reason and focusedPane → syncFromSession if undo/redo/reset or edit from WYSIWYG pane; return early otherwise.
+   * @controlflow Check change.reason and focusedPane → syncFromSession if undo/redo/reset or edit from K-Doc pane; return early otherwise.
    */
   private handleSessionChange(change: SessionChange): void {
     // Check whether the session change is restorative (undo/redo/reset) or an edit from the other pane.
@@ -329,7 +329,7 @@ export class CodeMirrorBinding {
       // An edit this view did not apply; see the ProseMirror binding for why identity, not pane.
       (change.reason === 'edit' && change.originId !== this.originId)
     ) {
-      // Reason is undo/redo/reset or external edit from WYSIWYG pane: resynchronize view with session.
+      // Reason is undo/redo/reset or external edit from K-Doc pane: resynchronize view with session.
       this.syncFromSession();
     } else {
       // Change is this pane's own edit echo or a focus event: ignore and return early.

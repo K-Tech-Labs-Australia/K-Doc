@@ -6,7 +6,7 @@
  * @functions
  *   - setup: Wire mutable mock state into createNavigationController and return test-driving helpers.
  *   - openQuickOpen suite: Assert picker prompt contents and picked-path opening behaviour.
- *   - openGoTo suite: Assert WYSIWYG heading reveal, Source line reveal, and cancel/error paths.
+ *   - openGoTo suite: Assert K-Doc heading reveal, Source line reveal, and cancel/error paths.
  *   - breadcrumbs suite: Assert caret-path refresh, frame coalescing, edit propagation, and destroy teardown.
  * @dataflow setup() mock state → createNavigationController options → controller actions → recorded side effects in state arrays.
  * @controlflow Each test drives one action, flushes queued animation frames when required, then asserts on recorded state.
@@ -96,8 +96,8 @@ describe('openQuickOpen', () => {
 });
 
 describe('openGoTo', () => {
-  // In WYSIWYG Go To lists headings and reveals the chosen heading's start offset.
-  it("in WYSIWYG it offers the headings and reveals the picked one's start", async () => {
+  // In K-Doc Go To lists headings and reveals the chosen heading's start offset.
+  it("in K-Doc it offers the headings and reveals the picked one's start", async () => {
     const source = '# Title\n\ntext\n\n## Section\n';
     const { state, controller } = setup(source);
     await controller.openGoTo();

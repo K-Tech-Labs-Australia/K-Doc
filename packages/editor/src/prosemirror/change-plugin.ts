@@ -1,6 +1,6 @@
 /**
  * @file change-plugin.ts
- * @purpose ProseMirror decoration layer that paints tracked insertions and deletions in the WYSIWYG pane (FR-11.1, FR-11.6).
+ * @purpose ProseMirror decoration layer that paints tracked insertions and deletions in the K-Doc pane (FR-11.1, FR-11.6).
  *   Manages change decorations for both kinds of tracked edit, position mapping across edits, transaction metadata updates,
  *   and change-id queries at a document position.
  * @inputs ProseMirror transactions (carrying change spans), EditorState instances, and document positions.

@@ -1,7 +1,7 @@
 /**
  * @file session-timeline.spec.ts
  * @purpose Vitest suite for DocumentSession.timeline verifying FR-14.7 records states to undo to.
- * @inputs Synthetic editor text snapshots, PaneId identifiers ('wysiwyg' | 'source'), and an injectable millisecond clock.
+ * @inputs Synthetic editor text snapshots, PaneId identifiers ('kdoc' | 'source'), and an injectable millisecond clock.
  * @outputs Vitest assertions validating timeline contents, pane attribution, coalescing separation, reset clearing, and canUndo agreement.
  * @functions None.
  * @dataflow DocumentSession edits -> EditHistory recording -> DocumentSession.timeline getter -> Vitest assertions.
@@ -61,13 +61,13 @@ describe('DocumentSession.timeline', (): void => {
     expect(doc.timeline.map((entry): string => entry.pane)).toEqual(['source']);
   });
 
-  it('attributes an apply-tree edit to the wysiwyg pane even when text is unchanged', (): void => {
+  it('attributes an apply-tree edit to the kdoc pane even when text is unchanged', (): void => {
     const doc = session('one');
 
-    // A new session defaults to wysiwyg, so this round-trip tree application is attributed there.
+    // A new session defaults to kdoc, so this round-trip tree application is attributed there.
     doc.applyTree(parseMarkdown(doc.snapshot.text).root);
 
-    expect(doc.timeline.map((entry): string => entry.pane)).toEqual(['wysiwyg']);
+    expect(doc.timeline.map((entry): string => entry.pane)).toEqual(['kdoc']);
   });
 
   it('records a find-and-replace replace-all as an undoable timeline entry', (): void => {

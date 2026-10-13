@@ -1067,10 +1067,9 @@ export function installSettingsDialog(options: SettingsDialogOptions): SettingsD
       `kdoc-setting-${dialogId}-editor-defaultViewMode`,
       'Default view mode',
       [
-        { value: 'wysiwyg', label: 'WYSIWYG' },
+        { value: 'kdoc', label: 'K-Doc' },
         { value: 'source', label: 'Source' },
         { value: 'split', label: 'Split' },
-        { value: 'preview', label: 'Preview' },
       ],
       currentSettings.editor.defaultViewMode,
       (v: ViewMode): void => {

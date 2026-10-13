@@ -1,7 +1,7 @@
 /**
  * @file history.spec.ts
  * @purpose Vitest test suite for EditHistory undo/redo stack in @k-doc/core verifying requirement FR-7.3.
- * @inputs Synthetic editor text snapshots, PaneId identifiers ('wysiwyg' | 'source'), and millisecond timestamps.
+ * @inputs Synthetic editor text snapshots, PaneId identifiers ('kdoc' | 'source'), and millisecond timestamps.
  * @outputs Vitest assertions validating stack sizes, undo/redo states, text restoration, coalescing behaviour, and bounds.
  * @functions None.
  * @dataflow Synthetic edit states -> EditHistory methods (push, undo, redo, endRun, clear) -> return values and getters -> Vitest assertions.
@@ -33,8 +33,8 @@ describe('empty history', () => {
     const history = new EditHistory();
 
     // Pressing Ctrl+Z or Ctrl+Y with nothing to undo or redo is normal user behaviour, not an error.
-    expect(history.undo('current', 'wysiwyg', 0)).toBeNull();
-    expect(history.redo('current', 'wysiwyg', 0)).toBeNull();
+    expect(history.undo('current', 'kdoc', 0)).toBeNull();
+    expect(history.redo('current', 'kdoc', 0)).toBeNull();
   });
 });
 
@@ -43,7 +43,7 @@ describe('push and undo', () => {
     const history = new EditHistory();
 
     // Push initial snapshot without coalescing
-    history.push('a', 'wysiwyg', 0, false);
+    history.push('a', 'kdoc', 0, false);
 
     // Assert that undo is available and redo is not
     expect(history.canUndo).toBe(true);
@@ -53,10 +53,10 @@ describe('push and undo', () => {
 
   it('undo restores previous text and leaves canRedo true and canUndo false', () => {
     const history = new EditHistory();
-    history.push('a', 'wysiwyg', 0, false);
+    history.push('a', 'kdoc', 0, false);
 
     // Undo from state 'b' back to state 'a'
-    const restored: string | null = history.undo('b', 'wysiwyg', 10);
+    const restored: string | null = history.undo('b', 'kdoc', 10);
 
     // Verify restored text and updated stack availability
     expect(restored).toBe('a');
@@ -67,11 +67,11 @@ describe('push and undo', () => {
 
   it('redo restores undone text and updates stack state', () => {
     const history = new EditHistory();
-    history.push('a', 'wysiwyg', 0, false);
-    history.undo('b', 'wysiwyg', 10);
+    history.push('a', 'kdoc', 0, false);
+    history.undo('b', 'kdoc', 10);
 
     // Redo restores state 'b' that was recorded during undo
-    const redone: string | null = history.redo('a', 'wysiwyg', 20);
+    const redone: string | null = history.redo('a', 'kdoc', 20);
 
     // Verify redone text and updated stack availability
     expect(redone).toBe('b');
@@ -86,9 +86,9 @@ describe('coalescing', () => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
 
     // Push typing sequence within the coalesce window
-    history.push('v0', 'wysiwyg', 0, true);
-    history.push('v1', 'wysiwyg', 100, true);
-    history.push('v2', 'wysiwyg', 200, true);
+    history.push('v0', 'kdoc', 0, true);
+    history.push('v1', 'kdoc', 100, true);
+    history.push('v2', 'kdoc', 200, true);
 
     // Assert all 3 keystrokes merged into a single history entry
     expect(history.size).toBe(1);
@@ -96,7 +96,7 @@ describe('coalescing', () => {
     // The stored text is the state to return to, so a coalesced run must retain
     // the text from before the run began; returning 'v2' would land the user in
     // the middle of their own typing run.
-    const restored: string | null = history.undo('v3', 'wysiwyg', 300);
+    const restored: string | null = history.undo('v3', 'kdoc', 300);
     expect(restored).toBe('v0');
   });
 
@@ -104,37 +104,37 @@ describe('coalescing', () => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
 
     // Push at t=0 and t=900 (gap > 500ms window)
-    history.push('v0', 'wysiwyg', 0, true);
-    history.push('v1', 'wysiwyg', 900, true);
+    history.push('v0', 'kdoc', 0, true);
+    history.push('v1', 'kdoc', 900, true);
 
     // Assert that the two edits form distinct history entries
     expect(history.size).toBe(2);
 
     // First undo walks back to v1
-    expect(history.undo('v2', 'wysiwyg', 1000)).toBe('v1');
+    expect(history.undo('v2', 'kdoc', 1000)).toBe('v1');
     // Second undo walks back to v0
-    expect(history.undo('v1', 'wysiwyg', 1010)).toBe('v0');
+    expect(history.undo('v1', 'kdoc', 1010)).toBe('v0');
     // Third undo returns null since the undo stack is exhausted
-    expect(history.undo('v0', 'wysiwyg', 1020)).toBeNull();
+    expect(history.undo('v0', 'kdoc', 1020)).toBeNull();
   });
 
   it('a push with coalesce: false never merges even 1ms after the previous one', () => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
-    history.push('v0', 'wysiwyg', 0, true);
+    history.push('v0', 'kdoc', 0, true);
 
     // A structural operation must be individually undoable however fast it follows a keystroke.
-    history.push('v1', 'wysiwyg', 1, false);
+    history.push('v1', 'kdoc', 1, false);
 
     expect(history.size).toBe(2);
   });
 
   it('a push from a different pane never merges', () => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
-    const wysiwygPane: PaneId = 'wysiwyg';
+    const kdocPane: PaneId = 'kdoc';
     const sourcePane: PaneId = 'source';
 
     // Consecutive edits from distinct panes within the window must remain separate entries
-    history.push('a', wysiwygPane, 0, true);
+    history.push('a', kdocPane, 0, true);
     history.push('b', sourcePane, 10, true);
 
     expect(history.size).toBe(2);
@@ -144,9 +144,9 @@ describe('coalescing', () => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
 
     // Open a run, explicitly close it via endRun, and push another edit within the window
-    history.push('a', 'wysiwyg', 0, true);
+    history.push('a', 'kdoc', 0, true);
     history.endRun();
-    history.push('b', 'wysiwyg', 10, true);
+    history.push('b', 'kdoc', 10, true);
 
     expect(history.size).toBe(2);
   });
@@ -155,22 +155,22 @@ describe('coalescing', () => {
 describe('redo invalidation', () => {
   it('push after undo invalidates the redo stack', () => {
     const history = new EditHistory();
-    history.push('a', 'wysiwyg', 0, false);
-    history.undo('b', 'wysiwyg', 10);
+    history.push('a', 'kdoc', 0, false);
+    history.undo('b', 'kdoc', 10);
     expect(history.canRedo).toBe(true);
 
     // Editing after undoing abandons the redone future — the standard linear-history rule.
-    history.push('c', 'wysiwyg', 20, false);
+    history.push('c', 'kdoc', 20, false);
     expect(history.canRedo).toBe(false);
   });
 
   it('undo closes an open run so subsequent coalesced push does not merge', () => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
-    history.push('a', 'wysiwyg', 0, true);
-    history.undo('b', 'wysiwyg', 5);
+    history.push('a', 'kdoc', 0, true);
+    history.undo('b', 'kdoc', 5);
 
     // Undoing closed the run; this coalescing push starts a fresh entry rather than merging
-    history.push('c', 'wysiwyg', 10, true);
+    history.push('c', 'kdoc', 10, true);
 
     expect(history.size).toBe(1);
     expect(history.canRedo).toBe(false);
@@ -178,12 +178,12 @@ describe('redo invalidation', () => {
 
   it('redo closes an open run so subsequent coalesced push does not merge', () => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
-    history.push('a', 'wysiwyg', 0, false);
-    history.undo('b', 'wysiwyg', 5);
-    history.redo('a', 'wysiwyg', 8);
+    history.push('a', 'kdoc', 0, false);
+    history.undo('b', 'kdoc', 5);
+    history.redo('a', 'kdoc', 8);
 
     // Redoing closed the run; this coalescing push starts a fresh entry rather than merging
-    history.push('c', 'wysiwyg', 10, true);
+    history.push('c', 'kdoc', 10, true);
 
     expect(history.size).toBe(2);
   });
@@ -194,32 +194,32 @@ describe('memory bound', () => {
     const history = new EditHistory({ maxEntries: 3 });
 
     // Push 5 non-coalescing entries
-    history.push('e0', 'wysiwyg', 0, false);
-    history.push('e1', 'wysiwyg', 10, false);
-    history.push('e2', 'wysiwyg', 20, false);
-    history.push('e3', 'wysiwyg', 30, false);
-    history.push('e4', 'wysiwyg', 40, false);
+    history.push('e0', 'kdoc', 0, false);
+    history.push('e1', 'kdoc', 10, false);
+    history.push('e2', 'kdoc', 20, false);
+    history.push('e3', 'kdoc', 30, false);
+    history.push('e4', 'kdoc', 40, false);
 
     // Size is bounded to maxEntries (3)
     expect(history.size).toBe(3);
 
     // Dropping the oldest entries is the documented cost of bounding memory.
     // The entries e0 and e1 have been dropped from the bottom of the stack.
-    expect(history.undo('current', 'wysiwyg', 50)).toBe('e4');
-    expect(history.undo('e4', 'wysiwyg', 60)).toBe('e3');
-    expect(history.undo('e3', 'wysiwyg', 70)).toBe('e2');
+    expect(history.undo('current', 'kdoc', 50)).toBe('e4');
+    expect(history.undo('e4', 'kdoc', 60)).toBe('e3');
+    expect(history.undo('e3', 'kdoc', 70)).toBe('e2');
 
     // Exactly 3 undos succeeded; subsequent undo returns null and earliest entries are unreachable
-    expect(history.undo('e2', 'wysiwyg', 80)).toBeNull();
+    expect(history.undo('e2', 'kdoc', 80)).toBeNull();
   });
 });
 
 describe('clear', () => {
   it('resets canUndo, canRedo, and size to empty state', () => {
     const history = new EditHistory();
-    history.push('a', 'wysiwyg', 0, false);
-    history.push('b', 'wysiwyg', 10, false);
-    history.undo('c', 'wysiwyg', 20);
+    history.push('a', 'kdoc', 0, false);
+    history.push('b', 'kdoc', 10, false);
+    history.undo('c', 'kdoc', 20);
 
     expect(history.canUndo).toBe(true);
     expect(history.canRedo).toBe(true);
@@ -244,11 +244,11 @@ describe('defaults', () => {
     // Validate that HistoryEntry interface shape is usable as expected
     const entry: HistoryEntry = {
       text: 'snapshot',
-      pane: 'wysiwyg',
+      pane: 'kdoc',
       at: 100,
     };
     expect(entry.text).toBe('snapshot');
-    expect(entry.pane).toBe('wysiwyg');
+    expect(entry.pane).toBe('kdoc');
     expect(entry.at).toBe(100);
   });
 });
