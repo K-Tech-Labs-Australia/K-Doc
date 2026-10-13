@@ -1,6 +1,6 @@
 /**
  * @file keymap.ts
- * @purpose Creates the keymap plugins for K-Doc's WYSIWYG pane, binding formatting commands, session-owned history, and base editing behaviour.
+ * @purpose Creates the keymap plugins for the K-Doc pane, binding formatting commands, session-owned history, and base editing behaviour.
  *
  *   IMPORTANT ARCHITECTURAL NOTE: Undo and redo are bound to the DocumentSession, not to ProseMirror.
  *   prosemirror-history is deliberately not imported. Installing it would create a second undo stack that
@@ -10,7 +10,7 @@
  * @inputs KdocKeymapOptions containing the authoritative DocumentSession and optional Schema.
  * @outputs An array of three ProseMirror keymap plugins in priority order: K-Doc formatting shortcuts, list editing, and base editing fallback.
  * @functions
- *   - createKdocKeymap: Constructs the complete keymap plugin array for K-Doc's WYSIWYG editor pane.
+ *   - createKdocKeymap: Constructs the complete keymap plugin array for the K-Doc editor pane.
  * @dataflow User keyboard event -> ProseMirror keymap dispatch -> K-Doc Command / DocumentSession action / base editing fallback.
  * @controlflow K-Doc keymap plugin (first priority) -> List keymap plugin (second priority) -> Base keymap plugin (fallback).
  * @version 2
@@ -137,7 +137,7 @@ export const HOST_OWNED_KEYS: readonly string[] = [
 ];
 
 /**
- * @purpose Constructs the complete keymap plugin array for K-Doc's WYSIWYG editor pane.
+ * @purpose Constructs the complete keymap plugin array for the K-Doc editor pane.
  * @inputs options: KdocKeymapOptions - Configuration options containing the authoritative DocumentSession and optional Schema.
  * @outputs readonly Plugin[] - An array of three ProseMirror keymap plugins in priority order (K-Doc formatting, list editing, base keymap).
  * @dataflow options -> resolve schema -> build K-Doc bindings -> build list keymap -> combine with baseKeymap -> readonly Plugin[].

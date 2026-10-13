@@ -1,6 +1,6 @@
 /**
  * @file search-plugin.ts
- * @purpose ProseMirror decoration layer that highlights find matches in the WYSIWYG pane (FR-9.2). Each match is an inline decoration placed over a document position range, driven by ranges already mapped from source offsets to live-document positions by the shell.
+ * @purpose ProseMirror decoration layer that highlights find matches in the K-Doc pane (FR-9.2). Each match is an inline decoration placed over a document position range, driven by ranges already mapped from source offsets to live-document positions by the shell.
  *   Manages search-match decorations: rebuilding them from incoming SearchMeta on each re-search and mapping them across ordinary edits so highlights stay anchored to the matched words while the user types.
  * @inputs ProseMirror transactions (carrying SearchMeta with document position ranges), EditorState instances, an EditorView for dispatching updates, and the already-mapped range list produced by the shell's offset mapper.
  * @outputs ProseMirror Plugin instance carrying a DecorationSet, the CSS class names 'kdoc-search-match' and 'kdoc-search-active', and the SEARCH_STYLES stylesheet shared with the Source pane.

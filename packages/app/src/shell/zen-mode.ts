@@ -183,7 +183,7 @@ export function installZenMode(options: ZenModeOptions): ZenMode {
    */
   function onKeydown(event: KeyboardEvent): void {
     // Exit only when Zen is active, the key is Escape, nothing consumed it, and no dialog or open find bar needs Escape to close.
-    // Capture phase: the editors use Escape themselves (WYSIWYG selects the parent node) and would otherwise keep it from Zen.
+    // Capture phase: the editors use Escape themselves (K-Doc selects the parent node) and would otherwise keep it from Zen.
     if (active && event.key === 'Escape' && !event.defaultPrevented && doc.querySelector('dialog[open], .kdoc-find-bar:not([hidden])') === null) {
       event.preventDefault();
       exit();

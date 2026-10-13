@@ -3,7 +3,7 @@
 /**
  * @file split-pane-sizing.spec.ts
  * @purpose Vitest test suite verifying view-mode transitions and split-pane sizing rules in EditorShell.
- *   Ensures inline flex styles are cleared on non-split modes (WYSIWYG, Source, Preview) so stylesheet rules take over,
+ *   Ensures inline flex styles are cleared on non-split modes (K-Doc, Source, Preview) so stylesheet rules take over,
  *   that split divider ratio memory is preserved across mode round-trips, and that secondary panes remain open and sized.
  * @inputs EditorShell instances mounted in jsdom with various initial ViewModes and interactive view-mode transitions.
  * @outputs Vitest assertions verifying inline style.flex / style.flexGrow values, element visibility, split ratio restoration, and secondary pane state.
@@ -56,7 +56,7 @@ afterEach((): void => {
 interface ShellHarness {
   readonly shell: EditorShell;
   readonly mount: HTMLElement;
-  readonly wysiwygPane: HTMLElement;
+  readonly kdocPane: HTMLElement;
   readonly sourcePane: HTMLElement;
   readonly splitDividerElement: HTMLElement;
   readonly secondaryPane: HTMLElement;
@@ -69,7 +69,7 @@ interface ShellHarness {
  * Instantiates an EditorShell in document.body with specified initial view mode and tracks it for afterEach teardown.
  *
  * @purpose Mounts an isolated EditorShell fixture in jsdom and provides typed handles to internal pane elements.
- * @inputs initialViewMode - Optional target ViewMode ('wysiwyg' | 'split' | 'source') defaulting to 'split'.
+ * @inputs initialViewMode - Optional target ViewMode ('kdoc' | 'split' | 'source') defaulting to 'split'.
  * @outputs ShellHarness - Handle containing shell instance and DOM element references.
  * @dataflow createElement -> append to body -> instantiate EditorShell -> extract pane references -> return ShellHarness.
  * @controlflow Create mount div -> push to mounts -> instantiate EditorShell -> push to shells -> cast to access pane references -> return harness.
@@ -87,7 +87,7 @@ function mountShell(initialViewMode: ViewMode = 'split'): ShellHarness {
   shells.push(shell);
 
   const shellInternal = shell as unknown as {
-    wysiwygPane: HTMLElement;
+    kdocPane: HTMLElement;
     sourcePane: HTMLElement;
     splitDividerElement: HTMLElement;
     secondaryPane: HTMLElement;
@@ -99,7 +99,7 @@ function mountShell(initialViewMode: ViewMode = 'split'): ShellHarness {
   return {
     shell,
     mount,
-    wysiwygPane: shellInternal.wysiwygPane,
+    kdocPane: shellInternal.kdocPane,
     sourcePane: shellInternal.sourcePane,
     splitDividerElement: shellInternal.splitDividerElement,
     secondaryPane: shellInternal.secondaryPane,
@@ -112,32 +112,32 @@ function mountShell(initialViewMode: ViewMode = 'split'): ShellHarness {
 }
 
 describe('EditorShell view-mode split-pane sizing', (): void => {
-  it('(1) entering split then switching to wysiwyg leaves NO inline flex on the wysiwyg pane', (): void => {
-    const { shell, wysiwygPane, sourcePane, splitDividerElement } = mountShell('split');
+  it('(1) entering split then switching to kdoc leaves NO inline flex on the kdoc pane', (): void => {
+    const { shell, kdocPane, sourcePane, splitDividerElement } = mountShell('split');
 
     // Verify initial split state: both panes sized proportionally by the divider (0.5 flexGrow).
-    expect(wysiwygPane.style.flexGrow).toBe('0.5');
+    expect(kdocPane.style.flexGrow).toBe('0.5');
     expect(sourcePane.style.flexGrow).toBe('0.5');
     expect(splitDividerElement.hidden).toBe(false);
 
-    // Switch view mode to wysiwyg.
-    shell.setViewMode('wysiwyg');
+    // Switch view mode to kdoc.
+    shell.setViewMode('kdoc');
 
-    // In WYSIWYG mode, the WYSIWYG pane must have NO inline flex so stylesheet flex: 1 takes over.
-    expect(wysiwygPane.style.flex).toBe('');
-    expect(wysiwygPane.style.flexGrow).toBe('');
+    // In K-Doc mode, the K-Doc pane must have NO inline flex so stylesheet flex: 1 takes over.
+    expect(kdocPane.style.flex).toBe('');
+    expect(kdocPane.style.flexGrow).toBe('');
     expect(sourcePane.style.flex).toBe('');
     expect(sourcePane.style.flexGrow).toBe('');
-    expect(wysiwygPane.hidden).toBe(false);
+    expect(kdocPane.hidden).toBe(false);
     expect(sourcePane.hidden).toBe(true);
     expect(splitDividerElement.hidden).toBe(true);
   });
 
-  it('(2) switching from split to source leaves NO inline flex on the source pane, and switching to preview leaves NO inline flex on the wysiwyg pane', (): void => {
-    const { shell, wysiwygPane, sourcePane, splitDividerElement } = mountShell('split');
+  it('(2) switching from split to source leaves NO inline flex on the source pane, and switching to preview leaves NO inline flex on the kdoc pane', (): void => {
+    const { shell, kdocPane, sourcePane, splitDividerElement } = mountShell('split');
 
     // Verify initial split state.
-    expect(wysiwygPane.style.flexGrow).toBe('0.5');
+    expect(kdocPane.style.flexGrow).toBe('0.5');
     expect(sourcePane.style.flexGrow).toBe('0.5');
 
     // Switch to source mode.
@@ -146,42 +146,42 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
     // In Source mode, both panes must have inline flex cleared so source pane takes full width via stylesheet.
     expect(sourcePane.style.flex).toBe('');
     expect(sourcePane.style.flexGrow).toBe('');
-    expect(wysiwygPane.style.flex).toBe('');
-    expect(wysiwygPane.style.flexGrow).toBe('');
+    expect(kdocPane.style.flex).toBe('');
+    expect(kdocPane.style.flexGrow).toBe('');
     expect(sourcePane.hidden).toBe(false);
-    expect(wysiwygPane.hidden).toBe(true);
+    expect(kdocPane.hidden).toBe(true);
     expect(splitDividerElement.hidden).toBe(true);
 
     // Re-enter split mode.
     shell.setViewMode('split');
-    expect(wysiwygPane.style.flexGrow).toBe('0.5');
+    expect(kdocPane.style.flexGrow).toBe('0.5');
     expect(sourcePane.style.flexGrow).toBe('0.5');
 
-    // Switch to WYSIWYG mode.
-    shell.setViewMode('wysiwyg');
+    // Switch to K-Doc mode.
+    shell.setViewMode('kdoc');
 
-    // In WYSIWYG mode, both panes must have inline flex cleared so the WYSIWYG pane takes full width.
-    expect(wysiwygPane.style.flex).toBe('');
-    expect(wysiwygPane.style.flexGrow).toBe('');
+    // In K-Doc mode, both panes must have inline flex cleared so the K-Doc pane takes full width.
+    expect(kdocPane.style.flex).toBe('');
+    expect(kdocPane.style.flexGrow).toBe('');
     expect(sourcePane.style.flex).toBe('');
     expect(sourcePane.style.flexGrow).toBe('');
-    expect(wysiwygPane.hidden).toBe(false);
+    expect(kdocPane.hidden).toBe(false);
     expect(sourcePane.hidden).toBe(true);
     expect(splitDividerElement.hidden).toBe(true);
   });
 
   it('(3) dragging the divider then leaving split then returning to split still honours the divider ratio logic', (): void => {
-    const { shell, wysiwygPane, sourcePane, splitDivider } = mountShell('split');
+    const { shell, kdocPane, sourcePane, splitDivider } = mountShell('split');
 
     // Simulate user dragging the split divider to 0.7 (70% left, 30% right).
     splitDivider.setRatio(0.7);
     expect(splitDivider.ratio).toBe(0.7);
-    expect(wysiwygPane.style.flexGrow).toBe('0.7');
+    expect(kdocPane.style.flexGrow).toBe('0.7');
     expect(sourcePane.style.flexGrow).toBe('0.3');
 
-    // Leave split mode for wysiwyg mode.
-    shell.setViewMode('wysiwyg');
-    expect(wysiwygPane.style.flex).toBe('');
+    // Leave split mode for kdoc mode.
+    shell.setViewMode('kdoc');
+    expect(kdocPane.style.flex).toBe('');
     expect(sourcePane.style.flex).toBe('');
 
     // Return to split mode.
@@ -189,7 +189,7 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
 
     // The divider's 0.7 ratio must be restored and applied to both panes.
     expect(splitDivider.ratio).toBe(0.7);
-    expect(wysiwygPane.style.flexGrow).toBe('0.7');
+    expect(kdocPane.style.flexGrow).toBe('0.7');
     expect(sourcePane.style.flexGrow).toBe('0.3');
   });
 
@@ -208,8 +208,8 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
     expect(secondaryDividerElement.hidden).toBe(false);
     expect(secondaryPane.style.flexGrow).toBe('0.5');
 
-    // Transition to wysiwyg mode.
-    shell.setViewMode('wysiwyg');
+    // Transition to kdoc mode.
+    shell.setViewMode('kdoc');
 
     // Secondary pane must remain open and sized.
     expect(secondaryPane.hidden).toBe(false);
@@ -224,8 +224,8 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
     expect(secondaryDividerElement.hidden).toBe(false);
     expect(secondaryPane.style.flexGrow).toBe('0.5');
 
-    // Transition to WYSIWYG mode.
-    shell.setViewMode('wysiwyg');
+    // Transition to K-Doc mode.
+    shell.setViewMode('kdoc');
 
     // Secondary pane must still remain open and sized.
     expect(secondaryPane.hidden).toBe(false);

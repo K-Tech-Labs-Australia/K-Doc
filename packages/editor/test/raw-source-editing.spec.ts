@@ -122,7 +122,7 @@ describe('raw source editing', (): void => {
     const target = binding.view.state.doc.nodeAt(pos);
     if (target === null) { throw new Error('no raw block'); }
     const stored = target.attrs['node'] as Record<string, unknown>;
-    // A WYSIWYG-side rewrite pushes the new text into the widget; that push must not echo back as a second edit.
+    // A K-Doc-view side rewrite pushes the new text into the widget; that push must not echo back as a second edit.
     binding.view.dispatch(binding.view.state.tr.setNodeMarkup(pos, undefined, { ...target.attrs, node: { ...stored, value: '<div>Bye</div>' } }));
     expect(changes).toBe(1);
     expect(blockWidget(binding).state.doc.toString()).toBe('<div>Bye</div>');

@@ -17,7 +17,7 @@
  * @dataflow Stored string -> validated against VIEW_MODES -> SessionViewMode in the restored session.
  * @controlflow Closed literal union; no branching within this declaration.
  */
-export type SessionViewMode = 'wysiwyg' | 'split' | 'source';
+export type SessionViewMode = 'kdoc' | 'split' | 'source';
 
 /**
  * @purpose One sidebar's persisted state: either collapsed or showing a single panel by id.
@@ -46,7 +46,7 @@ export interface PersistedSession {
   readonly splitRatio: number;
   readonly sidebar: PersistedPanel;
   readonly rightSidebar: PersistedPanel;
-  readonly scrollWysiwyg: number;
+  readonly scrollKdoc: number;
   readonly scrollSource: number;
 }
 
@@ -71,7 +71,7 @@ export const MAX_RESTORED_TABS: number = 30;
 
 /** The complete set of view modes this code understands; a mode outside it is un-restorable by design. */
 const VIEW_MODES: readonly SessionViewMode[] = Object.freeze<readonly SessionViewMode[]>([
-  'wysiwyg',
+  'kdoc',
   'split',
   'source',
 ]);
@@ -191,7 +191,10 @@ export function loadSession(storage: SessionStorage): PersistedSession | null {
     // activePath is either null or a valid string; accept it as-is.
   }
 
-  const viewMode = record['viewMode'];
+  const storedViewMode = record['viewMode'];
+  // Sessions saved before 0.3 call the K-Doc view 'wysiwyg' and may hold the removed Preview view; both reopen in
+  // the K-Doc view rather than discarding the whole session.
+  const viewMode = storedViewMode === 'wysiwyg' || storedViewMode === 'preview' ? 'kdoc' : storedViewMode;
   // The mode must be one this code knows, or the session cannot be restored at all.
   if (!VIEW_MODES.includes(viewMode as SessionViewMode)) {
     return null;
@@ -200,10 +203,11 @@ export function loadSession(storage: SessionStorage): PersistedSession | null {
   }
 
   const splitRatio = asFiniteNumber(record['splitRatio']);
-  const scrollWysiwyg = asFiniteNumber(record['scrollWysiwyg']);
+  // Sessions saved before 0.3 keep the K-Doc pane's scroll position under its old name.
+  const scrollKdoc = asFiniteNumber(record['scrollKdoc'] ?? record['scrollWysiwyg']);
   const scrollSource = asFiniteNumber(record['scrollSource']);
   // All three numeric fields must be finite or the whole session is rejected.
-  if (splitRatio === null || scrollWysiwyg === null || scrollSource === null) {
+  if (splitRatio === null || scrollKdoc === null || scrollSource === null) {
     return null;
   } else {
     // Every numeric field parsed; continue to the sidebar panels.
@@ -226,7 +230,7 @@ export function loadSession(storage: SessionStorage): PersistedSession | null {
     splitRatio,
     sidebar,
     rightSidebar,
-    scrollWysiwyg: Math.max(0, scrollWysiwyg),
+    scrollKdoc: Math.max(0, scrollKdoc),
     scrollSource: Math.max(0, scrollSource),
   };
 }

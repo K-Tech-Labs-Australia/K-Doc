@@ -113,7 +113,7 @@ describe('carrying a caret at the end of a text segment', (): void => {
   });
 
   // At an inline formatting boundary two source offsets -- either side of invisible markup such as
-  // `**` -- are one position in WYSIWYG, so one of them must come back on the other side. What must
+  // `**` -- are one position in K-Doc, so one of them must come back on the other side. What must
   // hold is that switching again never walks the caret further, and it never changes visible place.
   it('never walks a caret at a segment edge on repeated switches', (): void => {
     const { index, doc } = build(SOURCE);

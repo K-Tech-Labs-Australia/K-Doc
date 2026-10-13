@@ -56,7 +56,7 @@ import type {
 //
 // `highlight` sits above the character formats because that is how people write it: `==**bold**==`
 // is far commoner than `**==bold==**`, and putting `strong` first turned the first form into the
-// second on every round trip through the WYSIWYG pane -- a silent rewrite of the user's source.
+// second on every round trip through the K-Doc pane -- a silent rewrite of the user's source.
 //
 // `subscript` and `superscript` go last because they are genuinely the narrowest: they wrap a digit
 // or a short token, never a formatted run.

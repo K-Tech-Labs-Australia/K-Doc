@@ -57,7 +57,7 @@ export function countWords(text: string): number {
   // Rule decision: Pure whitespace splitting (/\s+/), counting all non-empty runs. This deliberately does
   // not strip Markdown syntax (e.g. "##", ">", "*"): a heading's "##" is followed by a space and thus counted
   // as a token. Stripping syntax would require AST parsing on every keystroke or heuristic regexes diverging
-  // from character counts; keeping both on raw text maintains consistency. In WYSIWYG mode, text is prose.
+  // from character counts; keeping both on raw text maintains consistency. In K-Doc mode, text is prose.
   const tokens = text.trim().split(/\s+/);
   return tokens.length;
 }

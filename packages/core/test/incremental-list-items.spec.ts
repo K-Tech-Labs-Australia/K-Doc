@@ -7,7 +7,7 @@
  *   - shape: Serializes a value to JSON with the `position` field stripped for structural comparison.
  *   - listAt: Returns the top-level List node at a document index, throwing when it is not a list.
  *   - setItemText: Overwrites the text of a list item's first paragraph in place.
- *   - itemLike: Clones a list item with new text and no position, like a WYSIWYG-built node.
+ *   - itemLike: Clones a list item with new text and no position, like a K-Doc-view-built node.
  *   - run: Parses, edits a clone, serializes incrementally, asserts read-back fidelity, and returns text plus replaced ranges.
  * @dataflow Markdown source -> parseMarkdown -> edit callback mutates a cloned root -> serializeIncremental -> shape equality check -> { text, ranges }.
  * @controlflow Define helpers; describe listMarker behavior; describe single-item edits; describe insert/delete splices; describe whole-list fallbacks, each asserting byte-level sibling preservation.
@@ -78,7 +78,7 @@ function setItemText(item: ListItem, value: string): void {
 }
 
 /**
- * Builds a copy of a list item carrying new text and no source position, mirroring how a WYSIWYG pane creates items.
+ * Builds a copy of a list item carrying new text and no source position, mirroring how a K-Doc pane creates items.
  * @purpose Produces a fresh ListItem (cloned from an existing one) with replaced text and the `position` field removed so it can be spliced into a document as a brand-new node.
  * @inputs item - The existing list item to clone as a template.
  * @inputs value - The new text to store in the cloned item's first paragraph.
@@ -88,7 +88,7 @@ function setItemText(item: ListItem, value: string): void {
  */
 function itemLike(item: ListItem, value: string): ListItem {
   const copy = structuredClone(item);
-  // A freshly built node carries no source offset, matching how the WYSIWYG pane constructs items.
+  // A freshly built node carries no source offset, matching how the K-Doc pane constructs items.
   delete (copy as { position?: unknown }).position;
   setItemText(copy, value);
   return copy;

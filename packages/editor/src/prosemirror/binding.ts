@@ -11,7 +11,7 @@
  *   - view getter: Returns the underlying ProseMirror EditorView instance.
  *   - isEditable getter: Returns whether the ProseMirror editor view is currently editable.
  *   - focus: Focuses the ProseMirror EditorView DOM element.
- *   - setEditable: Updates the editable state of the editor view, toggling between editable and read-only preview mode.
+ *   - setEditable: Updates the editable state of the editor view, making the pane read-only while the document is locked.
  *   - destroy: Disposes session subscription, detaches DOM event listeners, and destroys the EditorView.
  *   - handleTransaction: Dispatches transactions to the view, enforces selection and echo loop guards, converts docs to mdast Root, and forwards edits to DocumentSession.
  *   - handleSessionChange: Filters incoming session change events and triggers view synchronization on undo, redo, or reset.
@@ -100,7 +100,7 @@ export interface ProseMirrorBindingOptions {
   readonly loadMedia?: MediaSourceLoader;
 
   /**
-   * Clipboard handling for the WYSIWYG pane (FR-7.4).
+   * Clipboard handling for the K-Doc pane (FR-7.4).
    *
    * Supplied by the host rather than built here, because the paste path converts HTML through the
    * core pipeline and the host is what knows whether a paste-options popup should follow.
@@ -120,14 +120,14 @@ export class ProseMirrorBinding {
   /**
    * This view's identity among the views over the session (FR-6.9).
    *
-   * Two WYSIWYG views are both the 'wysiwyg' pane, so the pane cannot say which of them applied an
+   * Two K-Doc views are both the 'kdoc' pane, so the pane cannot say which of them applied an
    * edit. This can: an edit comes back carrying the identity of whichever view applied it, and every
    * other view takes it.
    */
   private readonly originId: string = `pm-${(bindingCounter += 1)}`;
   private destroyed: boolean = false;
-  // Preview mode turns the pane read-only. It is a field rather than a constructor option because the shell flips it
-  // as the user switches view mode, and rebuilding the binding to change one boolean would throw away the undo history
+  // A locked document turns the pane read-only. It is a field rather than a constructor option because the shell flips it
+  // as the user locks and unlocks the document, and rebuilding the binding to change one boolean would throw away the undo history
   // the session owns and the caret the user was at.
   private editable: boolean = true;
   private readonly handleDomFocus: () => void;
@@ -177,7 +177,7 @@ export class ProseMirrorBinding {
     // Convert initial mdast syntax tree from session snapshot to a ProseMirror document.
     const initialDoc = mdastToProseMirror(this.session.snapshot.document.root, this.schema);
     // The keymap is built here rather than accepted as an option, because the binding already holds
-    // the session and every WYSIWYG pane needs exactly these bindings. It is stored so syncFromSession
+    // the session and every K-Doc pane needs exactly these bindings. It is stored so syncFromSession
     // can rebuild state with the same plugins; a rebuilt state without them would silently lose every
     // shortcut, including Enter.
     // Multi-caret goes first, ahead of every keymap. ProseMirror consults handleKeyDown in plugin
@@ -263,7 +263,7 @@ export class ProseMirrorBinding {
     // Register a DOM focus listener on this.editorView.dom.
     // The binding claims the edit lock when the pane is focused, because applyTree throws for a pane that does not hold it (FR-3.1).
     this.handleDomFocus = (): void => {
-      this.session.focusPane('wysiwyg');
+      this.session.focusPane('kdoc');
     };
     // focusin rather than focus: it bubbles, so focus landing inside an embedded widget -- a raw-HTML
     // editor is a CodeMirror of its own -- still hands this pane the edit lock. A plain focus listener
@@ -306,7 +306,7 @@ export class ProseMirrorBinding {
   }
 
   /**
-   * @purpose Updates the editable state of the editor view, toggling between editable and read-only preview mode.
+   * @purpose Updates the editable state of the editor view, making the pane read-only while the document is locked.
    * @inputs editable - boolean flag indicating whether the editor view should be editable.
    * @outputs void.
    * @dataflow editable argument → this.editable; prompts editorView to re-evaluate editable prop via updateState.
@@ -465,7 +465,7 @@ export class ProseMirrorBinding {
       change.reason === 'reset' ||
       change.reason === 'external' ||
       // An edit this view did not apply. Comparing identities rather than panes is what lets a second
-      // WYSIWYG view exist: against the pane, both views conclude the edit was their own and neither
+      // K-Doc view exist: against the pane, both views conclude the edit was their own and neither
       // updates. An edit with no identity was applied by something that is not a view at all, so it is
       // taken as someone else's.
       (change.reason === 'edit' && change.originId !== this.originId)

@@ -1,6 +1,6 @@
 /**
  * @file image-loader.ts
- * @purpose Loads local image files through the Tauri Rust host so the WYSIWYG pane can display them (FR-8.14) and HTML export can embed them as data URIs (FR-13.1).
+ * @purpose Loads local image files through the Tauri Rust host so the K-Doc pane can display them (FR-8.14) and HTML export can embed them as data URIs (FR-13.1).
  * @inputs A Window instance that is either the Tauri webview host or a plain browser window; absolute filesystem paths to image files.
  * @outputs An ImageLoader exposing availability, cached object URLs for display, non-cached base64 data URIs for embedding, and a clear() to revoke them.
  * @functions

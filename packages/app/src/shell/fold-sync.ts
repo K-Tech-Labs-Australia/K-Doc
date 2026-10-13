@@ -1,6 +1,6 @@
 /**
  * @file fold-sync.ts
- * @purpose Owns the shared fold store rendered by both editor panes and keeps the Source pane (CodeMirror) in step with it, so folding state stays consistent across the WYSIWYG and Source views.
+ * @purpose Owns the shared fold store rendered by both editor panes and keeps the Source pane (CodeMirror) in step with it, so folding state stays consistent across the K-Doc and Source views.
  * @inputs FoldSyncOptions: initial folded keys, a session document accessor, a lazily-read Source view accessor, and a persistence callback; fold APIs from '@k-doc/core' and '@k-doc/editor'.
  * @outputs A FoldSync object exposing the shared store, a CodeMirror extension that pushes user fold changes into the store, and lifecycle/commands for reconciling folds with the current session.
  * @functions

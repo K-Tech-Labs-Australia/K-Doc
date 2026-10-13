@@ -2,7 +2,7 @@
 
 /**
  * @file input-rules.spec.ts
- * @purpose Vitest test suite for Markdown input rules in K-Doc's WYSIWYG editor pane (FR-7.7), asserting on resulting Markdown.
+ * @purpose Vitest test suite for Markdown input rules in the K-Doc editor pane (FR-7.7), asserting on resulting Markdown.
  * @inputs Synthetic character-by-character typing interactions and keydown events dispatched to ProseMirror EditorView.
  * @outputs Vitest assertions verifying block-level transformations, inline mark formatting, and input rule undo behavior.
  * @functions
@@ -27,16 +27,16 @@ const trackedBindings: ProseMirrorBinding[] = [];
  * @purpose Creates a container div, DocumentSession, and ProseMirrorBinding, returning both in a tuple and tracking them for teardown.
  * @inputs markdown - The initial Markdown string used to construct the DocumentSession.
  * @outputs [ProseMirrorBinding, DocumentSession] - Tuple of the active ProseMirrorBinding and its backing DocumentSession.
- * @dataflow markdown -> new DocumentSession -> session.focusPane('wysiwyg') -> new ProseMirrorBinding -> tracked arrays & session map -> return tuple.
- * @controlflow Create div element -> append to document.body -> instantiate DocumentSession -> focus 'wysiwyg' pane -> instantiate ProseMirrorBinding -> record mount and binding for afterEach teardown -> record in session map -> return [binding, session].
+ * @dataflow markdown -> new DocumentSession -> session.focusPane('kdoc') -> new ProseMirrorBinding -> tracked arrays & session map -> return tuple.
+ * @controlflow Create div element -> append to document.body -> instantiate DocumentSession -> focus 'kdoc' pane -> instantiate ProseMirrorBinding -> record mount and binding for afterEach teardown -> record in session map -> return [binding, session].
  */
 function mountBinding(markdown: string): [ProseMirrorBinding, DocumentSession] {
   const mount = document.createElement('div');
   document.body.appendChild(mount);
 
   const session = new DocumentSession(markdown);
-  // Focus the wysiwyg pane so the edit lock is held (edits from an unfocused pane are rejected per FR-3.1).
-  session.focusPane('wysiwyg');
+  // Focus the kdoc pane so the edit lock is held (edits from an unfocused pane are rejected per FR-3.1).
+  session.focusPane('kdoc');
 
   const binding = new ProseMirrorBinding({ session, mount });
   trackedMounts.push(mount);

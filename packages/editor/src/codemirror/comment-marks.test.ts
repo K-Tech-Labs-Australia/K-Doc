@@ -243,4 +243,4 @@ describe('comment-marks', () => {
   });
 });
 
-// NOTE: commentSpanTheme() (the CSS tinting rules) is intentionally NOT covered by this suite — applying EditorView.theme requires a rendered DOM and layout to observe computed styles, which jsdom provides only partially. It was verified by hand in a browser; the state-level decoration plumbing exercised here is what keeps Source-pane marks identical to the WYSIWYG plugin's painted ranges.
+// NOTE: commentSpanTheme() (the CSS tinting rules) is intentionally NOT covered by this suite — applying EditorView.theme requires a rendered DOM and layout to observe computed styles, which jsdom provides only partially. It was verified by hand in a browser; the state-level decoration plumbing exercised here is what keeps Source-pane marks identical to the K-Doc plugin's painted ranges.

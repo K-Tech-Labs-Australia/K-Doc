@@ -5,7 +5,7 @@
  * @outputs BlockAlignment values read from or written to node.data.kdocAlign (and data.hProperties); HTML wrapper strings emitted by alignedBlockHandler when serialising an aligned block back out.
  * @functions
  *   - alignmentOf: Read and validate the alignment stored on a paragraph or heading node, returning null when absent or malformed.
- *   - applyAlignment: Write or clear an alignment on a paragraph or heading node, storing it twice for editor and preview parity.
+ *   - applyAlignment: Write or clear an alignment on a paragraph or heading node, storing it twice so the editor and exports agree.
  *   - foldAlignment: Fold a source `<div align="...">` wrapper into node data so the editor sees an aligned block rather than raw HTML around one.
  *   - openAlignment: Recognise a single opening `<div align="left|center|right">` html node in a tree, or null when it is not such a node.
  *   - isCloseNode: Recognise a closing `</div>` html node in a tree.
@@ -60,7 +60,7 @@ export function alignmentOf(node: Paragraph | Heading): BlockAlignment | null {
  * @controlflow When align is null delete both keys only if node.data exists and leave the node untouched otherwise; when align is present create an empty data object if needed then write both keys, using a single Record cast for every write as hintsOf reads it.
  */
 export function applyAlignment(node: Paragraph | Heading, align: BlockAlignment | null): void {
-  // The alignment lives twice on purpose: kdocAlign is what K-Doc reads and hProperties is what mdast-util-to-hast renders from, so both must stay in lockstep for the preview and exported HTML to agree.
+  // The alignment lives twice on purpose: kdocAlign is what K-Doc reads and hProperties is what mdast-util-to-hast renders from, so both must stay in lockstep for the editor and exported HTML to agree.
   if (align === null) {
     // Clearing an alignment: only touch node.data when it exists; a node without data has nothing to clear.
     if (node.data !== undefined) {

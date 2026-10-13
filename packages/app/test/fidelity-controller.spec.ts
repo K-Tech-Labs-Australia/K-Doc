@@ -34,11 +34,11 @@ function fakeSession(
   text: string,
 ): {
   session: DocumentSession;
-  emit: (reason: SessionChange['reason'], nextText: string, pane?: 'wysiwyg' | 'source') => void;
+  emit: (reason: SessionChange['reason'], nextText: string, pane?: 'kdoc' | 'source') => void;
   listenerCount: () => number;
 } {
-  // The mutable snapshot the controller reads; focusedPane defaults to the WYSIWYG editor.
-  let snapshot = { text, savedText, focusedPane: 'wysiwyg' as 'wysiwyg' | 'source' };
+  // The mutable snapshot the controller reads; focusedPane defaults to the K-Doc editor.
+  let snapshot = { text, savedText, focusedPane: 'kdoc' as 'kdoc' | 'source' };
   // Active subscribers pushed by subscribe() and removed by their returned teardown.
   const listeners: Array<(change: SessionChange) => void> = [];
 
@@ -65,7 +65,7 @@ function fakeSession(
   function emit(
     reason: SessionChange['reason'],
     nextText: string,
-    pane: 'wysiwyg' | 'source' = 'wysiwyg',
+    pane: 'kdoc' | 'source' = 'kdoc',
   ): void {
     // Advance the snapshot to reflect the new text and focused pane.
     snapshot = { ...snapshot, text: nextText, focusedPane: pane };
@@ -115,11 +115,11 @@ function harness(enabled: boolean = true): {
 }
 
 describe('createFidelityController', () => {
-  it('reports a WYSIWYG edit that reformats an unedited block', () => {
+  it('reports a K-Doc edit that reformats an unedited block', () => {
     const { session, emit } = fakeSession(STAR, STAR);
     const { controller, reports } = harness();
     controller.attach(session);
-    emit('edit', DASH, 'wysiwyg');
+    emit('edit', DASH, 'kdoc');
     controller.saved(DASH);
 
     expect(reports).toHaveLength(1);
@@ -185,7 +185,7 @@ describe('createFidelityController', () => {
     const { session, emit } = fakeSession(STAR, STAR);
     const { controller } = harness();
     controller.attach(session);
-    emit('edit', DASH, 'wysiwyg');
+    emit('edit', DASH, 'kdoc');
     controller.saved(DASH);
 
     expect(controller.problems(DASH + 'x')).toEqual([]);
@@ -203,12 +203,12 @@ describe('createFidelityController', () => {
   });
 
   it('judges edits after a reset against the reset text', () => {
-    // A reset is a different document, so a later WYSIWYG edit is compared with it, not with the text before the reset
+    // A reset is a different document, so a later K-Doc edit is compared with it, not with the text before the reset
     const { session, emit } = fakeSession(STAR, STAR);
     const { controller, reports } = harness();
     controller.attach(session);
     emit('reset', DASH);
-    emit('edit', '- a\n- b\n\nText edited\n', 'wysiwyg');
+    emit('edit', '- a\n- b\n\nText edited\n', 'kdoc');
     controller.saved('- a\n- b\n\nText edited\n');
     expect(reports).toEqual([[]]);
   });
@@ -228,7 +228,7 @@ describe('createFidelityController', () => {
     const { session, emit } = fakeSession(STAR, STAR);
     const { controller, reports } = harness();
     controller.attach(session);
-    emit('edit', DASH, 'wysiwyg');
+    emit('edit', DASH, 'kdoc');
     controller.saved(DASH);
 
     controller.saved(DASH);

@@ -1,6 +1,6 @@
 /**
  * @file comment-note-plugin.ts
- * @purpose ProseMirror decoration layer that renders a comment's text inline in the WYSIWYG pane, for FR-10.4's inline display mode. Each note is drawn as a widget decoration because its text does not live in the document — a widget is the only decoration capable of rendering characters the file does not contain, using the same reasoning the tracked-change deletion widget rests on.
+ * @purpose ProseMirror decoration layer that renders a comment's text inline in the K-Doc pane, for FR-10.4's inline display mode. Each note is drawn as a widget decoration because its text does not live in the document — a widget is the only decoration capable of rendering characters the file does not contain, using the same reasoning the tracked-change deletion widget rests on.
  *   Manages comment-note decorations: rebuilding them from planned note positions on each plan arrival and mapping them across ordinary edits so a note stays beside its text while the user types.
  * @inputs ProseMirror transactions (carrying CommentNoteMeta with document positions), EditorState instances, an EditorView for dispatching updates, and arrays of mapped document note points.
  * @outputs ProseMirror Plugin instance carrying a DecorationSet, the CSS class name 'kdoc-comment-note', the inline-note stylesheet COMMENT_NOTE_STYLES, and the commentNotePluginKey identifying its state.
@@ -50,7 +50,7 @@ export const COMMENT_NOTE_STYLES: string = `
 `;
 
 /**
- * A single comment note to be drawn inline in the WYSIWYG pane (FR-10.4).
+ * A single comment note to be drawn inline in the K-Doc pane (FR-10.4).
  */
 export interface CommentNotePoint {
   /** Identifier of the thread this note belongs to, used as the decoration's stable key. */

@@ -1,6 +1,6 @@
 /**
  * @file from-mdast.ts
- * @purpose Converts an mdast AST tree (CommonMark + GFM) into a ProseMirror document tree for K-Doc's WYSIWYG editor pane.
+ * @purpose Converts an mdast AST tree (CommonMark + GFM) into a ProseMirror document tree for the K-Doc editor pane.
  *
  *   This converter is one direction of the pair that must always change together with `to-mdast.ts`
  *   and `schema.ts` (DESIGN.md §7). Anything mdast can express that the schema does not model richly

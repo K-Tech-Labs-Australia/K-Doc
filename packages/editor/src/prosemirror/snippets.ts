@@ -1,6 +1,6 @@
 /**
  * @file snippets.ts
- * @purpose Snippet expansion in the WYSIWYG pane (FR-7.10): a prefix followed by Tab expands into its Markdown body, and Tab / Shift+Tab then move between the body's tab stops until the final cursor;
+ * @purpose Snippet expansion in the K-Doc pane (FR-7.10): a prefix followed by Tab expands into its Markdown body, and Tab / Shift+Tab then move between the body's tab stops until the final cursor;
  * @inputs the snippet options getter, the clock, key events, editor state;
  * @outputs a plugin holding the tab-stop session, pure helpers and SNIPPET_STYLES;
  * @functions

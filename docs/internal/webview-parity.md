@@ -11,7 +11,7 @@ last_updated: 2026-09-04
 **Question:** K-Doc ships on Tauri, so its UI runs in whatever webview the OS provides. Rendering
 differences between those are cosmetic; *editing* differences are not, because ProseMirror sits
 directly on `contenteditable`, `beforeinput`, and the Selection APIs. Which engine sets the floor,
-and what is the contingency if one of them cannot host the WYSIWYG pane?
+and what is the contingency if one of them cannot host the K-Doc pane?
 
 **Status:** Chromium answered and green. WKWebView and WebKitGTK **not yet run** — they need macOS
 and Linux hosts, which were not available when this was written. The instrument is built and
@@ -121,7 +121,7 @@ Not needed for Chromium. Recorded now so the decision is not made under pressure
 
 1. **Non-critical failures** — implement the documented fallback. `contentEditable="plaintext-only"`
    is the likely one; its absence means the Source pane sanitises paste itself.
-2. **Critical failure in the input pipeline** (`beforeinput` or `getTargetRanges`) — the WYSIWYG pane
+2. **Critical failure in the input pipeline** (`beforeinput` or `getTargetRanges`) — the K-Doc pane
    cannot be hosted on that engine. Two options, in order of preference: ship a bundled Chromium on
    that platform only, accepting the binary-size cost there; or degrade that platform to Source-only
    with the rendered Preview pane, which is a genuinely useful product but not the product.

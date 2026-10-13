@@ -71,7 +71,7 @@ function rangeOf(doc: ProseMirrorNode, needle: string): { from: number; to: numb
   }
 }
 
-describe('reference links in the WYSIWYG conversion', () => {
+describe('reference links in the K-Doc conversion', () => {
   // A full, collapsed, and shortcut reference should each resolve to its definition's href/title/type.
   it('turns each kind of reference into a link to its definition', () => {
     const marks = linkMarks(docOf(SAMPLE));

@@ -1,6 +1,6 @@
 /**
  * @file change-bar-plugin.ts
- * @purpose ProseMirror decoration layer that paints Simple Markup's margin change bars in the WYSIWYG pane (FR-11.4). Each bar is a single node decoration placed beside an entire top-level block, driven by whole-line signals rather than character ranges.
+ * @purpose ProseMirror decoration layer that paints Simple Markup's margin change bars in the K-Doc pane (FR-11.4). Each bar is a single node decoration placed beside an entire top-level block, driven by whole-line signals rather than character ranges.
  *   Manages change-bar decorations: rebuilding them from planned line positions on each plan arrival and mapping them across ordinary edits so a bar stays beside its line while the user types.
  * @inputs ProseMirror transactions (carrying ChangeBarMeta with document positions), EditorState instances, an EditorView for dispatching updates, and arrays of mapped document positions.
  * @outputs ProseMirror Plugin instance carrying a DecorationSet, the CSS class name 'kdoc-change-bar', and the changeBarPluginKey identifying its state.

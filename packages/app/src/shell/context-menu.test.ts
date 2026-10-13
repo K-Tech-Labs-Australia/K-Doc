@@ -2,7 +2,7 @@
 
 /**
  * @file context-menu.test.ts
- * @purpose Vitest test suite for K-Doc's WYSIWYG editor context menu controller (packages/app/src/shell/context-menu.ts, FR-14.2).
+ * @purpose Vitest test suite for the K-Doc view's editor context menu controller (packages/app/src/shell/context-menu.ts, FR-14.2).
  *   Verifies asynchronous spelling suggestion integration, synchronous event default prevention, fallback menu assembly,
  *   lifecycle teardown, and race condition suppression across async tick gaps.
  * @inputs EditorView instances configured with kdocSchema, fake PopupMenu objects recording openAt calls,

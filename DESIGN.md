@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| **Doc Version** | 171 |
+| **Doc Version** | 172 |
 | **Last Updated** | 2026-10-13 |
 | **Version** | 0.1.0 (first public release) |
 | **Scope** | **Windows only, for now.** macOS and Linux are deferred, not cancelled: portability discipline stays (NFR-9) and nothing may assume Windows in `@k-doc/core`, but neither is a release target and neither is tested. |
@@ -15,7 +15,7 @@
 
 ## 1. What K-Doc Is
 
-A desktop Markdown word processor: a WYSIWYG editing surface over plain `.md` files,
+A desktop Markdown word processor: a K-Doc editing surface over plain `.md` files,
 replicating the parts of Microsoft Word that Markdown can honestly express. The
 Markdown file is always the source of truth, and byte-level round-trip fidelity is a
 CI-gating contract rather than a goal.
@@ -28,7 +28,7 @@ CI-gating contract rather than a goal.
 | --- | --- | --- |
 | Desktop shell | **Tauri v2** (Rust) | ~10 MB binary, real Rust process for I/O, narrow webview capability surface. Resolved OQ-1. |
 | UI runtime | **TypeScript 5 + React 19**, `strict: true` | Global standards §3; no `any`. |
-| WYSIWYG engine | **ProseMirror** (via Tiptap) | Node views give real table grips, image handles, and embedded math/diagram widgets. |
+| K-Doc engine | **ProseMirror** (via Tiptap) | Node views give real table grips, image handles, and embedded math/diagram widgets. |
 | Source engine | **CodeMirror 6** | Large-file virtualisation, folding, multi-caret over raw text. |
 | Markdown core | **unified / remark** (`mdast`) | Mature CommonMark + GFM base with a clean extension seam for the Tier 4–5 syntax. |
 | Test runner | **Vitest** | Headless, fast, native ESM + TypeScript. |
@@ -53,7 +53,7 @@ K-Doc/
 ├── packages/
 │   ├── core/                @k-doc/core — headless Markdown engine: parse, serialize, render, analysis
 │   ├── config/              @k-doc/config — settings schema, keymaps, theme tokens
-│   ├── editor/              @k-doc/editor — ProseMirror (WYSIWYG) and CodeMirror (Source) adapters
+│   ├── editor/              @k-doc/editor — ProseMirror (K-Doc) and CodeMirror (Source) adapters
 │   └── app/                 @k-doc/app — the application shell that runs in the webview
 ├── src-tauri/               Rust host: windows, validated filesystem commands, spell check, git, pandoc
 ├── scripts/                 Dictionary fetch, third-party notices, FR status generator
@@ -266,7 +266,7 @@ subtle divider with no contrast obligation, and `borderStrong` carries the 3:1 r
 
 `@k-doc/editor` holds the engine adapters. The ProseMirror conversion layer uses only
 `prosemirror-model` and never `prosemirror-view`, so it is **DOM-free** — which means the most
-correctness-critical part of the WYSIWYG pane is tested in a bare Node process rather than a browser.
+correctness-critical part of the K-Doc pane is tested in a bare Node process rather than a browser.
 
 Three files form one unit and must always change together, which is §7's rule applied concretely:
 `schema.ts` (what the model can express), `from-mdast.ts`, and `to-mdast.ts`. A node the schema can
@@ -320,7 +320,7 @@ must reflect edits made in the **other** pane.
 
 That requirement exposed a real bug in the ProseMirror binding, which had ignored every `'edit'`
 reason. Correct while it was the only pane; wrong the moment a second one existed, because typing in
-Source would never have reached WYSIWYG.
+Source would never have reached K-Doc.
 
 Both bindings now use the same rule: **sync when the reason is `undo`/`redo`/`reset`, or when it is
 `edit` and the focused pane is not mine.** The focused pane is a reliable origin signal precisely
@@ -378,7 +378,7 @@ Three things in here are load-bearing:
   edit out of undo coalescing. A formatting command that forgot the tag would silently merge into the
   user's last typing run, and nobody would notice until undo behaved oddly.
 - **The binding builds its own keymap** rather than accepting one, because it already holds the
-  session and every WYSIWYG pane needs exactly these bindings. It stores the plugin array so
+  session and every K-Doc pane needs exactly these bindings. It stores the plugin array so
   `syncFromSession` rebuilds state with the same plugins; a rebuild without them would silently lose
   every shortcut.
 
@@ -448,7 +448,7 @@ and skips re-rendering. That inference covers panes and nothing else.
 
 Find-and-replace is not a pane. Its first implementation borrowed the Source pane's lock so the session
 would accept its edit, and the Source binding then correctly-but-wrongly discarded the change as its own
-echo: the WYSIWYG pane updated, the Source pane did not, and the two panes visibly disagreed about the
+echo: the K-Doc pane updated, the Source pane did not, and the two panes visibly disagreed about the
 document. `DocumentSession.applyExternalText` exists to close that hole. No pane owns `'external'`, so
 neither binding can mistake it for an echo and both re-render. The edit still enters the shared undo
 history, because a replace-all is exactly what a user expects one `Ctrl+Z` to take back.
@@ -458,7 +458,7 @@ Anything else that edits the document without being a pane belongs on this path 
 ### Revealing a match
 
 `revealRange` selects the match in the CodeMirror pane and switches the view to split when only the
-WYSIWYG pane is showing, since a source offset cannot be revealed in a pane that is not on screen. It
+K-Doc pane is showing, since a source offset cannot be revealed in a pane that is not on screen. It
 deliberately does **not** focus that pane: focus has to stay in the find box for incremental search to
 work at all.
 
@@ -490,8 +490,8 @@ Two implementation notes that are load-bearing rather than incidental:
 
 ### Known limitation
 
-The active row tracks the **CodeMirror** caret. Editing in the WYSIWYG pane does not move it, so in
-WYSIWYG-only mode the highlight goes stale. Mapping a ProseMirror position back to a source offset is
+The active row tracks the **CodeMirror** caret. Editing in the K-Doc pane does not move it, so in
+K-Doc-view-only mode the highlight goes stale. Mapping a ProseMirror position back to a source offset is
 a separate piece of work; the pane is honest about what it tracks rather than guessing.
 
 ## 6h. One Undo History, Both Panes
@@ -500,7 +500,7 @@ a separate piece of work; the pane is honest about what it tracks rather than gu
 caret is and an undo survives a pane switch. Honouring that requires each pane to bind undo to the
 session and to install **no history of its own**.
 
-The WYSIWYG pane always did: `prosemirror-history` is deliberately never imported. The Source pane did
+The K-Doc pane always did: `prosemirror-history` is deliberately never imported. The Source pane did
 not. It installed `history()` and `historyKeymap` from `@codemirror/commands`, which is a second,
 pane-local undo stack. `Ctrl+Z` there rewound CodeMirror's own edit log, and that rewind then reached
 the session as a **fresh edit** rather than as an undo — so the shared history grew instead of
@@ -590,7 +590,7 @@ move focus on `mousedown` and so cannot reproduce the bug at all.
 ## 6f. Markdown Input Rules
 
 `input-rules.ts` implements FR-7.7: typing `# ` makes a heading, `- ` makes a bullet, `**bold**` makes
-bold. This is what the WYSIWYG promise actually rests on — without it a user has to reach for a toolbar
+bold. This is what the K-Doc promise actually rests on — without it a user has to reach for a toolbar
 to do what typing already means in Markdown.
 
 `prosemirror-inputrules` ships block-level helpers but no inline-mark rule, so `markInputRule` is the
@@ -774,7 +774,7 @@ other side.
 The two anchor providers compute their numbers completely differently and must return them in the same
 frame, which is the whole contract between them:
 
-- **WYSIWYG** measures top-level children of the ProseMirror DOM with
+- **K-Doc** measures top-level children of the ProseMirror DOM with
   `rect.top - scrollerRect.top + scroller.scrollTop`. Rects are viewport-relative; that arithmetic
   converts one into a position relative to the *scrollable content*, which is what `scrollTop` measures.
 - **Source** asks CodeMirror for `lineBlockAt(offset).top`, which is already in that frame and needs no
@@ -799,32 +799,25 @@ panes visibly out of step.
 
 ---
 
-## 6k. Preview Mode
+## 6k. View Modes
 
-Preview (FR-5.4) is **the WYSIWYG pane with editing switched off**, not a second renderer. That is the
-whole design decision. A separate HTML preview would be a second rendering path to keep in step with the
-editor, and the two would drift within a release; reusing the pane makes drift impossible.
+There are three: **K-Doc** (the rendered, editable ProseMirror pane, called WYSIWYG before 0.3), **Split** (both
+panes side by side) and **Source** (CodeMirror over the raw Markdown). The mode id is `'kdoc' | 'split' | 'source'`
+in the shell (`ViewMode`), the settings (`editor.defaultViewMode`) and the stored session (`SessionViewMode`), and
+the pane id the session's edit lock uses is `'kdoc' | 'source'` (`PaneId`).
 
-`ProseMirrorBinding.setEditable()` flips a field that the view's `editable` prop reads. ProseMirror calls
-that prop on every state update rather than reading it once, so a mutable field is enough and no view
-rebuild is needed. Rebuilding to change one boolean would throw away the caret and force a resync of a
-document that has not changed.
+A read-only Preview mode existed until 0.3. It was the K-Doc pane with editing switched off and a narrower measure,
+not a rendering of the output, so it duplicated the K-Doc view while promising more; it was removed. A locked
+document (FR-6.7) is now the only thing that makes the K-Doc pane read-only.
 
-In Preview the shell also:
+`VIEW_MODE_CYCLE` and `nextViewMode` back `Ctrl+/` (FR-5.7), in the order of the view buttons. An unrecognised mode
+restarts the cycle rather than staying put, because a shortcut that silently does nothing is the worst response to an
+unexpected state - the user just presses it again harder.
 
-- hides the Source pane, so Preview is a single reading column;
-- adds `kdoc-preview` to the shell, which hides the format and table toolbars. Every control on them
-  would act on a pane that refuses edits, and a button that looks live but does nothing is worse than a
-  button that is not there;
-- constrains the prose to about 42rem and hides the caret. That measure is the only *visual* difference
-  between Preview and WYSIWYG, and it exists because full-pane-width prose is harder to read;
-- moves the edit lock to the WYSIWYG pane. The lock must point at a visible pane even in a mode where
-  nothing is editable, or the first keystroke after leaving Preview would throw.
-
-`VIEW_MODE_CYCLE` and `nextViewMode` back `Ctrl+/` (FR-5.7). Preview sits **last** deliberately: it is
-the only mode you cannot type in, so someone cycling to find a writing layout passes every editable one
-first. An unrecognised mode restarts the cycle rather than staying put, because a shortcut that silently
-does nothing is the worst response to an unexpected state - the user just presses it again harder.
+**Which mode a window starts in.** A restored session's mode wins (`applyStoredLayout` sets `viewModeRestored`);
+otherwise `restoreThenRecover` applies `editor.defaultViewMode`, which defaults to Split. Settings and sessions saved
+before 0.3 are read forward: `'wysiwyg'` and `'preview'` both become `'kdoc'`, and a session's old `scrollWysiwyg`
+is read as `scrollKdoc`, so an old value never discards the saved session.
 
 ---
 
@@ -1483,7 +1476,7 @@ suite is what surfaced this.
 
 `MARK_NESTING_ORDER` decides which mark becomes the outer mdast node. `highlight` sits above `strong` and
 `emphasis` because `==**bold**==` is how people write it, and putting `strong` first rewrote that into
-`**==bold==**` on every round trip through the WYSIWYG pane. `subscript` and `superscript` go last: they
+`**==bold==**` on every round trip through the K-Doc pane. `subscript` and `superscript` go last: they
 wrap a digit or a short token, never a formatted run.
 
 ### Literal markers are escaped on output
@@ -1526,7 +1519,7 @@ never what the user meant.
 
 Not to the button that opened it - the picker is also reachable from the command palette and the menu bar,
 where there is no button to anchor to. `coordsAtPos` can throw for a position it cannot map, which happens
-while the WYSIWYG pane is hidden in Source-only view, so the fallback is the pane's own corner: a layout
+while the K-Doc pane is hidden in Source-only view, so the fallback is the pane's own corner: a layout
 question should not surface as an exception.
 
 Its 80 cells are built **once** at construction. Rebuilding them per open is work with no purpose, since
@@ -1717,10 +1710,10 @@ doing its job.
 
 ### Not done
 
-**The WYSIWYG half.** FR-7.2 asks for multiple carets in *both* panes, and ProseMirror has no
+**The K-Doc half.** FR-7.2 asks for multiple carets in *both* panes, and ProseMirror has no
 multi-selection model - its `Selection` is a single range by construction. Drawing extra carets there
 would produce a caret that looks live and takes no edit, which is worse than no caret. The Source pane
-gets the feature; the WYSIWYG pane does not, and that is stated rather than papered over.
+gets the feature; the K-Doc pane does not, and that is stated rather than papered over.
 
 ---
 
@@ -1927,7 +1920,7 @@ remaining record of what the comment was about.
 ### Painted in both panes
 
 `codemirror/comment-marks.ts` paints the plan directly, because **`planDecorations` returns source
-offsets, which is exactly how a CodeMirror document is indexed**. The WYSIWYG pane needs a translation
+offsets, which is exactly how a CodeMirror document is indexed**. The K-Doc pane needs a translation
 first, and `prosemirror/offset-map.ts` is it.
 
 The two stylesheets are deliberately identical in colour and weight, so the same comment reads the same in
@@ -1983,7 +1976,7 @@ then have to click into the box themselves.
 
 The selection is read from the **Source pane**, because a comment anchor is a range of source offsets and
 only CodeMirror is indexed by those. The consequence is honest rather than hidden: pressing the shortcut in
-WYSIWYG-only view switches to split first, because the anchor comes from a pane that has to be on screen.
+K-Doc-view-only view switches to split first, because the anchor comes from a pane that has to be on screen.
 
 ### Not done
 
@@ -2178,10 +2171,10 @@ same millisecond and without the tie-break their order would depend on the store
 changed. The controller and pane are rebuilt per document like the other per-document panels; the listener
 is registered once in the constructor, because `mountDocument` runs on every tab switch.
 
-Both panes are painted on every plan, whatever the current view mode. Skipping the WYSIWYG pane while the
+Both panes are painted on every plan, whatever the current view mode. Skipping the K-Doc pane while the
 Source pane is showing would leave a stale set behind the moment the user switched back.
 
-The WYSIWYG pane needs `mapChangeSpansToPositions` rather than the comment mapper, because **a deletion is
+The K-Doc pane needs `mapChangeSpansToPositions` rather than the comment mapper, because **a deletion is
 a zero-width point** and `offsetRangeToPositions` refuses a collapsed range by design - reaching for the
 range mapper would silently drop every deletion.
 
@@ -2326,8 +2319,8 @@ edge of the widest row.
 ### Which pane it anchors in
 
 The rightmost visible one. In split view the Source pane is nearer the panel, and a line starting in the
-WYSIWYG pane would have to cross the Source pane to reach the card, which reads as pointing at the wrong
-text. The two panes are queried differently because they mark up differently: the WYSIWYG decoration carries
+K-Doc pane would have to cross the Source pane to reach the card, which reads as pointing at the wrong
+text. The two panes are queried differently because they mark up differently: the K-Doc decoration carries
 an active class, and the CodeMirror mark carries `data-thread-id`.
 
 ### Why it follows in a loop
@@ -2382,11 +2375,11 @@ number the reader cannot act on: it says fourteen more exist and gives no way to
 
 Matches now paint on three surfaces, and the panel drives none of them directly. It owns the search and
 reports through `onMatches`; the shell decides what to paint. That split is why the panel needs no idea
-that a WYSIWYG pane or a scrollbar exists.
+that a K-Doc pane or a scrollbar exists.
 
 - **The Source pane** takes the offsets unchanged - a CodeMirror document is indexed by exactly what the
   search produced.
-- **The WYSIWYG pane** needs `offsetRangeToPositions`, and the shell drops what will not map. **Dropping
+- **The K-Doc pane** needs `offsetRangeToPositions`, and the shell drops what will not map. **Dropping
   shifts every later index**, so the active match's slot in the mapped list is not the slot it had in the
   original, and painting the incoming index against the mapped list would highlight the wrong match. The
   shell tracks the mapped position as it builds the list.
@@ -2502,7 +2495,7 @@ would bury the text it annotates; a conversation belongs in the pane. And the no
 
 The note is a **widget in both panes**, for the reason the tracked-change deletion widget is: its text is
 not in the document, and a widget is the only decoration that can draw characters the file does not contain.
-The Source pane takes the offset unchanged; the WYSIWYG pane needs `offsetToPosition`, and a note the mapper
+The Source pane takes the offset unchanged; the K-Doc pane needs `offsetToPosition`, and a note the mapper
 cannot place is dropped rather than guessed at - a note beside the wrong sentence says the wrong thing about
 it.
 
@@ -2511,8 +2504,8 @@ routing the choice out to the shell and back would add a hop that decides nothin
 
 ## 6ap. Code Blocks
 
-**The rendered view is the WYSIWYG pane.** Preview makes that pane read-only rather than swapping in a
-second renderer, so highlighting has to happen there - there is no separate HTML surface to highlight.
+**The rendered view is the K-Doc pane**, so highlighting has to happen there - there is no separate HTML surface
+to highlight.
 
 It reuses the **same Lezer parsers the Source pane already loads**. A second highlighting engine would
 colour the same code two different ways in two panes of one window, and the only thing worse than no
@@ -2664,7 +2657,7 @@ Markdown: a reader that knows nothing about alerts still sees a quote with a lin
 `callout` node to the schema would have bought a prettier tree at the cost of a document only K-Doc can read.
 
 So the marker paragraph stays in the document, and the colour is **node decorations** over the blockquote.
-The marker is decorated rather than hidden: a marker invisible in the WYSIWYG pane but present in the Source
+The marker is decorated rather than hidden: a marker invisible in the K-Doc pane but present in the Source
 pane is a difference between two views of one document whose effect the user can see and whose cause they
 cannot - they would delete the word they can see and wonder why the colour stayed.
 
@@ -2838,7 +2831,7 @@ with nothing in it still reserves its space on the page.
 
 `includeToc` prepends a contents page built from the document's own headings. It is assembled by the
 printer, not by the renderer: it is not in the Markdown, and a renderer that added it would put it in the
-HTML export and the Preview pane too.
+HTML export and the presentation slides too.
 
 The list is flat with a depth class rather than genuinely nested, because a document can jump from an `h1`
 to an `h3` and building real nesting out of that means inventing levels the author did not write. A document
@@ -3036,12 +3029,12 @@ webview there on Windows waits for the event loop that same thread is blocking, 
 the original work verified the browser route only -- and the first desktop run of the handoff found it.
 The command is now `async`, which Tauri runs on its own thread.
 
-## 6az. Multi-Caret in the WYSIWYG Pane
+## 6az. Multi-Caret in the K-Doc Pane
 
 ### The carets cannot live in the selection
 
 CodeMirror has multiple selection ranges, so the Source pane needed four extensions and no logic.
-ProseMirror's `Selection` is a **single range by construction**, so the WYSIWYG pane could not be given
+ProseMirror's `Selection` is a **single range by construction**, so the K-Doc pane could not be given
 the same thing. The extra carets live in plugin state as document positions; the primary caret stays in
 `state.selection`, and every edit is applied at the primary position *and* at each extra.
 
@@ -3470,15 +3463,15 @@ skipped nine notes in ten look identical from outside, and a test cannot tell th
 
 ## 6bf. Carrying the Caret Across Modes
 
-FR-5.6 asks that switching between WYSIWYG and Source keep the caret and selection in the same place.
+FR-5.6 asks that switching between K-Doc and Source keep the caret and selection in the same place.
 Nothing did: each pane kept whatever caret it last had, so switching modes dropped the user somewhere
 unrelated to where they were working.
 
 ### Almost everything already existed
 
 `offset-map.ts` already maps between the two coordinate systems at character precision -- a Source
-offset is a character in the Markdown text, a WYSIWYG position counts across ProseMirror's nodes --
-and comments, track changes and find highlights have used the source-to-WYSIWYG direction for some
+offset is a character in the Markdown text, a K-Doc position counts across ProseMirror's nodes --
+and comments, track changes and find highlights have used the source-to-K-Doc direction for some
 time. The reverse, `positionToOffset`, was built and tested but had no caller.
 
 So the work is small: `selection-carry.ts` in `@k-doc/editor` maps an anchor-and-head pair each way,
@@ -3503,7 +3496,7 @@ is left alone: its forward snap is right for what already uses it, and the edge 
 
 ### What cannot be exact, and what is instead
 
-Two source offsets can be one WYSIWYG position. In `Some **bold**`, the offsets either side of `**` are
+Two source offsets can be one K-Doc position. In `Some **bold**`, the offsets either side of `**` are
 the same point in the rendered pane, because a mark takes no position there. One of them has to come
 back on the other side of the delimiter. What is guaranteed instead is the property a user actually
 feels: a caret never moves visible place, and switching modes again never walks it any further.
@@ -3519,9 +3512,6 @@ guess that puts the caret somewhere the user was not.
   and carrying then would push a stale caret into a document that was just opened.
 - The pane holding the caret stays on screen. In Split both panes are visible and each keeps its own
   caret; only leaving Split for a single pane carries it.
-
-Preview counts as a WYSIWYG-visible mode, so leaving Source for Preview carries the caret into the
-rendered pane and a later switch to WYSIWYG finds it in place.
 
 ## 6bg. Following Links
 
@@ -3573,7 +3563,7 @@ follows it, and a modified click anywhere else still reaches multi-caret.
 
 ### Not covered
 
-Wikilinks are plain text in the WYSIWYG pane -- there is no wikilink node or mark -- so they get no
+Wikilinks are plain text in the K-Doc pane -- there is no wikilink node or mark -- so they get no
 card and Ctrl+Click on one adds a caret. Links in the Source pane are not followable either.
 
 ## 6bh. Editing Raw HTML as Source
@@ -3626,7 +3616,7 @@ the browser rather than by unit tests.
 
 ## 6bi. Navigation: Go To, Quick Open and Breadcrumbs
 
-FR-9.6 asks for Go To on `Ctrl+G` -- a line in Source, a heading in WYSIWYG. FR-9.7 asks for Quick Open
+FR-9.6 asks for Go To on `Ctrl+G` -- a line in Source, a heading in K-Doc. FR-9.7 asks for Quick Open
 on `Ctrl+Shift+O`, a fuzzy file switcher across the vault. FR-9.9 asks for a breadcrumb bar showing the
 heading path of the caret.
 
@@ -3756,7 +3746,7 @@ unaligned, which can only hide findings.
 the base. Each change is reduced to one differing region by common prefix and suffix; existing ranges are
 shifted through it, and a text edit adds the region. `FidelityController` decides which changes are the
 user's bytes: a Source-pane edit, an external edit (find and replace, restore, paste special), undo and
-redo. Only a WYSIWYG edit is serializer output to be judged. Undo is the user's because it can reach back
+redo. Only a K-Doc edit is serializer output to be judged. Undo is the user's because it can reach back
 past a save to text the user typed, which the tracker has already forgotten -- found by thinking through
 the desktop run rather than by a test.
 
@@ -3773,7 +3763,7 @@ document changes rather than shown at offsets that no longer mean anything.
 
 ### Found by running it
 
-In the desktop app, typing in one item of a `*` list in WYSIWYG and saving rewrote the other item's
+In the desktop app, typing in one item of a `*` list in K-Doc and saving rewrote the other item's
 marker to `-`. The first version, judging top-level blocks only, stayed silent, which is why containers
 are now entered. The finding itself was an FR-4.2 gap in the incremental serializer, closed for top-level lists in §6bn.
 
@@ -3841,7 +3831,7 @@ The vault link check fed every inline link to the note matcher, images included,
 ### Not covered
 
 Broken note links, duplicate headings, long rows and missing images have no quick fix. Headings inside quotes
-and lists are not checked. A relative image did not display in the WYSIWYG pane at all, a separate
+and lists are not checked. A relative image did not display in the K-Doc pane at all, a separate
 gap in how local images are loaded.
 
 ## 6bm. Local Images
@@ -3873,8 +3863,7 @@ your own editor. What the command will not do is hand over a file that is not an
 | `core/src/render/html.ts` | `HtmlRenderOptions.imageSources`, applied before rendering. |
 
 The shell resolves an address with the same `resolveImagePath` the document linter uses (§6bl), so an image
-the Problems panel calls missing is the image that shows as missing. Preview reuses the WYSIWYG pane, so it
-shows local images with no further work.
+the Problems panel calls missing is the image that shows as missing.
 
 ### Found by running it
 
@@ -4136,7 +4125,7 @@ key. A shifted character in a written chord is stored as Shift plus its key (`Ct
 `presets.ts` lists the remappable commands, each with a **scope**:
 - **global**: works anywhere.
 - **document**: works unless typing in a form field (undo, redo, Paste Special, insert image).
-- **editor**: only while the WYSIWYG pane has focus (formatting).
+- **editor**: only while the K-Doc pane has focus (formatting).
 
 `WORD_BINDINGS` is the §20 table plus the shortcuts K-Doc already had that the table does not name (next document,
 settings, ribbon, rename). The other presets override only the commands they change:
@@ -4180,9 +4169,9 @@ subscripted and zoomed, and in the Source pane `Ctrl+/` both switched view and t
 
 1. The chord is looked up in the keymap in effect, read afresh on every key, so a changed binding applies at once.
 2. The command's scope is checked against where the key was pressed (`keymap-scope.ts`), classified from the event
-   target as the WYSIWYG pane, the Source pane, a text field, a widget with keys of its own (a tree, list, menu,
+   target as the K-Doc pane, the Source pane, a text field, a widget with keys of its own (a tree, list, menu,
    grid or tab strip), or anywhere else:
-   - **editor** commands run only in the WYSIWYG pane, so `Ctrl+B` in Source is still nothing;
+   - **editor** commands run only in the K-Doc pane, so `Ctrl+B` in Source is still nothing;
    - **document** commands (undo, redo) never run in a text field, whose own undo the key belongs to;
    - a **global** command without Ctrl or Alt (`F2`, `F7`) is left to a widget, so F2 in the file tree renames the
      item rather than the document.
@@ -4521,7 +4510,7 @@ Two paste fixes were found in the running app:
 
 ### Copying a table
 
-The WYSIWYG view's `clipboardTextSerializer` is `clipboardText` (`table-tsv.ts`).
+The K-Doc view's `clipboardTextSerializer` is `clipboardText` (`table-tsv.ts`).
 - A copied table, whole rows, or cells of one row go on the plain-text clipboard as tab-separated values.
 - A tab or line break inside a cell becomes a space.
 - Anything else is the default paragraph text.
@@ -4569,7 +4558,7 @@ the status line once per kind per mounted document.
 ### Not covered
 
 - The warning does not stop the line break being entered; the save turns it into a space.
-- An empty header row renders as an empty first row in WYSIWYG rather than being hidden.
+- An empty header row renders as an empty first row in K-Doc rather than being hidden.
 
 ## 6cb. Column Width Hints and Cell Formatting (FR-8.26)
 
@@ -4621,9 +4610,9 @@ while the caret is in a cell. Alignment is per column, `setColumnAlign`, as GFM 
 
 ### Not covered
 
-- The WYSIWYG width is approximate: `ch` in the proportional UI font.
+- The K-Doc width is approximate: `ch` in the proportional UI font.
 - A hint cannot be dragged; it is set by number.
-- HTML export and Preview do not apply hints.
+- HTML export does not apply hints.
 
 ## 6cc. Table of Contents (FR-8.30)
 
@@ -4692,7 +4681,7 @@ Heading sections and list items fold in both panes, and the folds are the same i
 - `innermostFoldTarget(targets, offset)` gives the innermost place containing an offset.
 
 The key comes from the content, not from positions. So:
-- the WYSIWYG pane can compute it from the ProseMirror document;
+- the K-Doc pane can compute it from the ProseMirror document;
 - the Source pane can compute it from the session's parsed document;
 - an edit elsewhere in the file does not move it.
 
@@ -4709,7 +4698,7 @@ The key comes from the content, not from positions. So:
 - A stored value that is not the expected shape throws. The shell then resets the store and says so.
 - A document that has never been saved keeps its folds in its tab (`DocumentState.folds`) until it is closed.
 
-### WYSIWYG
+### K-Doc
 
 `packages/editor/src/prosemirror/fold-plugin.ts` renders from the document plus the store:
 - Every foldable heading gets a ▾/▸ button in the left margin, shown on hover, on keyboard focus, or while folded.
@@ -4732,7 +4721,7 @@ Fold state is not held in plugin state, because the binding rebuilds its EditorS
 `packages/app/src/shell/fold-sync.ts` joins the two for a mounted document:
 - User folds in Source go into the store with `setMany`.
 - Store changes are saved and re-applied to Source in a microtask, since CodeMirror refuses a dispatch during its own update.
-- `sessionChanged` re-applies after the Source binding replaces its text, which happens whenever WYSIWYG edits.
+- `sessionChanged` re-applies after the Source binding replaces its text, which happens whenever K-Doc edits.
 - Nothing is applied while Source's text length differs from the session's.
 
 ### Commands
@@ -4751,10 +4740,10 @@ None has a default shortcut:
 - Folds are remembered per path. A renamed or moved file starts unfolded, and Save As does not carry folds to the new path.
 - The outline pane's own collapse state is separate and not saved.
 
-## 6ce. Reference Links in WYSIWYG
+## 6ce. Reference Links in K-Doc
 
 Reference-style links (`[text][label]`, `[label][]`, `[label]`) and link definitions (`[label]: url "title"`) used to
-reach the WYSIWYG pane as opaque atoms reading "[unrenderable inline]" and "[unrenderable block]". They now render as
+reach the K-Doc pane as opaque atoms reading "[unrenderable inline]" and "[unrenderable block]". They now render as
 what they are, and the round trip still writes them back byte for byte.
 
 ### Reference links are link marks
@@ -4787,14 +4776,14 @@ show:
 
 ### Not covered
 
-- Definitions cannot be edited in WYSIWYG; edit them in Source.
+- Definitions cannot be edited in K-Doc; edit them in Source.
 - Image references (`![alt][label]`) still show the placeholder. (Footnotes have their own nodes; see §6b.)
 - Adjacent links with the same mark type are still grouped by mark name when written back (unchanged behaviour).
 
 ## 6cf. Reference Link Tools (FR-8.16)
 
 Two tools manage reference-style links: a command that converts inline links, and a panel that lists definitions. They
-build on §6ce, which made reference links readable in WYSIWYG.
+build on §6ce, which made reference links readable in K-Doc.
 
 ### Core
 
@@ -4825,7 +4814,7 @@ Problems and Review:
 - A header shows the count and a **Convert inline links** button.
 - Each definition is a row with its label, its destination and title, and a badge: "used N times", "unused" or
   "duplicate, never used". The last two use the warning colour.
-- Clicking a row shows the definition in Source, switching WYSIWYG to Split, because a definition is only editable as
+- Clicking a row shows the definition in Source, switching K-Doc to Split, because a definition is only editable as
   source. The jump is recorded in navigation history.
 - The panel refreshes on every session change and every mount.
 
@@ -4939,7 +4928,7 @@ A resized image keeps its width in the alt slot, `![alt|600](img.png)`, as OQ-5 
 
 ### Not covered
 
-- `![[img.png|600]]` embeds: WYSIWYG does not render wiki-link embeds yet, so their hint cannot be edited. They keep
+- `![[img.png|600]]` embeds: K-Doc does not render wiki-link embeds yet, so their hint cannot be edited. They keep
   their text untouched.
 - Resizing is pointer-only; there is no keyboard resize.
 - Height always follows the aspect ratio. Alignment is FR-8.11's.
@@ -4990,11 +4979,11 @@ In order:
    line is left to the horizontal rule.
 6. **Ellipsis:** `...` gives `…`.
 
-Autocorrect applies in WYSIWYG only; the Source pane is plain Markdown and keeps what is typed.
+Autocorrect applies in K-Doc only; the Source pane is plain Markdown and keeps what is typed.
 
 ### ProseMirror base styles
 
-Verifying autocorrect showed that the WYSIWYG editor never loaded ProseMirror's required CSS:
+Verifying autocorrect showed that the K-Doc editor never loaded ProseMirror's required CSS:
 - `white-space` was `normal`, so a space at the end of a line collapsed, and the next keystroke replaced a space that a
   command or rule had inserted. Runs of spaces also disappeared.
 - `PROSEMIRROR_BASE_STYLES` (`editor/src/prosemirror/base-styles.ts`, from prosemirror-view's CSS minus the parts the
@@ -5035,7 +5024,7 @@ It can be opened three ways:
 
 ## 6ck. Snippets (FR-7.10)
 
-In WYSIWYG, a snippet's prefix followed by Tab expands into its body. Tab and Shift+Tab then move between the body's
+In K-Doc, a snippet's prefix followed by Tab expands into its body. Tab and Shift+Tab then move between the body's
 tab stops.
 
 ### Body syntax
@@ -5113,7 +5102,7 @@ file. `installSnippetsDialog({ doc, snippets, defaults, onChange })` returns `{ 
 
 ### Not covered
 
-- Snippets expand only in WYSIWYG; the Source pane has no expansion.
+- Snippets expand only in K-Doc; the Source pane has no expansion.
 
 ## 6cm. Split and Merge Documents (FR-8.31)
 
@@ -5139,7 +5128,7 @@ Two Edit commands work on source text, so every byte outside the edit is kept.
 ### Editor
 
 `packages/editor/src/prosemirror/section-at-caret.ts` provides `sectionIndexAtCaret(state)`. The outline lists only
-top-level headings, so the WYSIWYG caret's section is the count of top-level heading nodes up to the caret's block,
+top-level headings, so the K-Doc caret's section is the count of top-level heading nodes up to the caret's block,
 minus one. The block index is clamped for a position after the last block.
 
 ### Shell
@@ -5398,7 +5387,7 @@ They are not saved.
 
 ### Editor
 
-- **WYSIWYG** (`packages/editor/src/prosemirror/writing-modes.ts`, `createWritingModesPlugin(() => modes)`):
+- **K-Doc** (`packages/editor/src/prosemirror/writing-modes.ts`, `createWritingModesPlugin(() => modes)`):
   - Decorations read the modes through the getter. Every textblock and leaf block except the caret's gets a node
     decoration with `kdoc-focus-dim` (opacity 0.3).
   - Containers are never decorated, so a list around a focused item keeps its bullets and opacity doesn't compound.
@@ -5442,7 +5431,7 @@ screen. Escape, or the command again, leaves.
     messages is hidden.
   - Entering and leaving are idempotent. A window that refuses full screen is reported, but the chrome stays hidden.
   - `destroy()` leaves Zen, so a torn-down shell does not stay full screen.
-- **Escape:** a capture-phase `keydown` listener on the document takes Escape before the editors, since WYSIWYG binds
+- **Escape:** a capture-phase `keydown` listener on the document takes Escape before the editors, since K-Doc binds
   Escape to "select parent node" and would otherwise keep it. Escape is left alone when a dialog is open, when a find bar
   is visible, or when something already marked it handled.
 - **Full screen:** the new host command `set_window_fullscreen(fullscreen)` (`src-tauri/src/windows.rs`) changes only the
@@ -5467,7 +5456,7 @@ breaks into one mdast root per slide.
 - Only top-level `---` (or `***`) rules split: a rule inside a quote or list stays on its slide.
 - Front matter is not shown, and empty slides (two rules in a row, or one at either end) are dropped.
 - A document without rules is one slide.
-- The shell renders each slide with `renderFragment`, the same renderer Preview and export use.
+- The shell renders each slide with `renderFragment`, the same renderer export uses.
 
 ### Overlay
 
@@ -5479,7 +5468,7 @@ breaks into one mdast root per slide.
   Space, Enter), previous (Left, Up, Page Up, Backspace), Home, End and Escape. Moving past either end stays put.
   Modified keys (Ctrl, Cmd, Alt) and other keys are left alone.
 - **Clicking** the slide advances, except on a link.
-- **Images:** every `img` is resolved through the shell's `loadImageSource`, the same path WYSIWYG uses for local images.
+- **Images:** every `img` is resolved through the shell's `loadImageSource`, the same path K-Doc uses for local images.
   Each render carries a token, so an image resolved for a slide already left is not written into the next one. An image
   that cannot be resolved keeps its written address.
 - **Full screen** uses the `set_window_fullscreen` command added for Zen mode. A refusal is reported and the slides still
@@ -5515,7 +5504,7 @@ Appearance.
 - `blockSpacingEm(density)` has no default branch, so a density added to the union later is a compile error rather than
   a silent fallthrough.
 - `applyTypography` sets `--kdoc-block-spacing`, and `TYPOGRAPHY_STYLES` applies it to the top-level blocks of the
-  WYSIWYG pane. The spacing is in em, so it follows the font size and the zoom. `comfortable` is 1em, the spacing the
+  K-Doc pane. The spacing is in em, so it follows the font size and the zoom. `comfortable` is 1em, the spacing the
   editor already had, so the default changes nothing.
 - Only the pane's own children are spaced: a paragraph inside a list item keeps the list's rhythm. The Source pane is
   left alone, as it already is for the reading width.
@@ -5550,7 +5539,7 @@ nothing rather than applying something that would be lost.
 
 - The commands cycle rather than offering a list to pick from, and they have no default shortcut.
 - Saving a document under a new name does not carry its override across; the new path simply has none.
-- Density is not applied to the Source pane, to Preview, or to print and export.
+- Density is not applied to the Source pane, or to print and export.
 - There is no per-document override for any other appearance setting.
 
 ## 6cv. Read-Only Files Open Locked (FR-6.7)
@@ -5579,11 +5568,10 @@ pretending the lock was cleared. Both `openFile` and `readFile` now map the host
 
 `DocumentState.locked` rides with the tab, so a locked document stays locked across a switch. The shell reads
 it in `mountDocument` and applies it in `applyLock`, which is the last thing the mount does:
-- `ProseMirrorBinding.setEditable` already existed for Preview; `CodeMirrorBinding.setEditable` is new and
+- `ProseMirrorBinding.setEditable` and `CodeMirrorBinding.setEditable` each
   reconfigures a compartment rather than rebuilding the view, so locking keeps the text, the scroll position
   and the caret. A locked pane still takes text from the session, or a tab switch would leave the previous
   file on screen.
-- The WYSIWYG pane takes both the lock and Preview into account, so leaving Preview cannot unlock a document.
 - `allowSave` refuses a save and says why. Autosave goes through it too, so a locked document does not report
   the same failure on every tick.
 
@@ -5607,13 +5595,13 @@ locked.
 ## 6cw. A Second Pane on the Same Document (FR-6.9)
 
 **View → Second Pane on This Document** opens a second editable view of the open document beside the first,
-with its own scroll position, independent of the WYSIWYG/Source split.
+with its own scroll position, independent of the K-Doc/Source split.
 
 ### Which view made the edit
 
-The obstacle was not the pane but the edit lock. `focusedPane` is `'wysiwyg' | 'source'`, and a binding
-decided whether a change was its own by comparing against it. With two WYSIWYG views both are the
-`'wysiwyg'` pane, so each reads the other's edit as its own and neither updates: the second view goes stale
+The obstacle was not the pane but the edit lock. `focusedPane` is `'kdoc' | 'source'`, and a binding
+decided whether a change was its own by comparing against it. With two K-Doc views both are the
+`'kdoc'` pane, so each reads the other's edit as its own and neither updates: the second view goes stale
 on the first keystroke.
 
 `SessionChange` and `ApplyOptions` now carry an optional `originId`:
@@ -5624,16 +5612,16 @@ on the first keystroke.
   views there are.
 - A change no view applied — an external reload, an undo, a reset — carries no identity, so every view takes
   it, as before.
-- `focusedPane` still decides *which kind* of edit is allowed (`applyTree` needs WYSIWYG focus, `applyText`
+- `focusedPane` still decides *which kind* of edit is allowed (`applyTree` needs K-Doc focus, `applyText`
   needs Source focus); identity decides only who already has the edit.
 
 ### The pane
 
-The second pane sits between the WYSIWYG pane and the Source pane, with its own `installSplitDivider`
+The second pane sits between the K-Doc pane and the Source pane, with its own `installSplitDivider`
 between it and the first. It is deliberately plainer than the main pane: a `ProseMirrorBinding` over the same
 session with images and the host keymap, and nothing else. It is built when the pane opens, destroyed with
 the document, and rebuilt over the next one when a tab switch arrives with the pane still open. It takes the
-document's lock (FR-6.7) along with the other panes, and it is left out of the WYSIWYG/Source scroll sync,
+document's lock (FR-6.7) along with the other panes, and it is left out of the K-Doc/Source scroll sync,
 which is what gives it its own scroll position.
 
 ### Not covered
@@ -6245,7 +6233,7 @@ those come from the page setup rather than from the styling.
 
 ### Not covered
 
-- The Preview pane and the editor are not affected: this is the stylesheet for a file being written or printed,
+- The editor is not affected: this is the stylesheet for a file being written or printed,
   not for the app (FR-14.10 is the app's themes).
 - A theme cannot be created, renamed or deleted inside K-Doc; the folder is the interface.
 - There is no validation of a reader's CSS: it is written into the file as it stands.
@@ -6293,7 +6281,7 @@ nothing for the app, which leaves K-Doc's own colours).
   names is writing against markup that may change.
 - Nothing validates a theme's CSS, and a theme that sets a token to nonsense simply looks wrong.
 - Themes cannot be created, renamed or deleted inside K-Doc; the folder is the interface.
-- The Preview pane follows the app's tokens, so a theme changes it too; the stylesheet an export is *written* with is
+- The K-Doc pane follows the app's tokens, so a theme changes it too; the stylesheet an export is *written* with is
   the export theme (FR-13.8), not this.
 
 ## 6dk. Attachments (FR-6.14)
@@ -6373,7 +6361,7 @@ renderer still reads as Markdown, and GitHub, Obsidian and Pandoc all honour the
 
 `foldAlignment` (`packages/core/src/align/block-alignment.ts`) runs at the end of `parseMarkdown` and turns the
 wrapper into node data on the block it held: `data.kdocAlign` for K-Doc, and `data.hProperties` for
-mdast-util-to-hast, which is what centres the block in the Preview pane and in an exported file with no renderer
+mdast-util-to-hast, which is what centres the block in an exported file with no renderer
 changes. The editor's schema carries the same value as an `align` attribute on `paragraph` and `heading`, so an
 aligned block is an ordinary editable block rather than two raw HTML blocks around a plain one, and
 `alignedBlockHandler` writes the wrapper back on the way out.
@@ -6413,8 +6401,8 @@ that happens to end in `.mov` is still a page. A sentence that merely contains a
 
 ### In the editor
 
-The Preview pane *is* the WYSIWYG pane, read-only, so there is no second rendering path to hang a player on: the
-editor needs a node view. `from-mdast` folds a recognised paragraph into a `media` node, `media-view.ts` renders
+The K-Doc pane is the only rendered view of the document, so there is no second rendering path to hang a player
+on: the editor needs a node view. `from-mdast` folds a recognised paragraph into a `media` node, `media-view.ts` renders
 it, and `to-mdast` writes it back as exactly the link or image it came from — the node carries `syntax`, `target`
 and `label` for that purpose, so a file never learns that K-Doc showed it as a player. The fold happens in the
 editor bridge rather than in the mdast tree, which is why the incremental serializer (FR-4.2) needs no changes
@@ -6651,7 +6639,7 @@ round trip, because a plugin is only useful with both.
 ### Not covered
 
 - No marketplace, no installing, no updating: a plugin is a folder the reader put there, as the spec says.
-- A plugin's syntax is drawn in exports and printouts, not in the editing pane. The WYSIWYG pane is
+- A plugin's syntax is drawn in exports and printouts, not in the editing pane. The K-Doc pane is
   ProseMirror, and drawing there would mean a node view per plugin syntax and a round trip through the
   editor's own schema.
 - A plugin panel shows text, not a surface of its own: it has no DOM, so it cannot draw one.
@@ -6708,7 +6696,7 @@ next to Blockquote, and in the command palette under Format.
 
 ## 6ds. Wiki image embeds and resizing without a mouse (FR-8.15)
 
-A Markdown image has been drawn, selected and resized in the WYSIWYG pane since FR-8.15 first landed. Two
+A Markdown image has been drawn, selected and resized in the K-Doc pane since FR-8.15 first landed. Two
 things were missing: a **wiki embed**, `![[img.png|600]]`, was plain text on the screen, so its size hint
 could not be edited by the only means K-Doc offers; and every way of resizing needed a pointer.
 

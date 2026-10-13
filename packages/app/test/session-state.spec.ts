@@ -32,7 +32,7 @@ const SESSION: PersistedSession = {
   splitRatio: 0.3,
   sidebar: { collapsed: false, panelId: 'files' },
   rightSidebar: { collapsed: true, panelId: null },
-  scrollWysiwyg: 120,
+  scrollKdoc: 120,
   scrollSource: 340,
 };
 
@@ -107,10 +107,21 @@ describe('loadSession', () => {
     expect(loadSession(fakeStorage(stored({ viewMode: null })))).toBe(null);
   });
 
+  // Sessions saved before 0.3 name the K-Doc view 'wysiwyg' and may hold the removed Preview view.
+  it('reopens an old WYSIWYG or Preview session in the K-Doc view', () => {
+    expect(loadSession(fakeStorage(stored({ viewMode: 'wysiwyg' })))?.viewMode).toBe('kdoc');
+    expect(loadSession(fakeStorage(stored({ viewMode: 'preview' })))?.viewMode).toBe('kdoc');
+  });
+
+  // Sessions saved before 0.3 keep the K-Doc pane's scroll position under its old name.
+  it('reads the scroll position an old session saved for the WYSIWYG pane', () => {
+    expect(loadSession(fakeStorage(stored({ scrollKdoc: undefined, scrollWysiwyg: 120 })))?.scrollKdoc).toBe(120);
+  });
+
   // Guards rejection of measurements that are not real numbers.
   it('refuses a measurement that is not a real number', () => {
     expect(loadSession(fakeStorage(stored({ splitRatio: 'half' })))).toBe(null);
-    expect(loadSession(fakeStorage(stored({ scrollWysiwyg: null })))).toBe(null);
+    expect(loadSession(fakeStorage(stored({ scrollKdoc: null })))).toBe(null);
     expect(loadSession(fakeStorage(stored({ scrollSource: 'top' })))).toBe(null);
   });
 
@@ -123,8 +134,8 @@ describe('loadSession', () => {
 
   // Guards clamping of negative scroll offsets back to the top.
   it('brings a negative scroll back to the top', () => {
-    const restored = loadSession(fakeStorage(stored({ scrollWysiwyg: -40, scrollSource: -1 })));
-    expect(restored?.scrollWysiwyg).toBe(0);
+    const restored = loadSession(fakeStorage(stored({ scrollKdoc: -40, scrollSource: -1 })));
+    expect(restored?.scrollKdoc).toBe(0);
     expect(restored?.scrollSource).toBe(0);
   });
 
@@ -144,7 +155,7 @@ describe('loadSession', () => {
     expect(JSON.parse(infiniteRatio).splitRatio).toBe(Infinity);
     expect(loadSession(fakeStorage(infiniteRatio))).toBe(null);
 
-    const infiniteScroll = stored({}).replace('"scrollWysiwyg":120', '"scrollWysiwyg":-1e999');
+    const infiniteScroll = stored({}).replace('"scrollKdoc":120', '"scrollKdoc":-1e999');
     expect(loadSession(fakeStorage(infiniteScroll))).toBe(null);
   });
 

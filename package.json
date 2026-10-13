@@ -13,7 +13,7 @@
   "homepage": "https://ktechlabs.au",
   "private": true,
   "type": "module",
-  "description": "A desktop Markdown word processor: WYSIWYG editing over plain .md files.",
+  "description": "A desktop Markdown word processor: word-processor editing over plain .md files.",
   "workspaces": [
     "packages/*"
   ],

@@ -4,7 +4,8 @@ K-Doc is a desktop Markdown editor from K-Tech Labs. It shows you the document, 
 word-processor-style view while the file on disk stays plain, portable Markdown, and anything you did not touch is
 written back byte-for-byte. It is for people who want Word-like editing without giving up Markdown files and folders.
 
-- **Four views of one document:** WYSIWYG, Source, Split (both side by side, with one shared undo history) and Preview.
+- **Three views of one document:** K-Doc (the formatted document, which you edit directly), Source (the Markdown) and
+  Split (both side by side, with one shared undo history).
 - **Vaults:** open a folder of notes to get a file tree, quick open, find and replace across the vault, a link graph
   and templates.
 - **Tabs:** several documents open at once, which you can drag out into a window of their own.
@@ -123,7 +124,8 @@ Word preset); **View → Keyboard Shortcuts** lists them all and lets you change
 
 ### Views and windows
 
-- Switch between WYSIWYG, Split, Source and Preview with the buttons in the title bar or the **View** menu.
+- Switch between K-Doc, Split and Source with the buttons in the title bar or the **View** menu; `Ctrl+/` cycles
+  through them. **Settings → Editor → Default view mode** sets the one a new window starts in.
 - Open documents appear as tabs below the ribbon once a second one is open. Drag a tab out of the strip to open it in
   its own window.
 - **Another Document Beside This One…** in the **View** menu opens a second file next to the first.
@@ -177,7 +179,7 @@ or unknown value falls back to its default and is reported, and keys K-Doc does 
 | `general.authorName` | `You` | Name stamped on comments and tracked changes |
 | `general.attachmentsFolder` | `attachments` | Folder for pasted and dropped images |
 | `general.attachmentNameTemplate` | `{name}-{date}` | File name for attachments; tokens `{name}` `{doc}` `{date}` `{time}` |
-| `editor.defaultViewMode` | `wysiwyg` | `wysiwyg`, `source`, `split` or `preview` |
+| `editor.defaultViewMode` | `split` | `kdoc`, `source` or `split` (a restored session's view wins) |
 | `editor.splitOrientation` | `vertical` | `vertical` or `horizontal` |
 | `editor.revealSyntaxMarkers` | `true` | Reveal Markdown syntax markers in the editor |
 | `editor.smartSubstitutions` | `true` | Typographic substitutions while typing |
@@ -207,7 +209,7 @@ or unknown value falls back to its default and is reported, and keys K-Doc does 
 | `autocorrect.ordinals` | `false` | Superscript ordinals |
 | `autocorrect.capitalizeSentences` | `false` | Capitalise the first letter of a sentence |
 | `autocorrect.replaceText` | `true` | Apply the replacement table |
-| `snippets.enabled` | `true` | Expand a snippet prefix with Tab in WYSIWYG |
+| `snippets.enabled` | `true` | Expand a snippet prefix with Tab in K-Doc |
 | `history.snapshotOnSave` | `true` | Take a version-history snapshot on every save |
 | `history.snapshotMinutes` | `10` | Also snapshot an open, saved document every N minutes; `0` for never |
 | `history.keepAllHours` | `24` | Keep every snapshot this many hours |

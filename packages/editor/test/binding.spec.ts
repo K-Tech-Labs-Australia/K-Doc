@@ -226,7 +226,7 @@ describe('ProseMirrorBinding', () => {
 
       // A real focus is always accompanied by a bubbling focusin, which is what the binding listens for.
       binding.view.dom.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
-      expect(session.snapshot.focusedPane).toBe('wysiwyg');
+      expect(session.snapshot.focusedPane).toBe('kdoc');
     });
 
     it('claims the edit lock when focus lands inside an embedded widget', () => {
@@ -238,7 +238,7 @@ describe('ProseMirrorBinding', () => {
       session.focusPane('source');
       // Focus on a descendant -- a raw-HTML editor inside the pane -- must still hand this pane the lock.
       inner.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
-      expect(session.snapshot.focusedPane).toBe('wysiwyg');
+      expect(session.snapshot.focusedPane).toBe('kdoc');
       inner.remove();
     });
 
@@ -259,7 +259,7 @@ describe('ProseMirrorBinding', () => {
       const second = new ProseMirrorBinding({ session, mount: secondMount });
 
       try {
-        // Both views are the WYSIWYG pane, so the pane cannot tell them apart. Before each view had its
+        // Both views are the K-Doc pane, so the pane cannot tell them apart. Before each view had its
         // own identity, both read the edit as their own and neither updated: the second view went stale
         // on the first keystroke, which is the bug that made two views impossible.
         binding.view.dom.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));

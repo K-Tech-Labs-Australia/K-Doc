@@ -86,7 +86,7 @@ afterEach(() => {
  * @inputs markdown - Raw Markdown source string used to initialize the document session.
  * @outputs Object containing readonly commands array and recorded dependency calls array.
  * @dataflow markdown -> DocumentSession -> ProseMirrorBinding -> buildCommandRegistry -> return harness record.
- * @controlflow Create mount div -> append to body -> initialize session and focus wysiwyg pane -> create ProseMirrorBinding -> build command registry with recording dependency closures -> register for teardown -> return record.
+ * @controlflow Create mount div -> append to body -> initialize session and focus kdoc pane -> create ProseMirrorBinding -> build command registry with recording dependency closures -> register for teardown -> return record.
  */
 function mountRegistry(markdown: string): { commands: readonly KdocCommand[]; calls: string[] } {
   const mount = document.createElement('div');
@@ -94,7 +94,7 @@ function mountRegistry(markdown: string): { commands: readonly KdocCommand[]; ca
   activeMounts.push(mount);
 
   const session = new DocumentSession(markdown);
-  session.focusPane('wysiwyg');
+  session.focusPane('kdoc');
 
   const binding = new ProseMirrorBinding({ session, mount });
   activeBindings.push(binding);

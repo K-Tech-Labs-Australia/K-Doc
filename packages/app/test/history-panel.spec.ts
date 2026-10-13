@@ -222,7 +222,7 @@ function requireElement<T extends Element>(root: ParentNode, selector: string): 
  * @dataflow Parameters -> plain row object returned directly.
  * @controlflow Assemble the four fields into a HistoryRow and return it.
  */
-function row(index: number, at: number, pane: 'wysiwyg' | 'source', words: number): HistoryRow {
+function row(index: number, at: number, pane: 'kdoc' | 'source', words: number): HistoryRow {
   return { index, at, pane, words };
 }
 
@@ -341,9 +341,9 @@ describe('the History panel', (): void => {
   it('draws versions newest-first so a recent restore is one click away', (): void => {
     // The version a user wants back is nearly always a recent one, and the timeline should put it on top.
     const rows: HistoryRow[] = [
-      row(0, NOW - 3 * 60 * 60 * 1000, 'wysiwyg', 200),
+      row(0, NOW - 3 * 60 * 60 * 1000, 'kdoc', 200),
       row(1, NOW - 10 * 60 * 1000, 'source', 210),
-      row(2, NOW - 30 * 1000, 'wysiwyg', 205),
+      row(2, NOW - 30 * 1000, 'kdoc', 205),
     ];
     const { panel } = mount({ rows });
     // Newest-first rendering must read "just now" (30s), then "10 minutes ago", then "3 hours ago"; a forward loop would reverse this.
@@ -357,9 +357,9 @@ describe('the History panel', (): void => {
   it('labels each button with its timeline index rather than its on-screen slot', (): void => {
     // A click must restore the version the row names (its place in the session), not whatever happens to sit at that visual position.
     const rows: HistoryRow[] = [
-      row(0, NOW - 3 * 60 * 60 * 1000, 'wysiwyg', 200),
+      row(0, NOW - 3 * 60 * 60 * 1000, 'kdoc', 200),
       row(1, NOW - 10 * 60 * 1000, 'source', 210),
-      row(2, NOW - 30 * 1000, 'wysiwyg', 205),
+      row(2, NOW - 30 * 1000, 'kdoc', 205),
     ];
     const { panel } = mount({ rows });
     const buttons = panel.element.querySelectorAll<HTMLButtonElement>('button.kdoc-history-entry');
@@ -382,10 +382,10 @@ describe('the History panel', (): void => {
     // The user knows those two panes by the names on their tabs, not by the identifiers in the code.
     const rows: HistoryRow[] = [
       row(0, NOW - 3 * 60 * 60 * 1000, 'source', 102),
-      row(1, NOW - 30 * 1000, 'wysiwyg', 97),
+      row(1, NOW - 30 * 1000, 'kdoc', 97),
     ];
     const { panel } = mount({ rows });
-    // Newest-first: the WYSIWYG entry (Editor) then the source entry (Source), each with its delta.
+    // Newest-first: the K-Doc entry (Editor) then the source entry (Source), each with its delta.
     expect(texts(panel.element, '.kdoc-history-detail')).toEqual([
       'Editor \u00B7 3 words fewer',
       'Source \u00B7 2 words more',
@@ -395,9 +395,9 @@ describe('the History panel', (): void => {
   it('samples the clock exactly once per refresh', (): void => {
     // One shared reading keeps every row in agreement; sampling once rather than once per row is how two entries recorded in the same second can never disagree about "now".
     const rows: HistoryRow[] = [
-      row(0, NOW - 3 * 60 * 60 * 1000, 'wysiwyg', 200),
+      row(0, NOW - 3 * 60 * 60 * 1000, 'kdoc', 200),
       row(1, NOW - 10 * 60 * 1000, 'source', 210),
-      row(2, NOW - 30 * 1000, 'wysiwyg', 205),
+      row(2, NOW - 30 * 1000, 'kdoc', 205),
     ];
     const harness = mount({ rows });
     // The install's own initial refresh is the only read; no per-row reads occur.
@@ -407,9 +407,9 @@ describe('the History panel', (): void => {
   it('restores the timeline index of the entry that was clicked', (): void => {
     // A click on a row must put back exactly the version that row names, no more and no less.
     const rows: HistoryRow[] = [
-      row(0, NOW - 3 * 60 * 60 * 1000, 'wysiwyg', 200),
+      row(0, NOW - 3 * 60 * 60 * 1000, 'kdoc', 200),
       row(1, NOW - 10 * 60 * 1000, 'source', 210),
-      row(2, NOW - 30 * 1000, 'wysiwyg', 205),
+      row(2, NOW - 30 * 1000, 'kdoc', 205),
     ];
     const harness = mount({ rows });
     // The second rendered button carries timeline index 1.
@@ -429,7 +429,7 @@ describe('the History panel', (): void => {
   it('restores exactly once per click', (): void => {
     // A delegated listener and a per-button listener on the same row would restore twice; one click must restore once.
     const rows: HistoryRow[] = [
-      row(0, NOW - 3 * 60 * 60 * 1000, 'wysiwyg', 200),
+      row(0, NOW - 3 * 60 * 60 * 1000, 'kdoc', 200),
       row(1, NOW - 30 * 1000, 'source', 210),
     ];
     const harness = mount({ rows });
@@ -448,7 +448,7 @@ describe('the History panel', (): void => {
 
   it('ignores clicks that land outside any history entry', (): void => {
     // Clicking the panel's own container, not an entry, must not restore anything.
-    const rows: HistoryRow[] = [row(0, NOW - 30 * 1000, 'wysiwyg', 200)];
+    const rows: HistoryRow[] = [row(0, NOW - 30 * 1000, 'kdoc', 200)];
     const harness = mount({ rows });
     const body = requireElement<HTMLDivElement>(harness.panel.element, '.kdoc-history-body');
     body.dispatchEvent(new MouseEvent('click'));
@@ -457,7 +457,7 @@ describe('the History panel', (): void => {
 
   it('keeps the same element across a refresh', (): void => {
     // A refresh rebuilds the body's children, not the panel itself; swapping elements under the sidebar would lose focus and state.
-    const harness = mount({ rows: [row(0, NOW - 30 * 1000, 'wysiwyg', 200)] });
+    const harness = mount({ rows: [row(0, NOW - 30 * 1000, 'kdoc', 200)] });
     const stable = harness.panel.element;
     harness.rows = [row(1, NOW - 60 * 1000, 'source', 210)];
     harness.panel.refresh();
@@ -466,7 +466,7 @@ describe('the History panel', (): void => {
 
   it('recomputes relative times when the clock moves', (): void => {
     // A history panel that froze its "now" at mount would keep saying "just now" forever; the readout must track the live clock.
-    const harness = mount({ rows: [row(0, NOW - 30 * 1000, 'wysiwyg', 200)] });
+    const harness = mount({ rows: [row(0, NOW - 30 * 1000, 'kdoc', 200)] });
     expect(texts(harness.panel.element, '.kdoc-history-when')).toEqual(['just now']);
 
     // Advance the clock by two hours and re-render; never hold a child element across the refresh.
@@ -479,7 +479,7 @@ describe('the History panel', (): void => {
 
   it('stops restoring after destroy', (): void => {
     // A destroyed panel must not react to clicks: tearing down its listener twice must be safe and leave it inert.
-    const harness = mount({ rows: [row(7, NOW - 30 * 1000, 'wysiwyg', 200)] });
+    const harness = mount({ rows: [row(7, NOW - 30 * 1000, 'kdoc', 200)] });
     const body = requireElement<HTMLDivElement>(harness.panel.element, '.kdoc-history-body');
 
     harness.panel.destroy();

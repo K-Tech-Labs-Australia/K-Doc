@@ -1,7 +1,7 @@
 /**
  * @file document-session.ts
  * @purpose Implements DocumentSession, the authoritative document state machine and edit coordinator for K-Doc's editor bridge (FR-3.1 to FR-3.5).
- *   K-Doc runs two editor engines over one document — ProseMirror for the WYSIWYG pane, CodeMirror for the Source pane. Neither owns the document;
+ *   K-Doc runs two editor engines over one document — ProseMirror for the K-Doc pane, CodeMirror for the Source pane. Neither owns the document;
  *   this class does. The text is authoritative, exactly one pane holds the edit lock, and the undo history lives here so a single Ctrl+Z means
  *   one thing regardless of which pane made the edit. Headless: no DOM, no framework, no engine imports.
  * @inputs Markdown source text, AST trees (Root), pane focus changes (PaneId), apply options, and subscription callbacks.
@@ -12,13 +12,13 @@
  *   - timeline getter: Exposes the session's recorded states so a history browser can list them and put one back (FR-14.7).
  *   - subscribe: Registers a change listener callback and returns an unsubscription disposer.
  *   - focusPane: Transfers edit focus to the specified pane and terminates open history typing runs.
- *   - applyTree: Applies a modified mdast Root from the focused WYSIWYG pane via incremental serialization.
+ *   - applyTree: Applies a modified mdast Root from the focused K-Doc pane via incremental serialization.
  *   - applyText: Applies replacement Markdown text from the focused Source pane.
  *   - undo: Restores the previous text state from edit history and updates document state.
  *   - redo: Restores an undone text state from edit history and updates document state.
  *   - markSaved: Records the current text as the saved text, so dirty reads false until it changes again.
  *   - reset: Replaces document content externally, clearing history and dirty flags.
- * @dataflow Editor changes (WYSIWYG AST or Source text) → DocumentSession state machine → EditHistory recording → KdocDocument update → SessionChange notification to listeners.
+ * @dataflow Editor changes (K-Doc AST or Source text) → DocumentSession state machine → EditHistory recording → KdocDocument update → SessionChange notification to listeners.
  * @controlflow Enforce single-pane edit lock (throw on unfocused edits) → update document & history → notify all registered listeners on consistent state.
  * @version 4
  * @date 2026-09-16
@@ -61,7 +61,7 @@ export interface SessionChange {
   /**
    * Which view applied this edit, when one said (FR-6.9).
    *
-   * `focusedPane` cannot answer this once two views share a pane: both are the WYSIWYG pane, so a
+   * `focusedPane` cannot answer this once two views share a pane: both are the K-Doc pane, so a
    * view comparing against it concludes the edit was its own and ignores it, and the second view
    * never updates. An identity the applying view chose distinguishes "mine" from "someone else's"
    * however many views there are.
@@ -101,7 +101,7 @@ export interface DocumentSessionOptions extends EditHistoryOptions {
  */
 export class DocumentSession {
   private document: KdocDocument;
-  private focusedPane: PaneId = 'wysiwyg';
+  private focusedPane: PaneId = 'kdoc';
   /**
    * The text as of the last save, against which `dirty` is computed.
    *
@@ -224,7 +224,7 @@ export class DocumentSession {
 
   /**
    * @purpose Transfers editor focus to the specified pane, closing any active history typing run and notifying listeners.
-   * @inputs pane - The PaneId ('wysiwyg' | 'source') to receive focus.
+   * @inputs pane - The PaneId ('kdoc' | 'source') to receive focus.
    * @outputs void.
    * @dataflow pane → this.focusedPane; history.endRun() → closes coalescing window; notify('focus', []) → broadcast.
    * @controlflow Check if pane is already focused (return early if true) → update focusedPane → call history.endRun() → notify focus change.
@@ -247,27 +247,27 @@ export class DocumentSession {
   }
 
   /**
-   * @purpose Applies an updated mdast Root from the focused WYSIWYG pane via incremental serialization, updating history and document state.
-   * @inputs updated - The modified mdast Root syntax tree from the WYSIWYG editor.
+   * @purpose Applies an updated mdast Root from the focused K-Doc pane via incremental serialization, updating history and document state.
+   * @inputs updated - The modified mdast Root syntax tree from the K-Doc editor.
    * @inputs options - Optional ApplyOptions controlling edit coalescing.
    * @outputs SessionChange - Change descriptor containing the new snapshot, 'edit' reason, and replaced offset ranges.
    * @dataflow updated + this.document → serializeIncremental → new text & ranges → parseMarkdown → this.document; history.push → recorded state.
-   * @controlflow Guard focusedPane === 'wysiwyg' (throw Error if false) → push current text to history → incrementally serialize and re-parse → set dirty = true → notify listeners.
+   * @controlflow Guard focusedPane === 'kdoc' (throw Error if false) → push current text to history → incrementally serialize and re-parse → set dirty = true → notify listeners.
    */
   applyTree(updated: Root, options?: ApplyOptions): SessionChange {
-    // Check whether the WYSIWYG pane currently holds edit focus.
-    if (this.focusedPane !== 'wysiwyg') {
+    // Check whether the K-Doc pane currently holds edit focus.
+    if (this.focusedPane !== 'kdoc') {
       // Failing fast catches a bridge bug immediately, while allowing it would let the two document models diverge silently.
       throw new Error(
         `Cannot apply tree edit: current focused pane is '${this.focusedPane}', but only the focused pane may apply edits (FR-3.1).`,
       );
     } else {
-      // WYSIWYG pane is focused: proceed with tree application.
+      // K-Doc pane is focused: proceed with tree application.
     }
 
     this.history.push(
       this.document.text,
-      'wysiwyg',
+      'kdoc',
       this.now(),
       options?.coalesce !== false,
     );
@@ -324,7 +324,7 @@ export class DocumentSession {
    * whoever made the edit, and a binding therefore treats an 'edit' arriving while it holds the lock as its
    * own echo and skips re-rendering. A tool that is not a pane breaks that inference. Find-and-replace
    * originally borrowed the Source pane's lock to get its edit accepted, and the Source binding then
-   * correctly-but-wrongly discarded the change as its own echo: the WYSIWYG pane updated and the Source
+   * correctly-but-wrongly discarded the change as its own echo: the K-Doc pane updated and the Source
    * pane did not. The two panes visibly disagreed about the document.
    *
    * Hence a separate reason rather than a borrowed lock. No pane owns 'external', so no binding mistakes it

@@ -1,6 +1,6 @@
 /**
  * @file table-toolbar.ts
- * @purpose Implements the contextual GFM table toolbar for K-Doc's WYSIWYG editor pane, providing controls for inserting tables, modifying rows and columns, toggling column alignment, and deleting tables that execute ProseMirror commands and reflect table context.
+ * @purpose Implements the contextual GFM table toolbar for the K-Doc editor pane, providing controls for inserting tables, modifying rows and columns, toggling column alignment, and deleting tables that execute ProseMirror commands and reflect table context.
  * @inputs TableToolbarOptions containing container element, ProseMirror EditorView instance, and Document context.
  * @outputs TableToolbar interface with refresh() and destroy() lifecycle methods, alongside TABLE_TOOLBAR_STYLES CSS stylesheet definition.
  * @functions

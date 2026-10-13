@@ -240,7 +240,7 @@ export function createNavigationController(
     });
   };
 
-  // Open the Go To picker, line-based in Source or heading-based in WYSIWYG.
+  // Open the Go To picker, line-based in Source or heading-based in K-Doc.
   const openGoTo = async (): Promise<void> => {
     // No-op once the controller has been destroyed.
     if (destroyed) {
@@ -268,7 +268,7 @@ export function createNavigationController(
       options.revealSourceOffset(lineTargetOffset(text, target));
       return;
     }
-    // WYSIWYG editing navigates by heading instead of raw lines.
+    // K-Doc editing navigates by heading instead of raw lines.
     const entries = currentOutline();
     // With no headings, explain that there is nothing to go to.
     if (entries.length === 0) {

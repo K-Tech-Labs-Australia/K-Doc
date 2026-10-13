@@ -86,7 +86,7 @@ describe('centreInContainer', () => {
 
 describe('typewriter updates', () => {
   // no scroll without focus or on a transaction that moved nothing; scrolls on selection and text changes; not when the mode is off.
-  it('centres the WYSIWYG caret after it moves, only with focus and the mode on', () => {
+  it('centres the K-Doc caret after it moves, only with focus and the mode on', () => {
     const outer = scroller();
     let modes: WritingModes = { focus: 'off', typewriter: true };
     const doc = mdastToProseMirror(parseMarkdown('One\n\nTwo\n').root, kdocSchema);

@@ -139,7 +139,7 @@ export interface CommandRegistryDeps {
   readonly openRecent: () => void;
   /** Opens Quick Open, the fuzzy file switcher (FR-9.7). */
   readonly quickOpen: () => void;
-  /** Opens Go To: a line in Source, a heading in WYSIWYG (FR-9.6). */
+  /** Opens Go To: a line in Source, a heading in K-Doc (FR-9.6). */
   readonly goTo: () => void;
   /** Asks for the minimum width of the table column under the caret (FR-8.26). */
   readonly setColumnWidth: () => void;
@@ -500,8 +500,8 @@ export function buildCommandRegistry(deps: CommandRegistryDeps): readonly KdocCo
     editorCommand('table:delete-table', 'Delete Table', 'Table', '', deleteTable()),
 
     // View
-    appCommand('view:wysiwyg', 'WYSIWYG', 'View', '', (): void => {
-      deps.setViewMode('wysiwyg');
+    appCommand('view:kdoc', 'K-Doc', 'View', '', (): void => {
+      deps.setViewMode('kdoc');
     }),
     appCommand('view:split', 'Split', 'View', '', (): void => {
       deps.setViewMode('split');

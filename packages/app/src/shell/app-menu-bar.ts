@@ -335,7 +335,7 @@ export const APP_MENU_BAR_SPEC: readonly AppMenuSpec[] = [
     label: 'View',
     accessKey: 'V',
     items: [
-      { kind: 'command', commandId: 'view:wysiwyg' },
+      { kind: 'command', commandId: 'view:kdoc' },
       { kind: 'command', commandId: 'view:split' },
       { kind: 'command', commandId: 'view:source' },
       { kind: 'command', commandId: 'view:cycle-view-mode' },

@@ -1,6 +1,6 @@
 /**
  * @file multi-caret-state.test.ts
- * @purpose Vitest test suite covering the pure state representations and transaction builders for multi-caret editing in K-Doc's WYSIWYG pane (FR-7.2).
+ * @purpose Vitest test suite covering the pure state representations and transaction builders for multi-caret editing in the K-Doc pane (FR-7.2).
  *   Verifies caret set normalization, position mapping through document changes, caret toggling, primary selection integration, and back-to-front insertion and deletion transactions without mounting a DOM view.
  * @inputs ProseMirror EditorState instances, MultiCaretState descriptors, document positions, mapping objects, and test edit payloads.
  * @outputs Vitest assertions verifying caret set normalization, mapping, toggling, and multi-caret insert and delete transactions.

@@ -25,7 +25,7 @@ K-Doc shows you the **document**, not the syntax. You write in a word-processor 
 - **Open** a Markdown file with *Ctrl+O*, or open a whole folder of notes as a vault from the **Files** panel (the folder icon on the left).
 - **Save** with *Ctrl+S*. This welcome page is untitled, so its first save asks where to put it.
 - Press *Ctrl+Shift+P* for the command palette: every command, with its shortcut, in one searchable list.
-- Switch between WYSIWYG, Source, Split and Preview from the **View** menu. Split shows both at once, and they share one undo history whichever side you type in.
+- Switch between K-Doc, Source and Split from the **View** menu. Split shows both at once, and they share one undo history whichever side you type in.
 
 ## Things worth knowing
 

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 /**
  * @file fold-plugin.test.ts
- * @purpose Verifies FR-8.29 WYSIWYG folding: target enumeration, toggle/hidden-block rendering, click and command toggling, and caret handling on fold and unfold.
+ * @purpose Verifies FR-8.29 K-Doc folding: target enumeration, toggle/hidden-block rendering, click and command toggling, and caret handling on fold and unfold.
  * @inputs Markdown fixtures; FoldStore test doubles; ProseMirror editor state and view helpers.
  * @outputs vitest assertions covering proseMirrorFoldTargets, foldTargetAt, hiddenFoldTargetAt, createFoldPlugin, toggleFoldCommand, and the shared core targets.
  * @functions

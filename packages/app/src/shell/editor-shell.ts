@@ -1,7 +1,7 @@
 /**
  * @file editor-shell.ts
- * @purpose Implements EditorShell, the K-Doc Material 3 Expressive application shell coordinating toolbar controls, dual synchronized editor panes (WYSIWYG and Source), theme switching, and live status bar readouts over a shared DocumentSession.
- * @inputs EditorShellOptions containing DOM mount container, initial Markdown source text, optional initial ViewMode ('wysiwyg' | 'split' | 'source'), and optional initial ThemeMode ('light' | 'dark' | 'system').
+ * @purpose Implements EditorShell, the K-Doc Material 3 Expressive application shell coordinating toolbar controls, dual synchronized editor panes (K-Doc and Source), theme switching, and live status bar readouts over a shared DocumentSession.
+ * @inputs EditorShellOptions containing DOM mount container, initial Markdown source text, optional initial ViewMode ('kdoc' | 'split' | 'source'), and optional initial ThemeMode ('light' | 'dark' | 'system').
  * @outputs EditorShell instance exposing the authoritative DocumentSession, setViewMode layout controller, and destroy lifecycle teardown method.
  * @functions
  *   - EditorShell: Constructor initializing stylesheet injection, theme controller, in-app menu bar, DOM elements, DocumentSession, editor bindings, session subscription, and initial view mode.
@@ -157,7 +157,7 @@ import { installAppMenuBar, APP_MENU_BAR_STYLES, type AppMenuBar } from './app-m
 import { TabSet } from './tab-set.js';
 import { installTabBar, TAB_BAR_STYLES, type TabBar, type TabView } from './tab-bar.js';
 import { installScrollSync, type ScrollSync, type BlockAnchor } from './scroll-sync.js';
-import { wysiwygAnchors, sourceAnchors, sourceScroller } from './pane-anchors.js';
+import { kdocAnchors, sourceAnchors, sourceScroller } from './pane-anchors.js';
 import { installCommandPalette, COMMAND_PALETTE_STYLES, type CommandPalette } from './command-palette.js';
 import { installPickerDialog, type PickerDialog } from './picker-dialog.js';
 import { PICKER_DIALOG_STYLES } from './picker-dialog-styles.js';
@@ -342,7 +342,7 @@ import { BRAND_STYLES, createProductWordmark } from './brand.js';
 import { ABOUT_DIALOG_STYLES, installAboutDialog, type AboutDialog } from './about-dialog.js';
 import { getVersion } from '@tauri-apps/api/app';
 
-export type ViewMode = 'wysiwyg' | 'split' | 'source';
+export type ViewMode = 'kdoc' | 'split' | 'source';
 
 /**
  * What a background tab remembers about its document.
@@ -372,7 +372,7 @@ export interface DocumentState {
 }
 
 /** The order Ctrl+/ cycles through, matching the order of the view buttons. */
-export const VIEW_MODE_CYCLE: readonly ViewMode[] = ['wysiwyg', 'split', 'source'];
+export const VIEW_MODE_CYCLE: readonly ViewMode[] = ['kdoc', 'split', 'source'];
 
 /**
  * @purpose Returns the mode that follows the given one in the cycle, wrapping at the end.
@@ -1085,7 +1085,7 @@ ${PROSEMIRROR_BASE_STYLES}
 
 /**
  * EditorShell orchestrates the visual application container for K-Doc, coordinating the toolbar,
- * dual synchronized editor panes (WYSIWYG ProseMirror and raw Source CodeMirror), theme switching,
+ * dual synchronized editor panes (K-Doc ProseMirror and raw Source CodeMirror), theme switching,
  * and live document metrics over a shared DocumentSession.
  */
 // Four encodings is too few to justify a menu of its own: a dropdown for four items is more ceremony
@@ -1106,7 +1106,7 @@ export class EditorShell {
   private readonly mount: HTMLElement;
   private readonly shellElement: HTMLElement;
   private readonly toolbarElement: HTMLElement;
-  private readonly wysiwygButton: HTMLButtonElement;
+  private readonly kdocButton: HTMLButtonElement;
   private readonly splitButton: HTMLButtonElement;
   private readonly sourceButton: HTMLButtonElement;
   private readonly themeButton: HTMLButtonElement;
@@ -1116,7 +1116,7 @@ export class EditorShell {
   private readonly fileGroup: HTMLElement;
   private readonly findRow: HTMLElement;
   private readonly outlineNav: HTMLElement;
-  private readonly wysiwygPane: HTMLElement;
+  private readonly kdocPane: HTMLElement;
   private readonly sourcePane: HTMLElement;
   private readonly statusBarElement: HTMLElement;
   private readonly statusDot: HTMLElement;
@@ -1170,7 +1170,7 @@ export class EditorShell {
   private findPanel!: FindPanel;
   private outlinePane: OutlinePane | null = null;
   private readonly outlineButton: HTMLButtonElement;
-  // The second view of the same document (FR-6.9), between the WYSIWYG pane and the Source pane.
+  // The second view of the same document (FR-6.9), between the K-Doc pane and the Source pane.
   // Hidden until it is asked for, so nothing changes for anyone who never opens it.
   private readonly secondaryPane: HTMLElement;
 
@@ -1289,6 +1289,8 @@ export class EditorShell {
    * first restores nothing.
    */
   private sessionRestored: boolean = false;
+  /** Whether the restored session set the view mode; if not, the Default view setting does. */
+  private viewModeRestored: boolean = false;
 
   // The active document's own reading width and density (FR-5.10, FR-14.13), read from local storage
   // when it is mounted. Empty means it simply follows the appearance settings.
@@ -1323,7 +1325,7 @@ export class EditorShell {
   private vaultFolders: readonly string[] = [];
   /** The vault root the folder list was last loaded for. */
   private vaultFoldersRoot: string | null = null;
-  /** Says where a hovered link in the WYSIWYG pane goes (FR-8.13). */
+  /** Says where a hovered link in the K-Doc pane goes (FR-8.13). */
   private readonly linkHoverCard: LinkHoverCard;
   /** Hands web and mail links to the operating system (FR-8.13). */
   private readonly externalOpener: ExternalOpener;
@@ -1535,13 +1537,13 @@ export class EditorShell {
     segmented.setAttribute('role', 'group');
     segmented.setAttribute('aria-label', 'View mode');
 
-    this.wysiwygButton = document.createElement('button');
-    this.wysiwygButton.type = 'button';
-    this.wysiwygButton.textContent = 'WYSIWYG';
-    this.wysiwygButton.addEventListener('click', (): void => {
-      this.setViewMode('wysiwyg');
+    this.kdocButton = document.createElement('button');
+    this.kdocButton.type = 'button';
+    this.kdocButton.textContent = 'K-Doc';
+    this.kdocButton.addEventListener('click', (): void => {
+      this.setViewMode('kdoc');
     });
-    segmented.appendChild(this.wysiwygButton);
+    segmented.appendChild(this.kdocButton);
 
     this.splitButton = document.createElement('button');
     this.splitButton.type = 'button';
@@ -1893,7 +1895,7 @@ export class EditorShell {
       entries: (): readonly {
         readonly index: number;
         readonly at: number;
-        readonly pane: 'wysiwyg' | 'source';
+        readonly pane: 'kdoc' | 'source';
         readonly words: number;
       }[] => {
         // Check whether the session, which owns the timeline, exists yet.
@@ -1906,7 +1908,7 @@ export class EditorShell {
             (entry: HistoryEntry, index: number): {
         readonly index: number;
         readonly at: number;
-        readonly pane: 'wysiwyg' | 'source';
+        readonly pane: 'kdoc' | 'source';
         readonly words: number;
       } => ({
               index,
@@ -2020,7 +2022,7 @@ export class EditorShell {
       definitions: () => (this.documentSession === undefined ? [] : linkDefinitions(this.documentSession.snapshot.document)),
       reveal: (offset: number): void => {
         this.navHistory.recordJump();
-        // A definition is only editable as source, and WYSIWYG has no caret position inside it, so it is shown in Source.
+        // A definition is only editable as source, and K-Doc has no caret position inside it, so it is shown in Source.
         this.revealSourceOffset(offset);
       },
       convert: (): void => {
@@ -2169,9 +2171,9 @@ export class EditorShell {
       },
     });
 
-    this.wysiwygPane = document.createElement('div');
-    this.wysiwygPane.className = 'kdoc-pane';
-    this.panesElement.appendChild(this.wysiwygPane);
+    this.kdocPane = document.createElement('div');
+    this.kdocPane.className = 'kdoc-pane';
+    this.panesElement.appendChild(this.kdocPane);
 
     this.secondaryDividerElement = document.createElement('div');
     this.secondaryDividerElement.hidden = true;
@@ -2180,7 +2182,7 @@ export class EditorShell {
     this.secondaryPane = document.createElement('div');
     this.secondaryPane.className = 'kdoc-pane';
     // Its own scroll position is the point of the second pane, so it is a separate scrolling box and
-    // is deliberately left out of the Source/WYSIWYG scroll sync.
+    // is deliberately left out of the Source/K-Doc scroll sync.
     this.secondaryPane.hidden = true;
     this.panesElement.appendChild(this.secondaryPane);
 
@@ -2192,12 +2194,12 @@ export class EditorShell {
     this.panesElement.appendChild(this.sourcePane);
 
     this.externalOpener = createExternalOpener(window);
-    // One card for the life of the shell: it watches the WYSIWYG pane's element, which survives every
+    // One card for the life of the shell: it watches the K-Doc pane's element, which survives every
     // document mount, so re-creating it per tab would only stack duplicate listeners.
     this.linkHoverCard = installLinkHoverCard({
       doc: document,
       win: window,
-      pane: this.wysiwygPane,
+      pane: this.kdocPane,
       describe: (href: string): LinkCardContent => this.describeLink(href),
       follow: (href: string): void => {
         void this.followLink(href);
@@ -2463,7 +2465,7 @@ export class EditorShell {
     this.splitDivider = installSplitDivider({
       element: this.splitDividerElement,
       doc: document,
-      first: this.wysiwygPane,
+      first: this.kdocPane,
       second: this.sourcePane,
       container: this.panesElement,
     });
@@ -3008,7 +3010,7 @@ export class EditorShell {
     this.currentViewMode = initialViewMode;
     this.setViewMode(initialViewMode);
 
-    // Step 8: Focus the WYSIWYG pane so the edit lock starts held by a real pane.
+    // Step 8: Focus the K-Doc pane so the edit lock starts held by a real pane.
     this.proseMirrorBinding.focus();
   }
 
@@ -4315,6 +4317,12 @@ export class EditorShell {
       const message = error instanceof Error ? error.message : String(error);
       this.showMessage(`The previous session could not be restored. ${message}`);
     }
+    // The Default view setting applies whenever the session did not bring a view back with it.
+    if (!this.viewModeRestored) {
+      this.setViewMode(this.settings.editor.defaultViewMode);
+    } else {
+      // The restored session's view wins.
+    }
     // A file the user double-clicked opens after the restored ones, so it ends up in front.
     await this.openFilesAskedFor(startingTab);
     // Whether it restored or failed, the launch is done reading the stored arrangement, so what happens
@@ -4508,12 +4516,13 @@ export class EditorShell {
    */
   private applyStoredLayout(stored: PersistedSession): void {
     this.setViewMode(stored.viewMode);
+    this.viewModeRestored = true;
     this.splitDivider.setRatio(stored.splitRatio);
     this.applyStoredPanel(this.sidebar, stored.sidebar);
     this.applyStoredPanel(this.rightSidebar, stored.rightSidebar);
 
     window.requestAnimationFrame((): void => {
-      this.wysiwygPane.scrollTop = stored.scrollWysiwyg;
+      this.kdocPane.scrollTop = stored.scrollKdoc;
       const source = sourceScroller(this.codeMirrorBinding.view);
       source.scrollTop = stored.scrollSource;
     });
@@ -4579,7 +4588,7 @@ export class EditorShell {
       splitRatio: this.splitDivider.ratio,
       sidebar: { collapsed: this.sidebar.isCollapsed, panelId: this.sidebar.activePanelId },
       rightSidebar: { collapsed: this.rightSidebar.isCollapsed, panelId: this.rightSidebar.activePanelId },
-      scrollWysiwyg: this.wysiwygPane.scrollTop,
+      scrollKdoc: this.kdocPane.scrollTop,
       scrollSource: sourceScroller(this.codeMirrorBinding.view).scrollTop,
     });
   }
@@ -4692,7 +4701,7 @@ export class EditorShell {
   }
 
   /**
-   * @purpose Writes the current WYSIWYG selection to the clipboard as Markdown or HTML (FR-7.4).
+   * @purpose Writes the current K-Doc selection to the clipboard as Markdown or HTML (FR-7.4).
    * @inputs format - Which serialization the user asked for.
    * @outputs Promise<void>.
    * @dataflow view.state -> selectionAsMarkdown / selectionAsHtml -> navigator.clipboard.writeText.
@@ -4747,7 +4756,7 @@ export class EditorShell {
       // coordsAtPos throws for a position it cannot map, which happens while the pane is hidden in
       // Source-only view. Falling back to the pane's own corner keeps the picker reachable rather than
       // letting a layout question become an exception.
-      const rect = this.wysiwygPane.getBoundingClientRect();
+      const rect = this.kdocPane.getBoundingClientRect();
       this.sizePicker.openAt(rect.left + 8, rect.top + 8);
     }
   }
@@ -5277,7 +5286,7 @@ export class EditorShell {
     } else {
       // Source offsets: the Source pane is the one that counts in these, so reveal it there.
       // Check whether that pane is on screen, since a range cannot be revealed in a hidden one.
-      if (this.currentViewMode === 'wysiwyg') {
+      if (this.currentViewMode === 'kdoc') {
         // Only the rendered pane is showing: open the split so there is something to scroll.
         this.setViewMode('split');
       } else {
@@ -5350,7 +5359,7 @@ export class EditorShell {
     } catch {
       // coordsAtPos throws for a position it cannot map, which happens while the pane is hidden in
       // Source-only view. The pane's own corner keeps the gallery reachable.
-      const rect = this.wysiwygPane.getBoundingClientRect();
+      const rect = this.kdocPane.getBoundingClientRect();
       this.stylesGallery.openAt(rect.left + 8, rect.top + 8);
     }
   }
@@ -5461,7 +5470,7 @@ export class EditorShell {
     } catch {
       // coordsAtPos throws for a position it cannot map, which happens while the pane is hidden in
       // Source-only view. The pane's own corner keeps the gallery reachable.
-      const rect = this.wysiwygPane.getBoundingClientRect();
+      const rect = this.kdocPane.getBoundingClientRect();
       this.listPicker.openAt(rect.left + 8, rect.top + 8);
     }
   }
@@ -5502,11 +5511,11 @@ export class EditorShell {
    * @purpose Starts a comment on the selection (FR-10.1), showing the pane that holds it.
    * @inputs none.
    * @outputs void.
-   * @dataflow view mode -> split when WYSIWYG -> comments pane shown -> commentsController.addComment().
-   * @controlflow Switch WYSIWYG to split -> show the comments pane -> add the comment, or say to select text.
+   * @dataflow view mode -> split when K-Doc -> comments pane shown -> commentsController.addComment().
+   * @controlflow Switch K-Doc to split -> show the comments pane -> add the comment, or say to select text.
    */
   private newComment(): void {
-    if (this.currentViewMode === 'wysiwyg') {
+    if (this.currentViewMode === 'kdoc') {
       // The anchor is taken from the Source pane's selection, so that pane must be on screen for this to mean anything.
       this.setViewMode('split');
     } else {
@@ -5608,7 +5617,7 @@ export class EditorShell {
             this.zenMode.toggle();
           },
           startPresentation: (): void => {
-            // Each --- rule starts a new slide; every slide goes through the same renderer as Preview and export.
+            // Each --- rule starts a new slide; every slide goes through the same renderer as export.
             this.presentation.open(splitSlides(this.documentSession.snapshot.document).map((slide) => renderFragment(slide)));
           },
           exportDocx: (): void => {
@@ -6372,9 +6381,9 @@ export class EditorShell {
       session: this.documentSession,
       // The shell's keymap dispatches the remappable shortcuts (FR-14.16), so the editor must not also bind them.
       hostOwnsShortcuts: true,
-      // Local pictures load through the host (FR-8.14); Preview reuses this pane, so it shows them too.
+      // Local pictures load through the host (FR-8.14).
       loadImage: (src: string): Promise<string | null> => this.loadImageSource(src),
-      mount: this.wysiwygPane,
+      mount: this.kdocPane,
       // Ctrl+Click on a link follows it (FR-8.13); the same route as the hover card and the context menu.
       onFollowLink: (href: string): void => {
         void this.followLink(href);
@@ -6634,10 +6643,10 @@ export class EditorShell {
       doc: document,
       session: this.documentSession,
       revealRange: (start: number, end: number): void => {
-        // A match the user cannot see is not a result. When only the WYSIWYG pane is showing there is
+        // A match the user cannot see is not a result. When only the K-Doc pane is showing there is
         // nowhere to reveal a source offset, so the view switches to split rather than silently
         // selecting text in a hidden pane.
-        if (this.currentViewMode === 'wysiwyg') {
+        if (this.currentViewMode === 'kdoc') {
           this.setViewMode('split');
         } else {
           // The Source pane is already visible in split or source mode.
@@ -6651,7 +6660,7 @@ export class EditorShell {
       applyText: (next: string): void => {
         // Deliberately NOT applyText with a borrowed Source-pane lock. The bindings infer an edit's
         // origin from which pane holds it, so borrowing made the Source binding discard the change as
-        // its own echo: the WYSIWYG pane updated and the Source pane did not.
+        // its own echo: the K-Doc pane updated and the Source pane did not.
         this.documentSession.applyExternalText(next);
       },
       onClose: (): void => {
@@ -6670,7 +6679,7 @@ export class EditorShell {
       revealRange: (start: number, end: number): void => {
         this.navHistory.recordJump();
         // Same reasoning as the find panel: a heading cannot be revealed in a pane that is not on screen.
-        if (this.currentViewMode === 'wysiwyg') {
+        if (this.currentViewMode === 'kdoc') {
           this.setViewMode('split');
         } else {
           // The Source pane is already visible in split or source mode.
@@ -6736,8 +6745,8 @@ export class EditorShell {
       },
       revealRange: (start: number, end: number): void => {
         // A comment the user cannot see is not a comment; switch view before moving the caret rather than selecting text inside a Source pane that would remain off-screen.
-        if (this.currentViewMode === 'wysiwyg') {
-          // WYSIWYG-only view: reveal the Source pane so the revealed range becomes visible to the user.
+        if (this.currentViewMode === 'kdoc') {
+          // K-Doc-view-only view: reveal the Source pane so the revealed range becomes visible to the user.
           this.setViewMode('split');
         } else {
           // The Source pane is already on screen (split or source mode): no view switch is required.
@@ -6821,8 +6830,8 @@ export class EditorShell {
           const change = this.changesController.changes().find((c) => c.id === changeId);
           if (change !== undefined) {
             // A matching change exists, so navigate to it.
-            if (this.currentViewMode === 'wysiwyg') {
-              // WYSIWYG hides anchors, so switch to split view first.
+            if (this.currentViewMode === 'kdoc') {
+              // K-Doc hides anchors, so switch to split view first.
               this.setViewMode('split');
             }
             const at = Math.max(0, Math.min(change.anchor.offset, this.codeMirrorBinding.view.state.doc.length));
@@ -6879,7 +6888,7 @@ export class EditorShell {
       onSpans: (spans: readonly ChangeSpan[]): void => {
         // A CodeMirror document is already indexed by source offsets, so paint the Source pane directly.
         setChangeSpansIn(this.codeMirrorBinding.view, spans);
-        // The WYSIWYG pane is painted whatever the current view mode: skipping it while the Source pane
+        // The K-Doc pane is painted whatever the current view mode: skipping it while the Source pane
         // is showing would leave a stale set behind the moment the user switched back.
         const pmView = this.proseMirrorBinding.view;
         const index = buildPositionIndex(this.documentSession.snapshot.document.root, pmView.state.doc);
@@ -6975,15 +6984,15 @@ export class EditorShell {
     this.scrollSync = installScrollSync({
       session: this.documentSession,
       win: window,
-      first: this.wysiwygPane,
+      first: this.kdocPane,
       // CodeMirror scrolls its own .cm-scroller rather than the pane div, so syncing against the pane
       // would read a scrollTop that never changes.
       second: sourceScroller(this.codeMirrorBinding.view),
       anchorsFor: (element: HTMLElement): readonly BlockAnchor[] => {
         // Check which pane is being measured; the two editors lay a document out completely differently.
-        if (element === this.wysiwygPane) {
-          // WYSIWYG: one anchor per top-level child of the ProseMirror content DOM.
-          return wysiwygAnchors(this.proseMirrorBinding.view, this.wysiwygPane);
+        if (element === this.kdocPane) {
+          // K-Doc: one anchor per top-level child of the ProseMirror content DOM.
+          return kdocAnchors(this.proseMirrorBinding.view, this.kdocPane);
         } else {
           // Source: one anchor per top-level block, located by its start offset in the Markdown text.
           return sourceAnchors(this.codeMirrorBinding.view, this.topLevelBlockOffsets());
@@ -7028,7 +7037,7 @@ export class EditorShell {
       view: this.proseMirrorBinding.view,
       spellEntries: (): Promise<readonly PopupMenuEntry[]> =>
         buildSpellEntries({ spell: this.spellCheck, view: this.proseMirrorBinding.view }),
-      pane: this.wysiwygPane,
+      pane: this.kdocPane,
       doc: document,
       openLink: (): void => {
         this.linkDialog.open(activeLink(this.proseMirrorBinding.view.state)?.attrs ?? null);
@@ -7056,7 +7065,7 @@ export class EditorShell {
     this.metadataPanel.refresh();
     this.problemsPanel.refresh();
     this.linkDefinitionsPanel.refresh();
-    // The WYSIWYG fold plugin drew the document's folds when it was created; Source needs them applied.
+    // The K-Doc fold plugin drew the document's folds when it was created; Source needs them applied.
     foldSync.applyToSource();
     // A second pane left open follows the reader from document to document, so it is rebuilt here over
     // the newly mounted session rather than closing itself on every tab switch.
@@ -8030,7 +8039,7 @@ export class EditorShell {
    * @inputs void; reads this.locked.
    * @outputs void.
    * @dataflow this.locked -> both bindings' setEditable -> the panes; -> statusLock.hidden -> the status bar.
-   * @controlflow Preview is never editable whatever the lock says, so the WYSIWYG pane takes both into account.
+   * @controlflow Both panes follow the lock; a second pane holding its own document follows that file's read-only flag.
    */
   /**
    * @purpose Refuses a save while the document is locked, reporting why (FR-6.7).
@@ -8055,7 +8064,7 @@ export class EditorShell {
    * @inputs void; acts on the mounted session.
    * @outputs void.
    * @dataflow A new ProseMirrorBinding over this.documentSession -> the secondary pane; a divider between
-   *   it and the WYSIWYG pane.
+   *   it and the K-Doc pane.
    * @controlflow Destroy any previous binding first, so a rebuild cannot leave one attached to the old
    *   session; then build the binding, show the pane and its divider, and apply the document's lock.
    */
@@ -8107,7 +8116,7 @@ export class EditorShell {
     this.secondaryDivider = installSplitDivider({
       element: this.secondaryDividerElement,
       doc: document,
-      first: this.wysiwygPane,
+      first: this.kdocPane,
       second: this.secondaryPane,
       container: this.panesElement,
     });
@@ -8687,7 +8696,7 @@ export class EditorShell {
    * @inputs void; operates on the current document's fold state and focused pane.
    * @outputs void.
    * @dataflow FoldSync store toggled via Source caret or ProseMirror command → reported when nothing matched.
-   * @controlflow Return early if no fold sync is mounted; branch on the focused pane to toggle in Source or WYSIWYG; report when no toggle occurred.
+   * @controlflow Return early if no fold sync is mounted; branch on the focused pane to toggle in Source or K-Doc; report when no toggle occurred.
    */
   /**
    * @purpose Takes a local snapshot of the open document (FR-11.8).
@@ -9078,7 +9087,7 @@ export class EditorShell {
   private splitAtHeading(): void {
     const snapshot = this.documentSession.snapshot;
     const entries = buildOutline(snapshot.document);
-    // The Source caret is a source offset; the WYSIWYG caret is found by counting top-level headings.
+    // The Source caret is a source offset; the K-Doc caret is found by counting top-level headings.
     const index = snapshot.focusedPane === 'source'
       ? sectionIndexAtOffset(entries, this.codeMirrorBinding.view.state.selection.main.head)
       : sectionIndexAtCaret(this.proseMirrorBinding.view.state);
@@ -9224,7 +9233,7 @@ export class EditorShell {
 
   /**
    * @purpose Inserts a table of contents at the caret, asking how deep it goes, or refreshes the one the document already has (FR-8.30).
-   * @inputs none - reads the WYSIWYG view's document and caret.
+   * @inputs none - reads the K-Doc view's document and caret.
    * @outputs Promise<void>.
    * @dataflow hasTableOfContents -> refresh, or promptDialog.ask -> depth -> insertTableOfContents -> dispatch.
    * @controlflow With a table of contents, refresh it and say what happened; otherwise ask, refuse a bad level, insert, and say when no heading qualified.
@@ -9266,7 +9275,7 @@ export class EditorShell {
 
   /**
    * @purpose Asks for the minimum width of the table column under the caret and applies it (FR-8.26).
-   * @inputs none - reads the caret's column from the WYSIWYG view.
+   * @inputs none - reads the caret's column from the K-Doc view.
    * @outputs Promise<void>.
    * @dataflow columnWidthHintAt -> promptDialog.ask -> parseWidthHint -> setColumnWidthHint -> dispatch.
    * @controlflow Outside a table, say so; on cancel, stop; on an invalid answer, say what is accepted; otherwise set the hint.
@@ -9380,7 +9389,7 @@ export class EditorShell {
       // Source has focus: the CodeMirror head is already a character offset into the text.
       return this.codeMirrorBinding.view.state.selection.main.head;
     } else {
-      // Wysiwyg has focus: map the ProseMirror selection to Source coordinates via the position index.
+      // The K-Doc pane has focus: map the ProseMirror selection to Source coordinates via the position index.
       const pmView = this.proseMirrorBinding.view;
       const snapshot = this.documentSession.snapshot;
       const index = buildPositionIndex(snapshot.document.root, pmView.state.doc);
@@ -9399,7 +9408,7 @@ export class EditorShell {
    * @controlflow If in a non-line pane, switch to Split first; then set the CodeMirror selection and focus it.
    */
   private revealSourceOffset(offset: number): void {
-    if (this.currentViewMode === 'wysiwyg') {
+    if (this.currentViewMode === 'kdoc') {
       // A line number is meaningless in a pane that does not show lines, so switch to Split first.
       this.setViewMode('split');
     }
@@ -9424,7 +9433,7 @@ export class EditorShell {
       return;
     }
 
-    // Wysiwyg has focus: map the Source offset to a ProseMirror TextSelection via the position index.
+    // The K-Doc pane has focus: map the Source offset to a ProseMirror TextSelection via the position index.
     const pmView = this.proseMirrorBinding.view;
     const index = buildPositionIndex(this.documentSession.snapshot.document.root, pmView.state.doc);
     const selection = sourceSelectionToProseMirror(index, pmView.state.doc, { anchor: offset, head: offset });
@@ -9579,15 +9588,15 @@ export class EditorShell {
   }
 
   /**
-   * @purpose Carries the user's caret position between editing panes when the view mode changes, ensuring the caret is preserved across view-mode switches (FR-5.6). Preview counts as a WYSIWYG-visible mode, so leaving Source for Preview carries the caret into the rendered pane and a later switch to WYSIWYG finds it in place.
+   * @purpose Carries the user's caret position between editing panes when the view mode changes, ensuring the caret is preserved across view-mode switches (FR-5.6).
    * @inputs previous - The ViewMode being left.
    * @inputs next - The ViewMode being entered.
-   * @inputs focused - Which pane currently holds focus ('wysiwyg' | 'source').
+   * @inputs focused - Which pane currently holds focus ('kdoc' | 'source').
    * @outputs void.
    * @dataflow previous & next & focused -> determine pane visibility -> read selection from active pane -> convert selection using position index -> dispatch new selection to target pane.
-   * @controlflow If mode unchanged, return immediately -> calculate target pane visibility -> if Source active and hiding, convert to WYSIWYG selection -> else if WYSIWYG active and hiding, convert to Source selection -> else do nothing.
+   * @controlflow If mode unchanged, return immediately -> calculate target pane visibility -> if Source active and hiding, convert to K-Doc selection -> else if K-Doc active and hiding, convert to Source selection -> else do nothing.
    */
-  private carrySelectionAcross(previous: ViewMode, next: ViewMode, focused: 'wysiwyg' | 'source'): void {
+  private carrySelectionAcross(previous: ViewMode, next: ViewMode, focused: 'kdoc' | 'source'): void {
     // Check whether the mode is actually changing. If previous === next, return. setViewMode is re-applied after every tab mount with the mode unchanged, and carrying then would push a stale caret into a document that was just opened.
     if (previous === next) {
       // Unchanged: nothing to carry.
@@ -9597,7 +9606,7 @@ export class EditorShell {
     }
 
     const sourceVisible: boolean = next === 'split' || next === 'source';
-    const wysiwygVisible: boolean = next !== 'source';
+    const kdocVisible: boolean = next !== 'source';
 
     // Check which pane holds the caret and whether that pane is about to be hidden.
     if (focused === 'source' && !sourceVisible) {
@@ -9608,19 +9617,19 @@ export class EditorShell {
 
       // Check whether the Source caret could be placed in the rendered document.
       if (selection === null) {
-        // It could not: leave the WYSIWYG caret as it was, since guessing would put it where the user was not.
+        // It could not: leave the K-Doc caret as it was, since guessing would put it where the user was not.
         return;
       } else {
         // It could: move the rendered pane's caret there and bring it into view.
         pmView.dispatch(pmView.state.tr.setSelection(selection).scrollIntoView());
       }
-    } else if (focused === 'wysiwyg' && !wysiwygVisible) {
+    } else if (focused === 'kdoc' && !kdocVisible) {
       const pmView = this.proseMirrorBinding.view;
       const index = buildPositionIndex(this.documentSession.snapshot.document.root, pmView.state.doc);
       const pmSelection = pmView.state.selection;
       const carried: { anchor: number; head: number } | null = proseMirrorSelectionToSource(index, { anchor: pmSelection.anchor, head: pmSelection.head }, this.documentSession.snapshot.text.length);
 
-      // Check whether the WYSIWYG caret could be placed in the source text.
+      // Check whether the K-Doc caret could be placed in the source text.
       if (carried === null) {
         // It could not: leave the Source caret as it was.
         return;
@@ -9635,10 +9644,10 @@ export class EditorShell {
 
   /**
    * @purpose Switches the visible editor layout mode, updating pane visibility, segmented button states, and transferring focus if the active edit lock holder is hidden.
-   * @inputs mode - Target ViewMode ('wysiwyg' | 'split' | 'source').
+   * @inputs mode - Target ViewMode ('kdoc' | 'split' | 'source').
    * @outputs void.
    * @dataflow mode -> pane.hidden flags, button aria-pressed attributes, session focus transfer if hidden, refreshStatusBar.
-   * @controlflow Check view mode -> update hidden attributes on wysiwygPane and sourcePane -> update aria-pressed on segmented buttons -> check if currently focused pane is now hidden and transfer focus to visible pane -> update currentViewMode -> refresh status bar.
+   * @controlflow Check view mode -> update hidden attributes on kdocPane and sourcePane -> update aria-pressed on segmented buttons -> check if currently focused pane is now hidden and transfer focus to visible pane -> update currentViewMode -> refresh status bar.
    */
   setViewMode(mode: ViewMode): void {
     // The mode being left, so the caret is only carried on a real change of mode.
@@ -9646,17 +9655,17 @@ export class EditorShell {
     this.currentViewMode = mode;
 
     // Check the target view mode and set hidden attributes on editor panes accordingly.
-    if (mode === 'wysiwyg') {
-      // In WYSIWYG mode, show the ProseMirror pane and hide the CodeMirror source pane.
-      this.wysiwygPane.hidden = false;
+    if (mode === 'kdoc') {
+      // In K-Doc mode, show the ProseMirror pane and hide the CodeMirror source pane.
+      this.kdocPane.hidden = false;
       this.sourcePane.hidden = true;
     } else if (mode === 'source') {
       // In Source mode, hide the ProseMirror pane and show the CodeMirror source pane.
-      this.wysiwygPane.hidden = true;
+      this.kdocPane.hidden = true;
       this.sourcePane.hidden = false;
     } else {
       // In Split mode, show both editor panes side-by-side.
-      this.wysiwygPane.hidden = false;
+      this.kdocPane.hidden = false;
       this.sourcePane.hidden = false;
     }
 
@@ -9674,9 +9683,9 @@ export class EditorShell {
         // Divider not yet installed during early construction: sizing will be applied upon installation.
       }
     } else {
-      // In non-split modes (WYSIWYG or Source), clear inline flex on both panes
+      // In non-split modes (K-Doc or Source), clear inline flex on both panes
       // so stylesheet rules take over and the visible pane occupies all available width.
-      this.wysiwygPane.style.flex = '';
+      this.kdocPane.style.flex = '';
       this.sourcePane.style.flex = '';
     }
 
@@ -9685,15 +9694,15 @@ export class EditorShell {
     this.codeMirrorBinding.setEditable(!this.locked);
 
     // Update aria-pressed attributes on segmented mode buttons to reflect active selection.
-    this.wysiwygButton.setAttribute('aria-pressed', mode === 'wysiwyg' ? 'true' : 'false');
+    this.kdocButton.setAttribute('aria-pressed', mode === 'kdoc' ? 'true' : 'false');
     this.splitButton.setAttribute('aria-pressed', mode === 'split' ? 'true' : 'false');
     this.sourceButton.setAttribute('aria-pressed', mode === 'source' ? 'true' : 'false');
 
     // CRITICAL FOCUS TRANSFER ON PANE VISIBILITY CHANGE:
     // K-Doc enforces single-pane edit locking (FR-3.1), where DocumentSession.applyTree and applyText
     // strictly throw errors when invoked by an unfocused pane. If the user switches view mode such that
-    // the currently focused pane becomes hidden (for example, switching to 'wysiwyg' while 'source' holds
-    // the edit lock, or switching to 'source' while 'wysiwyg' holds the lock), leaving the lock on the hidden
+    // the currently focused pane becomes hidden (for example, switching to 'kdoc' while 'source' holds
+    // the edit lock, or switching to 'source' while 'kdoc' holds the lock), leaving the lock on the hidden
     // pane would cause every subsequent keystroke in the visible pane to throw an unhandled error.
     // Therefore, whenever the active edit lock resides on a newly hidden pane, focus MUST be explicitly
     // transferred to the remaining visible pane so that the edit lock moves with user visibility.
@@ -9702,11 +9711,11 @@ export class EditorShell {
     // Carry the caret into the pane being revealed before focus moves there, so focus arrives at the
     // place the user was rather than wherever that pane's caret happened to be left (FR-5.6).
     this.carrySelectionAcross(previousMode, mode, currentFocusedPane);
-    if (mode === 'wysiwyg' && currentFocusedPane === 'source') {
+    if (mode === 'kdoc' && currentFocusedPane === 'source') {
       // Source pane is now hidden but held the edit lock: transfer focus to visible ProseMirror pane.
       this.proseMirrorBinding.focus();
-    } else if (mode === 'source' && currentFocusedPane === 'wysiwyg') {
-      // WYSIWYG pane is now hidden but held the edit lock: transfer focus to visible CodeMirror pane.
+    } else if (mode === 'source' && currentFocusedPane === 'kdoc') {
+      // K-Doc pane is now hidden but held the edit lock: transfer focus to visible CodeMirror pane.
       this.codeMirrorBinding.focus();
     } else {
       // In split mode or when the focused pane remains visible: no lock transfer required.
@@ -9886,11 +9895,11 @@ export class EditorShell {
       return;
     }
 
-    // Anchor in whichever pane is actually visible: when viewing source or split, the marked text lives in the Source pane; otherwise it lives in the WYSIWYG pane. This encodes the rightmost-visible-pane rule — the line runs rightward toward the panel, and a line starting from the WYSIWYG pane would have to cross over the Source pane to reach the card, which reads as pointing at the wrong text.
+    // Anchor in whichever pane is actually visible: when viewing source or split, the marked text lives in the Source pane; otherwise it lives in the K-Doc pane. This encodes the rightmost-visible-pane rule — the line runs rightward toward the panel, and a line starting from the K-Doc pane would have to cross over the Source pane to reach the card, which reads as pointing at the wrong text.
     const anchorEl =
       this.currentViewMode === 'source' || this.currentViewMode === 'split'
         ? this.sourcePane.querySelector(`[data-thread-id="${threadId}"]`)
-        : this.wysiwygPane.querySelector('.kdoc-commented-active');
+        : this.kdocPane.querySelector('.kdoc-commented-active');
 
     // The thread is anchored somewhere that is not currently painted (e.g. scrolled out of view or in a hidden pane), so there is no geometry to join and we clear the line.
     if (anchorEl === null) {
@@ -10234,15 +10243,15 @@ export class EditorShell {
     this.statusReadingTime.textContent = `${stats.readingMinutes} min read`;
 
     // Format the active focused pane name.
-    if (snapshot.focusedPane === 'wysiwyg') {
-      this.statusFocus.textContent = 'WYSIWYG';
+    if (snapshot.focusedPane === 'kdoc') {
+      this.statusFocus.textContent = 'K-Doc';
     } else {
       this.statusFocus.textContent = 'Source';
     }
 
     // Format the active view mode label.
-    if (this.currentViewMode === 'wysiwyg') {
-      this.statusViewMode.textContent = 'WYSIWYG';
+    if (this.currentViewMode === 'kdoc') {
+      this.statusViewMode.textContent = 'K-Doc';
     } else if (this.currentViewMode === 'split') {
       this.statusViewMode.textContent = 'Split';
     } else {

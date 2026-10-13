@@ -201,7 +201,7 @@ export function printableHtml(
 
   // The contents page is prepended to the rendered fragment rather than inserted by the renderer,
   // because it belongs to printing rather than to the document: it is not in the Markdown, and a
-  // renderer that added it would put it in the HTML export and the Preview pane too.
+  // renderer that added it would put it in the HTML export and the presentation slides too.
   return standaloneWith(contents + rendered, title, styles);
 }
 

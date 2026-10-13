@@ -1,6 +1,6 @@
 /**
  * @file indent-commands.ts
- * @purpose Indenting and outdenting whatever is under the caret in K-Doc's WYSIWYG pane (FR-20.2, FR-8.6): a list item within its list via indentList/outdentList, anything else into or out of a blockquote. These give the indentation keys the spec names for outside a list something to bind, since Markdown has no paragraph-level indent and leading spaces make a code block instead.
+ * @purpose Indenting and outdenting whatever is under the caret in the K-Doc pane (FR-20.2, FR-8.6): a list item within its list via indentList/outdentList, anything else into or out of a blockquote. These give the indentation keys the spec names for outside a list something to bind, since Markdown has no paragraph-level indent and leading spaces make a code block instead.
  * @inputs ProseMirror EditorState instances and optional transaction dispatch callbacks; consumed by the two commands bound to those keys.
  * @outputs Two ProseMirror Command factories: indentBlock nests under-indenting into a list item or, outside a list, wraps the block in a blockquote; outdentBlock reverses it (lifting via lift directly rather than checking for a blockquote by name).
  * @functions

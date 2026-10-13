@@ -11,7 +11,7 @@
  * @controlflow Build a four-element array in dependency order and return it; there is no branching or state to transition.
  * @note Ctrl+Click needs no extension here: once allowMultipleSelections is on, CodeMirror adds a caret on any modified click by itself,
  *   so only the Alt-drag column selection and the Mod-d keyboard shortcut require code in this module.
- * @note This is the Source half of FR-7.2 only. ProseMirror has no multi-selection model, so the WYSIWYG half is not implemented;
+ * @note This is the Source half of FR-7.2 only. ProseMirror has no multi-selection model, so the K-Doc half is not implemented;
  *   a caret drawn there that could not take an edit would be worse than no caret.
  * @version 1
  * @date 2026-09-06

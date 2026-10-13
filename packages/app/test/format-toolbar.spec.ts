@@ -2,7 +2,7 @@
 
 /**
  * @file format-toolbar.spec.ts
- * @purpose Vitest test suite for K-Doc's WYSIWYG format toolbar and modal link dialog (@k-doc/app).
+ * @purpose Vitest test suite for the K-Doc view's format toolbar and modal link dialog (@k-doc/app).
  *   Validates complete toolbar rendering, caret state reflection across inline marks, block formats,
  *   lists, and links, edit lock focus contract maintenance, modal link dialog input synchronization,
  *   validation, and lifecycle teardown under a jsdom environment.

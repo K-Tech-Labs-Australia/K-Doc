@@ -65,8 +65,8 @@ export interface HtmlRenderOptions {
  * Design constraints:
  * - Do NOT use CSS custom properties (variables) here: the exported file has to stand alone,
  *   and tokens defined in the app's stylesheet would resolve to nothing outside it.
- * - Measure uses `max-width: 42rem; margin: 0 auto;` on the body content, matching Preview's
- *   measure so the exported document reads identically to the Preview the user was looking at.
+ * - Measure uses `max-width: 42rem; margin: 0 auto;` on the body content: about 70 characters a line,
+ *   which reads more easily than text set to the full window width.
  * - System font stacks provide readable default typography without web font requests.
  * - In print media (@media print), page margins are provided by the physical page box,
  *   so max-width centering is removed, links inherit color, and URLs are printed after link text.
@@ -86,7 +86,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   color: #24292f;
   background-color: #ffffff;
-  /* Measure matches Preview's 42rem measure so the exported document reads like the Preview: */
+  /* About 70 characters a line, easier to read than the full window width: */
   max-width: 42rem;
   margin: 0 auto;
   padding: 2rem 1.5rem;

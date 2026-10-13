@@ -1,7 +1,7 @@
 /**
  * @file edit-history-entries.spec.ts
  * @purpose Vitest test suite for EditHistory.entries getter in @k-doc/core verifying requirement FR-14.7.
- * @inputs Synthetic editor text snapshots, PaneId identifiers ('wysiwyg' | 'source'), and millisecond timestamps.
+ * @inputs Synthetic editor text snapshots, PaneId identifiers ('kdoc' | 'source'), and millisecond timestamps.
  * @outputs Vitest assertions validating entries length, chronological ordering, pane/timestamp attribution, snapshot isolation, undo/redo reflection, coalescing, and clear.
  * @functions None.
  * @dataflow Synthetic edit states -> EditHistory methods (push, undo, redo, clear) -> history.entries getter -> Vitest assertions.
@@ -24,9 +24,9 @@ describe('EditHistory.entries', (): void => {
   // Retains every non-coalesced edit snapshot in chronological order, oldest first.
   it('retains multiple edits in chronological order with oldest first', (): void => {
     const history = new EditHistory();
-    history.push('a', 'wysiwyg', 0, false);
-    history.push('b', 'wysiwyg', 1000, false);
-    history.push('c', 'wysiwyg', 2000, false);
+    history.push('a', 'kdoc', 0, false);
+    history.push('b', 'kdoc', 1000, false);
+    history.push('c', 'kdoc', 2000, false);
 
     expect(history.entries.map((entry): string => entry.text)).toEqual(['a', 'b', 'c']);
   });
@@ -44,9 +44,9 @@ describe('EditHistory.entries', (): void => {
   // Returns a defensive copy of the undo stack so subsequent pushes do not alter it.
   it('returns a copy of the stack rather than a live reference', (): void => {
     const history = new EditHistory();
-    history.push('a', 'wysiwyg', 0, false);
+    history.push('a', 'kdoc', 0, false);
     const taken = history.entries;
-    history.push('b', 'wysiwyg', 1000, false);
+    history.push('b', 'kdoc', 1000, false);
 
     expect(taken.length).toBe(1);
     expect(history.size).toBe(2);
@@ -78,11 +78,11 @@ describe('EditHistory.entries', (): void => {
   it('collapses a coalesced typing run into the entry that opened it', (): void => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
     // A non-coalescing push closes the run, so it cannot be merged into afterwards.
-    history.push('a', 'wysiwyg', 0, false);
+    history.push('a', 'kdoc', 0, false);
     // This one opens a fresh run rather than joining the closed one above.
-    history.push('b', 'wysiwyg', 100, true);
+    history.push('b', 'kdoc', 100, true);
     // Within the window and in the same pane, so it merges into 'b' rather than adding a third entry.
-    history.push('c', 'wysiwyg', 200, true);
+    history.push('c', 'kdoc', 200, true);
     const entries = history.entries;
 
     // Two entries, not three: 'c' merged. And the run's entry still reads 'b', the state as it was
@@ -95,9 +95,9 @@ describe('EditHistory.entries', (): void => {
   // A run opens only on a coalescing push, so three of them in a window collapse to one entry.
   it('collapses a run that was coalescing from its first push', (): void => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
-    history.push('a', 'wysiwyg', 0, true);
-    history.push('b', 'wysiwyg', 100, true);
-    history.push('c', 'wysiwyg', 200, true);
+    history.push('a', 'kdoc', 0, true);
+    history.push('b', 'kdoc', 100, true);
+    history.push('c', 'kdoc', 200, true);
 
     // The first push opened the run, so both later ones merged into it and 'a' is what undo returns to.
     expect(history.entries.map((entry): string => entry.text)).toEqual(['a']);
@@ -106,7 +106,7 @@ describe('EditHistory.entries', (): void => {
   // A pane switch mid-run ends it, because one undo entry must not span two editors.
   it('starts a new entry when a coalescing push arrives from the other pane', (): void => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
-    history.push('a', 'wysiwyg', 0, true);
+    history.push('a', 'kdoc', 0, true);
     history.push('b', 'source', 100, true);
 
     expect(history.entries.map((entry): string => entry.text)).toEqual(['a', 'b']);
@@ -115,8 +115,8 @@ describe('EditHistory.entries', (): void => {
   // A gap longer than the window means the user stopped typing, so the next edit is its own entry.
   it('starts a new entry when a coalescing push falls outside the window', (): void => {
     const history = new EditHistory({ coalesceWindowMs: 500 });
-    history.push('a', 'wysiwyg', 0, true);
-    history.push('b', 'wysiwyg', 501, true);
+    history.push('a', 'kdoc', 0, true);
+    history.push('b', 'kdoc', 501, true);
 
     expect(history.entries.map((entry): string => entry.text)).toEqual(['a', 'b']);
   });
@@ -124,7 +124,7 @@ describe('EditHistory.entries', (): void => {
   // Empties the undo stack so entries length drops to 0 after clear().
   it('clears all entries when clear() is called', (): void => {
     const history = new EditHistory();
-    history.push('a', 'wysiwyg', 0, false);
+    history.push('a', 'kdoc', 0, false);
     history.clear();
     const entries = history.entries;
 

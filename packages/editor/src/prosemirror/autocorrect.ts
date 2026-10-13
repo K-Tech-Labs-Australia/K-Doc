@@ -1,6 +1,6 @@
 /**
  * @file autocorrect.ts
- * @purpose Autocorrect as you type in the WYSIWYG pane (FR-7.8): smart quotes, dashes, ellipsis, ordinal superscripts, sentence capitals and a replacement table, each read from live options at the moment it would fire, and all inert in code.
+ * @purpose Autocorrect as you type in the K-Doc pane (FR-7.8): smart quotes, dashes, ellipsis, ordinal superscripts, sentence capitals and a replacement table, each read from live options at the moment it would fire, and all inert in code.
  * @inputs The options getter returning current AutocorrectOptions; typed text via ProseMirror match arrays; editor state for position and mark resolution.
  * @outputs An input-rules Plugin plus pure helpers (isInCode, ordinalSuffixFits, findReplacement) used by the rule factories.
  * @functions

@@ -24,8 +24,8 @@
  * @date 2026-09-12
  */
 
-/** The editor surface an edit belongs to: the rendered WYSIWYG view or the raw source view. */
-export type PaneId = 'wysiwyg' | 'source';
+/** The editor surface an edit belongs to: the rendered K-Doc view or the raw source view. */
+export type PaneId = 'kdoc' | 'source';
 
 /** A single recorded text state, retained as a full snapshot for undo/redo restoration. */
 export interface HistoryEntry {

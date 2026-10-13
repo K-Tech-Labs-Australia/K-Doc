@@ -9,7 +9,7 @@
  *   - buildBars: Assembles a RangeSet from validated bars for a document length (module-level helper).
  *   - BarMarker: GutterMarker rendering a single identical margin bar as an empty span.
  *   - changeBars: Extension composing the state field and its gutter for embedding in a pane's extension list.
- *   - changeBarTheme: Extension providing CSS rules colouring the bars to match the WYSIWYG plugin.
+ *   - changeBarTheme: Extension providing CSS rules colouring the bars to match the K-Doc plugin.
  *   - setChangeBarsIn: Dispatches the bar effect on behalf of callers who need not know about it.
  * @dataflow plan line offsets -> setChangeBarsEffect.of(bars) -> changeBarsField rebuilds RangeSet via buildBars -> gutter markers option reads it and paints one identical span per changed line in the margin.
  * @controlflow create returns an empty range set; update replaces the set on a bar effect (the authoritative plan wins, no merge) or maps changes otherwise so typed edits keep ranges steady until the debounced re-plan arrives again — briefly approximate beats briefly absent. Each bar paints as one identical marker because Simple Markup says only *something changed here*, deliberately not what.
@@ -113,7 +113,7 @@ export function changeBars(): Extension {
 }
 
 /**
- * @purpose Provides CSS rules that colour the margin bars in the Source pane so they match the WYSIWYG plugin exactly (FR-11.4).
+ * @purpose Provides CSS rules that colour the margin bars in the Source pane so they match the K-Doc plugin exactly (FR-11.4).
  * @inputs void — theme variables (--kdoc-author-hue) are expected to be defined on a host element or :root by the surrounding design tokens; each bar rule falls back to a neutral hue because it cannot know which author's change owns any given line.
  * @outputs an Extension wrapping EditorView.theme with two selector rules keyed by the gutter class and CM_CHANGE_BAR_CLASS.
  * @dataflow None — pure descriptor; CodeMirror injects the CSS into the document head when the extension mounts and applies it to every bar carrying this class.

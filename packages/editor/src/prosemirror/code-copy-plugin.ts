@@ -1,6 +1,6 @@
 /**
  * @file code-copy-plugin.ts
- * @purpose ProseMirror plugin providing a copy button widget on code blocks in the WYSIWYG pane (FR-8.8).
+ * @purpose ProseMirror plugin providing a copy button widget on code blocks in the K-Doc pane (FR-8.8).
  *   The button is a widget, so it is not part of the document: it must never end up in the text a copy
  *   produces, which would be a copy button that copies itself.
  *   It is deliberately a separate plugin from the highlighter. Copying works for every fence, highlighted or

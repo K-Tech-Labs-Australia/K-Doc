@@ -1,6 +1,6 @@
 /**
  * @file comment-marks.ts
- * @purpose CodeMirror 6 decorations for commented ranges in K-Doc's Source pane (FR-10.1): a state field holding a DecorationSet of per-thread marks, an effect that replaces it with a freshly computed authoritative plan, and the theme rules that tint those marks — so every comment reads identically whether painted here or by the ProseMirror plugin in the WYSIWYG pane.
+ * @purpose CodeMirror 6 decorations for commented ranges in K-Doc's Source pane (FR-10.1): a state field holding a DecorationSet of per-thread marks, an effect that replaces it with a freshly computed authoritative plan, and the theme rules that tint those marks — so every comment reads identically whether painted here or by the ProseMirror plugin in the K-Doc pane.
  * @inputs setCommentSpansEffect carries readonly CommentSpan[] (source offsets from planDecorations); EditorView when dispatching; document length derived at build time to drop stale spans.
  * @outputs a DecorationSet of comment marks on editor state, two CSS class constants consumed by the theme, and extensions embeddable in the Source pane's extension list.
  * @functions
@@ -8,11 +8,11 @@
  *   - commentMarksField: StateField holding the DecorationSet of commented ranges across editor transactions.
  *   - buildMarks: Assembles a DecorationSet from validated spans for a document length (module-level helper).
  *   - commentMarks: Extension composing just the state field for embedding in a pane's extension list.
- *   - commentSpanTheme: Extension providing CSS rules tinting open and resolved marks to match the WYSIWYG plugin.
+ *   - commentSpanTheme: Extension providing CSS rules tinting open and resolved marks to match the K-Doc plugin.
  *   - setCommentSpansIn: Dispatches the span effect on behalf of callers who need not know about it.
  * @dataflow planDecorations source offsets -> setCommentSpansEffect.of(spans) -> commentMarksField rebuilds DecorationSet via buildMarks -> EditorView.decorations reads it and paints marks using commentSpanTheme styling.
  * @controlflow create returns an empty set; update replaces the set on a span effect (the authoritative plan wins, no merge) or maps changes otherwise so typed edits keep ranges steady until the debounced re-plan arrives again — briefly approximate beats briefly absent.
- * @note planDecorations returns source offsets — exactly what a CodeMirror document is indexed by — so this Source pane can paint the plan directly; the WYSIWYG pane cannot because ProseMirror positions differ from source offsets (markup characters are absent from its tree) and that mapping does not exist yet.
+ * @note planDecorations returns source offsets — exactly what a CodeMirror document is indexed by — so this Source pane can paint the plan directly; the K-Doc pane cannot because ProseMirror positions differ from source offsets (markup characters are absent from its tree) and that mapping does not exist yet.
  * @version 1
  * @date 2026-09-07
  */
@@ -136,7 +136,7 @@ export function commentMarks(): Extension {
 }
 
 /**
- * @purpose Provides CSS rules that tint open and resolved comment marks in the Source pane so they match the WYSIWYG plugin exactly (FR-10.1).
+ * @purpose Provides CSS rules that tint open and resolved comment marks in the Source pane so they match the K-Doc plugin exactly (FR-10.1).
  * @inputs void — theme variables (--kdoc-color-accent, --kdoc-color-text-muted) are expected to be defined on a host element or :root by the surrounding design tokens.
  * @outputs an Extension wrapping EditorView.theme with two selector rules keyed by the exported class constants.
  * @dataflow None — pure descriptor; CodeMirror injects the CSS into the document head when the extension mounts and applies it to every mark carrying these classes.

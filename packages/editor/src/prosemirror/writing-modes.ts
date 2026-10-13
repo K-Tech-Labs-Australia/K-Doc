@@ -1,6 +1,6 @@
 /**
  * @file writing-modes.ts
- * @purpose Focus and Typewriter modes in WYSIWYG (FR-5.8): dims every block but the one holding the caret (or, in sentence scope, all but the caret's sentence) and keeps the caret vertically centred while typing.
+ * @purpose Focus and Typewriter modes in K-Doc (FR-5.8): dims every block but the one holding the caret (or, in sentence scope, all but the caret's sentence) and keeps the caret vertically centred while typing.
  * @inputs a getter for the current modes, editor state and view.
  * @outputs decorations, scroll changes, WRITING_MODE_STYLES.
  * @functions

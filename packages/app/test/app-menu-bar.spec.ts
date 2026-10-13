@@ -284,7 +284,7 @@ function mountAppMenuBarHarness(
   activeMounts.push(barMount);
 
   const session = new DocumentSession(markdown);
-  session.focusPane('wysiwyg');
+  session.focusPane('kdoc');
 
   const binding = new ProseMirrorBinding({ session, mount: editorMount });
   activeBindings.push(binding);
