@@ -85,7 +85,7 @@ jobs:
             echo "The release notes already have an Install section."
           else
             # One line per paragraph: GitHub shows every line break in release notes as a break.
-          cat >> notes.md <<'EOF'
+            cat >> notes.md <<'EOF'
 
           ## Install
 
