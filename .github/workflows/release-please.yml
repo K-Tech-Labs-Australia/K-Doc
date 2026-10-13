@@ -67,3 +67,38 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ needs.release-please.outputs.tag_name }}" src-tauri/target/release/bundle/nsis/*-setup.exe --clobber
+
+      # Release Please writes only what changed; a reader downloading the installer also needs to know how to install
+      # it, why SmartScreen may warn, and how to check the file is the one this workflow built.
+      - name: Add install instructions and the checksum to the release notes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          installer=$(ls src-tauri/target/release/bundle/nsis/*-setup.exe)
+          name=$(basename "$installer")
+          sum=$(sha256sum "$installer" | cut -d' ' -f1)
+          gh release view "$TAG" --json body --jq .body > notes.md
+          # A re-run of this job must not add the section a second time.
+          if grep -q '^## Install' notes.md; then
+            echo "The release notes already have an Install section."
+          else
+            # One line per paragraph: GitHub shows every line break in release notes as a break.
+            cat >> notes.md <<'EOF'
+
+          ## Install
+
+          Download **`__NAME__`** below and run it. K-Doc installs for your Windows user only, so it needs no administrator rights. It runs on Windows 10 and 11; if WebView2 is missing, the installer downloads it.
+
+          The installer is not code-signed yet, so Windows SmartScreen may say the publisher is unknown. Choose **More info**, then **Run anyway**.
+
+          To check the download is the file this release built, compare its SHA-256 checksum. In PowerShell, run `Get-FileHash .\__NAME__` in the folder you saved it to; the hash should be:
+
+          ```
+          __SUM__
+          ```
+          EOF
+            sed -i "s/__NAME__/$name/g; s/__SUM__/$sum/" notes.md
+            gh release edit "$TAG" --notes-file notes.md
+          fi
