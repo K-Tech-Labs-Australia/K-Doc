@@ -10248,6 +10248,8 @@ export class EditorShell {
     } else {
       this.statusFocus.textContent = 'Source';
     }
+    // Which pane has focus only matters in Split; with one pane showing it would repeat the view's name.
+    this.statusFocus.hidden = this.currentViewMode !== 'split';
 
     // Format the active view mode label.
     if (this.currentViewMode === 'kdoc') {

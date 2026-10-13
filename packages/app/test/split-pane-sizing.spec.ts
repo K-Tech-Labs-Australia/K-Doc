@@ -133,7 +133,7 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
     expect(splitDividerElement.hidden).toBe(true);
   });
 
-  it('(2) switching from split to source leaves NO inline flex on the source pane, and switching to preview leaves NO inline flex on the kdoc pane', (): void => {
+  it('(2) switching from split to source leaves NO inline flex on the source pane, and switching to kdoc leaves NO inline flex on the kdoc pane', (): void => {
     const { shell, kdocPane, sourcePane, splitDividerElement } = mountShell('split');
 
     // Verify initial split state.
@@ -239,5 +239,13 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
     expect(secondaryPane.hidden).toBe(false);
     expect(secondaryDividerElement.hidden).toBe(false);
     expect(secondaryPane.style.flexGrow).toBe('0.5');
+  });
+
+  it('(5) names the focused pane in the status bar only in split, where two panes show', (): void => {
+    const { shell } = mountShell('split');
+    const focus = document.querySelector<HTMLElement>('[aria-label="Focused pane"]');
+    expect(focus?.hidden).toBe(false);
+    shell.setViewMode('kdoc');
+    expect(focus?.hidden).toBe(true);
   });
 });
