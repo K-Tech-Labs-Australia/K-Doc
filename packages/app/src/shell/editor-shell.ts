@@ -41,6 +41,7 @@ import { installLinkHoverCard, LINK_HOVER_CARD_STYLES, type LinkCardContent, typ
 import { canonicalFilePath, classifyLink, findHeadingBySlug, type LinkContext } from './link-target.js';
 import { createExternalOpener, type ExternalOpener } from '../files/external-links.js';
 import { defaultLaunchFiles, openLaunchFiles, type LaunchFiles } from '../files/launch-files.js';
+import { hasInstalledGuide, installedGuidePath, ONLINE_GUIDE_URL } from '../files/user-guide.js';
 import { installBacklinksPanel, BACKLINKS_PANEL_STYLES, type BacklinksPanel } from './backlinks-panel.js';
 import { installHistoryPanel, HISTORY_PANEL_STYLES, type HistoryPanel } from './history-panel.js';
 import {
@@ -5763,6 +5764,9 @@ export class EditorShell {
           openAbout: (): void => {
             this.aboutDialog.open();
           },
+          openUserGuide: (): void => {
+            void this.openUserGuide();
+          },
           goBack: (): void => {
             void this.navHistory.back();
           },
@@ -8296,6 +8300,34 @@ export class EditorShell {
       this.secondaryBinding?.setEditable(!this.secondaryDocument.readOnly);
     }
     this.statusLock.hidden = !this.locked;
+  }
+
+  /**
+   * @purpose Opens the user guide installed with K-Doc (Help > User Guide).
+   * @inputs void.
+   * @outputs Promise<void> - Resolves once the guide is on screen or the failure has been reported.
+   * @dataflow user_guide_path (which also grants the guide's folder) -> openNoteFromVault -> a tab; the host reports
+   *   every guide page read-only, so the tab opens locked and the installed copy is never edited by accident.
+   * @controlflow The browser build has no installed copy, so it opens the published guide instead; a failure is
+   *   reported, never thrown.
+   */
+  private async openUserGuide(): Promise<void> {
+    // Only the desktop app installs the guide; the browser build points at the published copy.
+    if (!hasInstalledGuide()) {
+      await this.externalOpener.open(ONLINE_GUIDE_URL).catch((error: unknown): void => {
+        this.showMessage(`Could not open the user guide. ${error instanceof Error ? error.message : String(error)}`, true);
+      });
+      return;
+    } else {
+      // Desktop app: open the copy installed with this version.
+    }
+    try {
+      const path = await installedGuidePath();
+      await this.openNoteFromVault(path);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.showMessage(`Could not open the user guide. ${message}`, true);
+    }
   }
 
   /**

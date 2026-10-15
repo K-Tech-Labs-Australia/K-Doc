@@ -127,6 +127,7 @@ function createMockDeps(view: EditorView, calls: string[]): CommandRegistryDeps 
     showGraph: record('showGraph'),
     openVault: record('openVault'),
     makeDefaultMarkdownApp: record('makeDefaultMarkdownApp'),
+    openUserGuide: record('openUserGuide'),
     openDocumentBeside: record('openDocumentBeside'),
     exportThroughPlugin: record('exportThroughPlugin'),
     reloadPlugins: record('reloadPlugins'),

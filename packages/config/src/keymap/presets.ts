@@ -81,6 +81,7 @@ export const KEYMAP_COMMANDS: readonly KeymapCommandSpec[] = [
   { id: 'view:zoom-reset', scope: 'global' },
   { id: 'view:settings', scope: 'global' },
   { id: 'view:ribbon', scope: 'global' },
+  { id: 'help:user-guide', scope: 'global' },
   { id: 'review:new-comment', scope: 'global' },
   { id: 'review:toggle-track-changes', scope: 'global' },
   { id: 'spell:check', scope: 'global' },
@@ -97,7 +98,7 @@ export const WORD_BINDINGS: KeyBindings = {
   'insert:link': ['Ctrl+K'], 'insert:table': ['Ctrl+Alt+T'], 'insert:horizontal-rule': ['Ctrl+Shift+-'], 'insert:image': ['Ctrl+Shift+I'],
   'find:open': ['Ctrl+F'], 'find:replace': ['Ctrl+H'], 'find:in-vault': ['Ctrl+Shift+F'], 'find:go-to': ['Ctrl+G'],
   'nav:back': ['Alt+Left'], 'nav:forward': ['Alt+Right'],
-  'view:command-palette': ['Ctrl+Shift+P'], 'view:cycle-view-mode': ['Ctrl+/'], 'view:toggle-sidebar': ['Ctrl+Shift+B'], 'view:toggle-right-panel': ['Ctrl+Shift+R'], 'view:zoom-in': ['Ctrl+Shift+.'], 'view:zoom-out': ['Ctrl+Shift+,', 'Ctrl+-'], 'view:zoom-reset': ['Ctrl+0'], 'view:settings': ['Ctrl+,'], 'view:ribbon': ['Ctrl+F1'],
+  'view:command-palette': ['Ctrl+Shift+P'], 'view:cycle-view-mode': ['Ctrl+/'], 'view:toggle-sidebar': ['Ctrl+Shift+B'], 'view:toggle-right-panel': ['Ctrl+Shift+R'], 'view:zoom-in': ['Ctrl+Shift+.'], 'view:zoom-out': ['Ctrl+Shift+,', 'Ctrl+-'], 'view:zoom-reset': ['Ctrl+0'], 'view:settings': ['Ctrl+,'], 'view:ribbon': ['Ctrl+F1'], 'help:user-guide': ['F1'],
   'review:new-comment': ['Ctrl+Alt+M'], 'review:toggle-track-changes': ['Ctrl+Shift+E'], 'spell:check': ['F7'],
 };
 

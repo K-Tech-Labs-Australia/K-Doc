@@ -70,7 +70,8 @@
     "resources": {
       "../LICENSE": "LICENSE",
       "../NOTICE": "NOTICE",
-      "../packages/app/public/THIRD-PARTY-NOTICES.txt": "THIRD-PARTY-NOTICES.txt"
+      "../packages/app/public/THIRD-PARTY-NOTICES.txt": "THIRD-PARTY-NOTICES.txt",
+      "../docs/guide/": "guide/"
     }
   }
 }

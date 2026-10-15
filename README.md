@@ -102,66 +102,25 @@ npm run fetch-dictionary -- en-US
 
 ## Usage
 
-### Everyday commands
+The [user guide](docs/guide/index.md) explains how to do everything in K-Doc. Inside the app, open it with
+**Help → User Guide** or `F1`. A short tour:
 
-Every command is in the menu bar and the command palette (**Ctrl+Shift+P**). These are the default shortcuts (the
-Word preset); **View → Keyboard Shortcuts** lists them all and lets you change them.
-
-| Action | Shortcut |
-| --- | --- |
-| New, Open, Save, Save As | Ctrl+N, Ctrl+O, Ctrl+S, Ctrl+Shift+S |
-| Close document, Next document | Ctrl+W, Ctrl+Tab |
-| Quick open a note in the vault | Ctrl+Shift+O |
-| Find, Replace, Go to | Ctrl+F, Ctrl+H, Ctrl+G |
-| Find in vault | Ctrl+Shift+F |
-| Back, Forward | Alt+Left, Alt+Right |
-| Command palette | Ctrl+Shift+P |
-| Settings | Ctrl+, |
-| New comment, Toggle track changes | Ctrl+Alt+M, Ctrl+Shift+E |
-| Show or hide the sidebar, Cycle the ribbon | Ctrl+Shift+B, Ctrl+F1 |
-| Zoom in, Zoom out, Reset zoom | Ctrl+Shift+>, Ctrl+Shift+<, Ctrl+0 |
-| Print | Ctrl+P |
-
-### Views and windows
-
-- Switch between K-Doc, Split and Source with the buttons in the title bar or the **View** menu; `Ctrl+/` cycles
-  through them. **Settings → Editor → Default view mode** sets the one a new window starts in.
-- Open documents appear as tabs below the ribbon once a second one is open. Drag a tab out of the strip to open it in
-  its own window.
-- **Another Document Beside This One…** in the **View** menu opens a second file next to the first.
-- Double-clicking a Markdown file while K-Doc is open opens it as a tab in the K-Doc window you used last, or switches
-  to it if it is already open. K-Doc runs as a single app, so it never starts a second copy.
-- Focus, Typewriter, Zen and Presentation modes are under **View → Focus Mode**.
-
-### Vaults
-
-Open the **Files** panel in the left rail and choose a folder; that folder becomes the vault. You then get:
-
-- the file tree and Quick Open (Ctrl+Shift+O)
-- Find in Vault (Ctrl+Shift+F)
-- the link graph (**File → Vault → Graph…**)
-- templates: put Markdown files in `<vault>/.k-doc/templates/` and they are offered when you create a note
-
-### Export
-
-Use **File → Export**:
-
-| Command | Output |
-| --- | --- |
-| Export as HTML | A standalone HTML page, with local images embedded |
-| Export as Word Document | DOCX |
-| Export as Markdown Flavour | The same document in another Markdown dialect |
-| Export as LaTeX, Export as EPUB | Via Pandoc, which must be on your `PATH` |
-| Export with a Plugin… | Any format a plugin provides |
-
-**Export Theme** chooses the stylesheet used for HTML exports. **Open Export Themes Folder** is where you add your own.
-
-### Themes
-
-- The theme button in the title bar opens a menu with System, Light and Dark and six built-in themes: K-Doc, Nord,
-  Solarized, Paper, Graphite and High Contrast. The same choice is under **Settings → Appearance**.
-- To restyle the app yourself, use **View → Theme → Open App Themes Folder**. Edit the generated `custom.css` (it
-  lists every colour token), then pick it with **View → Theme → App Theme**. A theme reloads as soon as you save it.
+- **Commands:** every command is in the menu bar and the command palette (`Ctrl+Shift+P`).
+  **Help → Keyboard Shortcuts** lists the shortcuts and lets you change them. See
+  [Keyboard shortcuts](docs/guide/keyboard-shortcuts.md).
+- **Views and windows:** switch between K-Doc, Split and Source with the title-bar buttons or `Ctrl+/`. Several
+  documents open as tabs, and you can drag a tab out into its own window. Double-clicking a Markdown file opens it in
+  the K-Doc window you used last. See [Getting started](docs/guide/getting-started.md).
+- **Writing:** format from the ribbon, the menus or by typing Markdown; tables, footnotes, callouts, snippets and
+  autocorrect are built in. See [Writing and formatting](docs/guide/writing-and-formatting.md).
+- **Reviewing:** comments, track changes, spelling and grammar, statistics and version history. See
+  [Reviewing documents](docs/guide/reviewing.md).
+- **Vaults:** **File → Vault → Open Vault Folder…** turns a folder of notes into a vault with a file tree, quick
+  open, search, backlinks, tags and a link graph. See [Working with a vault](docs/guide/vaults.md).
+- **Export and print:** **File → Export** writes HTML, Word and other formats; you can also print and present. See
+  [Export, print and present](docs/guide/export-and-print.md).
+- **Customising:** themes, keyboard presets, the ribbon and plugins. See
+  [Customising K-Doc](docs/guide/customising.md).
 
 ## Configuration
 
@@ -169,54 +128,8 @@ K-Doc has no environment variables. Everything is in the settings dialog (**Ctrl
 `settings.json` in K-Doc's application data folder (`%APPDATA%\au.ktechlabs.kdoc` on Windows). A malformed
 or unknown value falls back to its default and is reported, and keys K-Doc does not recognise are kept.
 
-| Setting | Default | What it does |
-| --- | --- | --- |
-| `general.restoreSessionOnLaunch` | `true` | Reopen the previous session's tabs at start-up |
-| `general.confirmExternalLinks` | `true` | Ask before opening a web link |
-| `general.trustedDomains` | `[]` | Domains whose links open without asking |
-| `general.portableComments` | `false` | Keep comments in the Markdown file instead of beside it |
-| `general.developerMode` | `false` | Show developer tools such as the Fidelity Check |
-| `general.authorName` | `You` | Name stamped on comments and tracked changes |
-| `general.attachmentsFolder` | `attachments` | Folder for pasted and dropped images |
-| `general.attachmentNameTemplate` | `{name}-{date}` | File name for attachments; tokens `{name}` `{doc}` `{date}` `{time}` |
-| `editor.defaultViewMode` | `split` | `kdoc`, `source` or `split` (a restored session's view wins) |
-| `editor.splitOrientation` | `vertical` | `vertical` or `horizontal` |
-| `editor.revealSyntaxMarkers` | `true` | Reveal Markdown syntax markers in the editor |
-| `editor.smartSubstitutions` | `true` | Typographic substitutions while typing |
-| `editor.inputRules` | `true` | Markdown shortcuts such as `# ` for a heading |
-| `editor.autosave` | `idle` | `off`, `on-blur`, `interval` or `idle` |
-| `editor.autosaveDelayMs` | `2000` | Autosave delay in milliseconds (200 to 60000) |
-| `editor.allowHtmlFormatting` | `false` | Let K-Doc write HTML for formatting Markdown cannot express |
-| `appearance.theme` | `system` | `light`, `dark` or `system` |
-| `appearance.uiTheme` | `kdoc` | `kdoc`, `nord`, `solarized`, `paper`, `graphite` or `high-contrast` |
-| `appearance.userTheme` | `""` | Name of your own CSS theme; empty for none |
-| `appearance.editorFontFamily` | `Segoe UI` | Document font |
-| `appearance.monospaceFontFamily` | `Cascadia Mono` | Code and Source view font |
-| `appearance.editorFontSizePx` | `16` | Document font size, 8 to 72 |
-| `appearance.lineHeight` | `1.6` | Line height, 1.0 to 3.0 |
-| `appearance.readingWidth` | `medium` | `narrow`, `medium`, `wide` or `full` |
-| `appearance.density` | `comfortable` | `compact`, `comfortable` or `spacious` |
-| `appearance.ribbon` | `[]` | Your ribbon layout; empty for K-Doc's own |
-| `proofing.spellCheck` | `true` | Underline misspellings |
-| `proofing.language` | `en-GB` | Default spelling language |
-| `proofing.detectLanguage` | `true` | Guess each document's language |
-| `proofing.grammarEndpoint` | `""` | A LanguageTool-compatible URL; empty sends nothing anywhere |
-| `keyboard.preset` | `word` | `word`, `vscode`, `typora` or `obsidian` |
-| `keyboard.bindings` | `{}` | Your shortcut overrides, by command |
-| `autocorrect.smartQuotes` | `true` | Curly quotes |
-| `autocorrect.dashes` | `true` | `--` to an en or em dash |
-| `autocorrect.ellipsis` | `true` | `...` to an ellipsis |
-| `autocorrect.ordinals` | `false` | Superscript ordinals |
-| `autocorrect.capitalizeSentences` | `false` | Capitalise the first letter of a sentence |
-| `autocorrect.replaceText` | `true` | Apply the replacement table |
-| `snippets.enabled` | `true` | Expand a snippet prefix with Tab in K-Doc |
-| `history.snapshotOnSave` | `true` | Take a version-history snapshot on every save |
-| `history.snapshotMinutes` | `10` | Also snapshot an open, saved document every N minutes; `0` for never |
-| `history.keepAllHours` | `24` | Keep every snapshot this many hours |
-| `history.keepHourlyDays` | `7` | Then keep one per hour for this many days |
-| `history.keepDailyDays` | `90` | Then keep one per day for this many days |
-| `export.comments` | `exclude` | `exclude`, `endnotes` or `margin-notes` |
-| `export.theme` | `default` | Stylesheet for HTML export |
+Every setting, with its allowed values and default, is described in the
+[Settings reference](docs/guide/settings-reference.md).
 
 Folders K-Doc reads, under the same application data folder:
 

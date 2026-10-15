@@ -11,11 +11,8 @@ and reporters are credited in the release notes unless they ask not to be.
 
 ## Supported versions
 
-Only the latest release receives security fixes.
-
-| Version | Supported |
-| --- | --- |
-| 0.1.x | Yes |
+Only the latest release on the [Releases page](https://github.com/K-Tech-Labs-Australia/K-Doc/releases) receives
+security fixes. If you are on an earlier version, update before reporting.
 
 ## What K-Doc trusts, and what it does not
 

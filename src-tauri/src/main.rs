@@ -49,6 +49,7 @@ mod grants;
 mod access;
 mod atomic;
 mod launch;
+mod guide;
 
 /// The largest text document K-Doc reads, in bytes (64 MiB): reading a bigger file whole would stall the app.
 const MAX_TEXT_BYTES: u64 = 64 * 1024 * 1024;
@@ -83,10 +84,19 @@ pub struct FileContents {
 /// @dataflow File path string -> std::fs::read raw bytes -> BOM detection -> String::from_utf8 decode -> FileContents struct returned over IPC.
 /// @controlflow Read raw bytes from path -> check for UTF-8 BOM prefix -> strip BOM if present -> decode UTF-8 bytes -> construct FileContents -> return Ok. Returns Err early on any I/O or decode failure.
 #[tauri::command]
-fn read_text_file(grants: tauri::State<'_, grants::GrantState>, path: String) -> Result<FileContents, String> {
+fn read_text_file(
+    app: tauri::AppHandle,
+    grants: tauri::State<'_, grants::GrantState>,
+    path: String,
+) -> Result<FileContents, String> {
     // Only a file the user chose (or one inside a folder they chose) may be read from the webview.
     grants.require(&path)?;
-    read_text_file_at(path)
+    let mut contents = read_text_file_at(path)?;
+    // The installed user guide opens locked: an update replaces it, so an edit made there would be lost.
+    if guide::is_guide_file(&app, &contents.path) {
+        contents.read_only = true;
+    }
+    Ok(contents)
 }
 
 /// Reads a text file without consulting the grant list; the command above is the only webview entry point.
@@ -389,6 +399,7 @@ fn main() {
             windows::set_window_fullscreen,
             launch::take_launch_paths,
             launch::open_default_apps_settings,
+            guide::user_guide_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running K-Doc");
