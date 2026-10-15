@@ -226,6 +226,8 @@ K-Doc keeps its own data in a `.k-doc` folder at the top of the vault. The scan 
 | `.k-doc/comments/`, `.k-doc/changes/` | Comments and tracked changes for the vault's notes | Yes, to share them |
 | `.k-doc/local/` | Machine-local data, such as the saved index (`index.db`) and snapshots | No |
 
+When you open a vault, K-Doc creates this layout and a `.k-doc/.gitignore` that leaves out `local/`, so if the vault is a Git repository the machine-local half is never committed by accident while comments, tracked changes and templates can be. K-Doc never overwrites a `.gitignore` you have changed.
+
 The saved index lets the vault open faster: K-Doc reads only notes whose size or modified time has changed since the last scan. You can delete `.k-doc/local/index.db` at any time; K-Doc rebuilds it the next time you open the vault.
 
 Comments are stored by an id in the note's front matter (`kdoc_id`), not by file name, so renaming or moving a note keeps its comments. K-Doc adds that id only when you add a comment. See [Reviewing](reviewing.md).
