@@ -8,6 +8,19 @@ The detailed development log from before the first public release is kept in
 [docs/internal/development-log.md](docs/internal/development-log.md). From 0.1.0 on, each release's notes are
 written by Release Please from the conventional commits merged since the last one.
 
+## [0.4.0](https://github.com/K-Tech-Labs-Australia/K-Doc/compare/v0.3.0...v0.4.0) (2026-10-15)
+
+
+### Features
+
+* Add a user guide, opened from Help &gt; User Guide (F1) ([#8](https://github.com/K-Tech-Labs-Australia/K-Doc/issues/8)) ([5d4c445](https://github.com/K-Tech-Labs-Australia/K-Doc/commit/5d4c445f7d010f2e1188e1eda5c3fe374f7de910))
+
+
+### Bug Fixes
+
+* Make the Input rules and Split orientation settings work, and remove dead code ([#10](https://github.com/K-Tech-Labs-Australia/K-Doc/issues/10)) ([84c5047](https://github.com/K-Tech-Labs-Australia/K-Doc/commit/84c5047c0d45e6ebc41e7c3f1a8a579335f330a2))
+* Time out grammar checks and give every vault a .gitignore ([#11](https://github.com/K-Tech-Labs-Australia/K-Doc/issues/11)) ([f829e08](https://github.com/K-Tech-Labs-Australia/K-Doc/commit/f829e0851b86eb6319b3d29b3459932388416dbc))
+
 ## [0.3.0](https://github.com/K-Tech-Labs-Australia/K-Doc/compare/v0.2.0...v0.3.0) (2026-10-13)
 
 
