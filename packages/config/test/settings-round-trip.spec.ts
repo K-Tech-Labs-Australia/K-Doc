@@ -35,7 +35,6 @@ const CHANGED: KdocSettings = {
     defaultViewMode: DEFAULT_SETTINGS.editor.defaultViewMode === 'source' ? 'kdoc' : 'source',
     // Picks a split orientation unlike the default (flips horizontal↔vertical).
     splitOrientation: DEFAULT_SETTINGS.editor.splitOrientation === 'horizontal' ? 'vertical' : 'horizontal',
-    revealSyntaxMarkers: !DEFAULT_SETTINGS.editor.revealSyntaxMarkers,
     smartSubstitutions: !DEFAULT_SETTINGS.editor.smartSubstitutions,
     inputRules: !DEFAULT_SETTINGS.editor.inputRules,
     // Picks an autosave mode unlike the default (flips interval↔idle).

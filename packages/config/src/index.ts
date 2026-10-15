@@ -15,14 +15,13 @@
  * @outputs Validated LoadedSettings structures, serialized JSON strings, merged KdocSettings objects, ThemeTokens, CSS variable strings, and WCAG contrast/luminance ratios.
  * @functions
  *   - parseSettings: Parses and validates a settings JSON string into LoadedSettings, falling back to defaults without throwing.
- *   - mergeSettingsLayers: Merges hierarchical settings layers left-to-right over defaults with section-level preservation.
  *   - serializeSettings: Serializes a KdocSettings object and optional unknown keys into stable, human-readable JSON.
  *   - relativeLuminance: Computes the WCAG relative luminance of an sRGB hex or rgb color string.
  *   - contrastRatio: Computes the WCAG contrast ratio between two color strings in an order-independent manner.
  *   - toCssVariables: Converts a ThemeTokens object into a CSS custom property declaration string.
  *   - resolveTheme: Resolves a complete ThemeTokens instance for a theme mode ('light', 'dark', 'system') given OS preference.
  *   - resolveUiTheme / uiThemeTokens / uiThemeSwatch / isUiThemeId: The built-in UI theme catalogue (ui-themes.ts).
- * @dataflow Settings JSON strings / partial layers / theme specifications -> parseSettings / mergeSettingsLayers / resolveTheme -> typed KdocSettings & ThemeTokens -> serializeSettings / toCssVariables / contrast calculations.
+ * @dataflow Settings JSON strings / partial layers / theme specifications -> parseSettings / resolveTheme -> typed KdocSettings & ThemeTokens -> serializeSettings / toCssVariables / contrast calculations.
  * @controlflow Re-export barrel only; all execution is delegated to the submodules.
  * @version 7
  * @date 2026-10-06
@@ -57,7 +56,6 @@ export type { RibbonGroupSetting, RibbonTabSetting } from './settings/ribbon-set
 export {
   DEFAULT_SETTINGS,
   parseSettings,
-  mergeSettingsLayers,
   serializeSettings,
 } from './settings/schema.js';
 

@@ -26,15 +26,7 @@ import { pageRule, tocHtml, TOC_STYLESHEET, type PageSetup } from './page-setup.
 
 // Re-exported so the one import a caller already has keeps working. The model itself lives in
 // page-setup.ts, because the dialog that edits it has no business importing the printer.
-export {
-  DEFAULT_PAGE_SETUP,
-  MARGIN_MIN_MM,
-  MARGIN_MAX_MM,
-  pageRule,
-  runningContent,
-  tocHtml,
-  TOC_STYLESHEET,
-} from './page-setup.js';
+export { DEFAULT_PAGE_SETUP } from './page-setup.js';
 export type { PageSetup, PaperSize, Orientation } from './page-setup.js';
 
 /**

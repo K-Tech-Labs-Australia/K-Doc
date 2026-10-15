@@ -70,8 +70,6 @@ function makeStore() {
     save: async (_kind, recs) => {
       recorder.saved.push([...recs] as unknown as CommentThread[]);
     },
-    createVault: async () => null,
-    migrateToVault: async () => 0,
     destroy: () => {},
   };
 

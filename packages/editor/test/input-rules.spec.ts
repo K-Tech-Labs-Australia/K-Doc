@@ -241,4 +241,36 @@ describe('Markdown input rules', () => {
       }
     });
   });
+
+  describe('the input rules switch (editor.inputRules)', () => {
+    // Mounts a binding whose rules ask `enabled` before firing, as the shell's settings getter does.
+    function mountSwitchable(enabled: () => boolean): [ProseMirrorBinding, DocumentSession] {
+      const mount = document.createElement('div');
+      document.body.appendChild(mount);
+      const session = new DocumentSession('');
+      session.focusPane('kdoc');
+      const binding = new ProseMirrorBinding({ session, mount, inputRulesEnabled: enabled });
+      trackedMounts.push(mount);
+      trackedBindings.push(binding);
+      return [binding, session];
+    }
+
+    it('leaves typed Markdown as typed while the rules are off', () => {
+      const [binding, session] = mountSwitchable(() => false);
+      type(binding, '**bold** ');
+      expect(binding.view.state.doc.rangeHasMark(0, binding.view.state.doc.content.size, binding.view.state.schema.marks['strong']!)).toBe(false);
+      expect(markdownOf(session)).toContain('\\*\\*bold\\*\\*');
+    });
+
+    it('formats again as soon as the switch is turned back on, without rebuilding the editor', () => {
+      let enabled = false;
+      const [binding] = mountSwitchable(() => enabled);
+      const strong = binding.view.state.schema.marks['strong']!;
+      type(binding, '**off** ');
+      expect(binding.view.state.doc.rangeHasMark(0, binding.view.state.doc.content.size, strong)).toBe(false);
+      enabled = true;
+      type(binding, '**on** ');
+      expect(binding.view.state.doc.rangeHasMark(0, binding.view.state.doc.content.size, strong)).toBe(true);
+    });
+  });
 });

@@ -13,27 +13,40 @@
  *   - destroy: Tears down all event listeners via AbortController, clears inline flex styles, and removes drag styling.
  * @dataflow Pointer / keyboard events -> compute ratio -> clamp to [MIN_RATIO, MAX_RATIO] -> update first/second pane style.flex & aria-valuenow.
  * @controlflow Configure divider accessibility attributes -> attach pointer, keyboard, and double-click listeners with AbortController -> apply initial 50/50 ratio -> return SplitDivider controller.
- * @version 4
- * @date 2026-10-04
+ * @version 5
+ * @date 2026-10-15
  */
+
+/**
+ * Which way the divider runs, named as the editor.splitOrientation setting names it: 'vertical' is a vertical bar
+ * between panes side by side (dragged left and right), 'horizontal' a horizontal bar between stacked panes (dragged
+ * up and down). This is also the divider's aria-orientation.
+ */
+export type DividerOrientation = 'vertical' | 'horizontal';
 
 export interface SplitDividerOptions {
   readonly element: HTMLElement;
   readonly doc: Document;
-  /** The pane on the left of the divider. */
+  /** The pane before the divider: on the left, or on top when stacked. */
   readonly first: HTMLElement;
-  /** The pane on the right of the divider. */
+  /** The pane after the divider: on the right, or below when stacked. */
   readonly second: HTMLElement;
-  /** The flex row containing both panes and the divider. */
+  /** The flex box containing both panes and the divider. */
   readonly container: HTMLElement;
+  /** Defaults to 'vertical' (panes side by side). */
+  readonly orientation?: DividerOrientation;
 }
 
 export interface SplitDivider {
-  /** The left pane's share of the container, 0..1. */
+  /** The first pane's share of the container, 0..1. */
   readonly ratio: number;
+  /** Which way the divider runs. */
+  readonly orientation: DividerOrientation;
   setRatio(ratio: number): void;
   /** Restore the even 50/50 split. */
   reset(): void;
+  /** Switch between side-by-side and stacked panes, keeping the ratio. */
+  setOrientation(orientation: DividerOrientation): void;
   destroy(): void;
 }
 
@@ -79,6 +92,12 @@ const PRIMARY_BUTTON: number = 0;
  * Sets user-select: none and cursor: col-resize so dragging does not select text across editors.
  */
 const DRAG_CLASS: string = 'kdoc-split-resizing';
+
+/** On the divider when it runs horizontally between stacked panes. */
+const HORIZONTAL_CLASS: string = 'kdoc-split-divider-horizontal';
+
+/** On the container alongside DRAG_CLASS while a horizontal divider is dragged, for the up-down cursor. */
+const DRAG_ROWS_CLASS: string = 'kdoc-split-resizing-rows';
 
 /**
  * Static stylesheet for the draggable split divider, defining a sunken trench track,
@@ -165,6 +184,36 @@ export const SPLIT_DIVIDER_STYLES: string = `
   cursor: col-resize;
 }
 
+/* Stacked panes: the divider becomes a horizontal bar, dragged up and down. */
+
+.kdoc-split-divider.kdoc-split-divider-horizontal {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  height: 6px;
+  min-height: 6px;
+  max-height: 6px;
+  cursor: row-resize;
+}
+
+.kdoc-split-divider.kdoc-split-divider-horizontal::before {
+  top: -4px;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  cursor: row-resize;
+}
+
+.kdoc-split-divider.kdoc-split-divider-horizontal::after {
+  width: 32px;
+  height: 4px;
+}
+
+.kdoc-split-resizing.kdoc-split-resizing-rows,
+.kdoc-split-resizing.kdoc-split-resizing-rows * {
+  cursor: row-resize;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .kdoc-split-divider,
   .kdoc-split-divider::after {
@@ -190,15 +239,28 @@ export function installSplitDivider(options: SplitDividerOptions): SplitDivider 
   let destroyed: boolean = false;
   let isDragging: boolean = false;
   let currentRatio: number = DEFAULT_RATIO;
+  let orientation: DividerOrientation = options.orientation ?? 'vertical';
 
   // Configure divider element styling and accessible separator semantics.
   options.element.classList.add('kdoc-split-divider');
   options.element.setAttribute('role', 'separator');
-  options.element.setAttribute('aria-orientation', 'vertical');
+  applyOrientation();
   options.element.setAttribute('aria-label', 'Resize panes');
   options.element.setAttribute('tabindex', '0');
   options.element.setAttribute('aria-valuemin', String(Math.round(MIN_RATIO * PERCENT_MULTIPLIER)));
   options.element.setAttribute('aria-valuemax', String(Math.round(MAX_RATIO * PERCENT_MULTIPLIER)));
+
+  /**
+   * @purpose Reflects the current orientation on the divider: its class (which reshapes it) and aria-orientation.
+   * @inputs void; reads orientation.
+   * @outputs void.
+   * @dataflow orientation -> HORIZONTAL_CLASS toggle -> aria-orientation.
+   * @controlflow No branching beyond the class toggle.
+   */
+  function applyOrientation(): void {
+    options.element.classList.toggle(HORIZONTAL_CLASS, orientation === 'horizontal');
+    options.element.setAttribute('aria-orientation', orientation);
+  }
 
   /**
    * Clamps the target split ratio within [MIN_RATIO, MAX_RATIO] and applies proportional flex styles to both panes.
@@ -309,8 +371,8 @@ export function installSplitDivider(options: SplitDividerOptions): SplitDivider 
       // No pointer event or releasePointerCapture unsupported: skip capture release.
     }
 
-    // Remove drag class to restore normal text selection and default cursor on the container.
-    options.container.classList.remove(DRAG_CLASS);
+    // Remove drag classes to restore normal text selection and default cursor on the container.
+    options.container.classList.remove(DRAG_CLASS, DRAG_ROWS_CLASS);
   }
 
   // Bind pointerdown to initiate pointer capture and drag state.
@@ -346,6 +408,8 @@ export function installSplitDivider(options: SplitDividerOptions): SplitDivider 
 
       // Add resizing class to container to disable text selection across editors and enforce col-resize cursor.
       options.container.classList.add(DRAG_CLASS);
+      // A horizontal divider is dragged up and down, so the whole window shows the up-down cursor while it moves.
+      options.container.classList.toggle(DRAG_ROWS_CLASS, orientation === 'horizontal');
       event.preventDefault();
     },
     { signal },
@@ -372,23 +436,27 @@ export function installSplitDivider(options: SplitDividerOptions): SplitDivider 
       }
 
       const rect = options.container.getBoundingClientRect();
+      const stacked = orientation === 'horizontal';
+      // Side by side the pointer's x position sets the ratio; stacked, its y position does.
+      const size = stacked ? rect.height : rect.width;
 
-      // Check if container width is non-positive to prevent division by zero.
-      if (rect.width <= 0) {
-        // Container has zero or negative width: cannot compute meaningful ratio.
+      // Check if the container's size along the drag axis is non-positive, to prevent division by zero.
+      if (size <= 0) {
+        // Container has no size along that axis: cannot compute a meaningful ratio.
         return;
       } else {
-        // Container has valid width: calculate pointer x offset relative to container left.
+        // Container has a size: calculate the pointer offset from its start.
       }
 
       // Measure against the content box: the panes container is padded to make room for the floating
       // sidebars, and that padding is not space either pane can occupy.
       const containerStyle = getComputedStyle(options.container);
-      const paddingLeft = parseFloat(containerStyle.paddingLeft) || 0;
-      const contentWidth = rect.width - paddingLeft - (parseFloat(containerStyle.paddingRight) || 0);
-      const pointerX = event.clientX - rect.left - paddingLeft;
-      // Divide by the content width when it is positive; a degenerate padding larger than the box falls back to the full width.
-      const computedRatio = pointerX / (contentWidth > 0 ? contentWidth : rect.width);
+      const paddingStart = parseFloat(stacked ? containerStyle.paddingTop : containerStyle.paddingLeft) || 0;
+      const paddingEnd = parseFloat(stacked ? containerStyle.paddingBottom : containerStyle.paddingRight) || 0;
+      const contentSize = size - paddingStart - paddingEnd;
+      const pointer = (stacked ? event.clientY - rect.top : event.clientX - rect.left) - paddingStart;
+      // Divide by the content size when it is positive; a degenerate padding larger than the box falls back to the full size.
+      const computedRatio = pointer / (contentSize > 0 ? contentSize : size);
       setRatio(computedRatio);
     },
     { signal },
@@ -455,12 +523,12 @@ export function installSplitDivider(options: SplitDividerOptions): SplitDivider 
       }
 
       // Check which key was pressed to adjust the split ratio.
-      if (event.key === 'ArrowLeft') {
-        // ArrowLeft: decrease first pane ratio by KEYBOARD_STEP (shift divider left).
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        // ArrowLeft or ArrowUp: decrease first pane ratio by KEYBOARD_STEP (shift divider left, or up when stacked).
         event.preventDefault();
         setRatio(currentRatio - KEYBOARD_STEP);
-      } else if (event.key === 'ArrowRight') {
-        // ArrowRight: increase first pane ratio by KEYBOARD_STEP (shift divider right).
+      } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        // ArrowRight or ArrowDown: increase first pane ratio by KEYBOARD_STEP (shift divider right, or down when stacked).
         event.preventDefault();
         setRatio(currentRatio + KEYBOARD_STEP);
       } else if (event.key === 'Home') {
@@ -497,8 +565,37 @@ export function installSplitDivider(options: SplitDividerOptions): SplitDivider 
       return currentRatio;
     },
 
+    /**
+     * @purpose Returns which way the divider currently runs.
+     * @inputs void.
+     * @outputs DividerOrientation.
+     * @dataflow orientation -> DividerOrientation.
+     * @controlflow Return orientation.
+     */
+    get orientation(): DividerOrientation {
+      return orientation;
+    },
+
     setRatio,
     reset,
+
+    /**
+     * @purpose Switches the divider between side-by-side and stacked panes; the ratio is kept, because flex shares
+     *   mean the same thing along either axis.
+     * @inputs next - The orientation to switch to.
+     * @outputs void.
+     * @dataflow next -> orientation -> applyOrientation.
+     * @controlflow Ignored after destroy.
+     */
+    setOrientation(next: DividerOrientation): void {
+      // A destroyed divider keeps no state to update.
+      if (destroyed) {
+        return;
+      } else {
+        orientation = next;
+        applyOrientation();
+      }
+    },
 
     /**
      * Cleans up all resources held by the split divider, aborting event listeners,
@@ -528,7 +625,7 @@ export function installSplitDivider(options: SplitDividerOptions): SplitDivider 
       options.second.style.removeProperty('flex');
 
       // Remove divider CSS class and accessibility attributes from the element.
-      options.element.classList.remove('kdoc-split-divider');
+      options.element.classList.remove('kdoc-split-divider', HORIZONTAL_CLASS);
       options.element.removeAttribute('role');
       options.element.removeAttribute('aria-orientation');
       options.element.removeAttribute('aria-label');

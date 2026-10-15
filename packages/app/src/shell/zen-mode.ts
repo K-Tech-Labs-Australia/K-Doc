@@ -57,8 +57,8 @@ const HINT_MS = 2500;
  * @controlflow No control flow; constant value.
  */
 export const ZEN_MODE_STYLES: string = `
-.${ZEN_CLASS} .kdoc-menu-bar, .${ZEN_CLASS} .kdoc-toolbar, .${ZEN_CLASS} .kdoc-tab-bar, .${ZEN_CLASS} .kdoc-ribbon, .${ZEN_CLASS} .kdoc-format-toolbar,
-.${ZEN_CLASS} .kdoc-table-toolbar, .${ZEN_CLASS} .kdoc-breadcrumbs, .${ZEN_CLASS} .kdoc-sidebar, .${ZEN_CLASS} .kdoc-status,
+.${ZEN_CLASS} .kdoc-menu-bar, .${ZEN_CLASS} .kdoc-toolbar, .${ZEN_CLASS} .kdoc-tab-bar, .${ZEN_CLASS} .kdoc-ribbon,
+. .${ZEN_CLASS} .kdoc-breadcrumbs, .${ZEN_CLASS} .kdoc-sidebar, .${ZEN_CLASS} .kdoc-status,
 .${ZEN_CLASS} .kdoc-key-hint { display: none !important; }
 .kdoc-zen-hint {
   position: fixed;

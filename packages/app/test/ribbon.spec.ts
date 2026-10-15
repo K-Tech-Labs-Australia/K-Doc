@@ -1046,7 +1046,7 @@ describe('depressed state and aria-pressed', () => {
 });
 
 describe('Home tab formatting coverage', () => {
-  it('covers the essential formatting commands duplicated from format-toolbar', () => {
+  it('covers the essential formatting commands', () => {
     const homeSpec = RIBBON_LAYOUT.find((spec) => spec.tab === 'Home');
     // Check if Home tab specification exists.
     if (homeSpec === undefined) {

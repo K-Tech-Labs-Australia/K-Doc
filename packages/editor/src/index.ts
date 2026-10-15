@@ -49,7 +49,6 @@ export { CodeMirrorBinding } from './codemirror/binding.js';
 export {
   createSourceGutterExtensions,
   sourceGutterTheme,
-  SOURCE_GUTTER_CLASS,
 } from './codemirror/source-gutters.js';
 
 export type { CodeMirrorKeymapOptions } from './codemirror/keymap.js';
@@ -59,7 +58,6 @@ export { createSourceKeymap } from './codemirror/keymap.js';
 export type { KdocMark, ListKind } from './prosemirror/commands.js';
 
 export {
-  isMarkActive,
   isBlockActive,
   toggleKdocMark,
   clearFormatting,

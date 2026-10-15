@@ -24,7 +24,6 @@ import {
   kdocSchema,
   mdastToProseMirror,
   proseMirrorToMdast,
-  isMarkActive,
   isBlockActive,
   toggleKdocMark,
   clearFormatting,
@@ -200,17 +199,6 @@ describe('inline marks', () => {
     const md2 = runToMarkdown(state2, toggleKdocMark('strong'));
     expect(md2).not.toContain('**');
     expect(md2).toContain('world');
-  });
-});
-
-describe('mark state queries', () => {
-  it('reports isMarkActive false on plain text and true after mark application', () => {
-    const state0 = selectWord(stateFor('Hello world.\n'), 'world');
-    expect(isMarkActive(state0, 'strong')).toBe(false);
-
-    const md = runToMarkdown(state0, toggleKdocMark('strong'));
-    const state1 = selectWord(stateFor(md), 'world');
-    expect(isMarkActive(state1, 'strong')).toBe(true);
   });
 });
 

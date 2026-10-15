@@ -71,6 +71,9 @@ export interface ProseMirrorBindingOptions {
   /** Passed to the keymap: the host dispatches the remappable shortcuts itself (FR-14.16). */
   readonly hostOwnsShortcuts?: boolean;
 
+  /** Passed to the keymap: whether Markdown input rules apply, read on every keystroke (editor.inputRules). */
+  readonly inputRulesEnabled?: () => boolean;
+
   /**
    * Called when Ctrl+Click (Cmd+Click) lands on a link, with its href as written (FR-8.13). When set,
    * the link-follow plugin is installed ahead of multi-caret, so a modified click on a link follows it
@@ -199,6 +202,7 @@ export class ProseMirrorBinding {
         schema: this.schema,
         ...(options.onRequestLink === undefined ? {} : { onRequestLink: options.onRequestLink }),
         ...(options.hostOwnsShortcuts === undefined ? {} : { hostOwnsShortcuts: options.hostOwnsShortcuts }),
+        ...(options.inputRulesEnabled === undefined ? {} : { inputRulesEnabled: options.inputRulesEnabled }),
       }),
     ];
 

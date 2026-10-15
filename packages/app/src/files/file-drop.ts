@@ -6,7 +6,7 @@
  * @inputs FileDropOptions containing the browser Window context, onInsert callback, and optional onError handler;
  *   native Tauri drag-drop events via getCurrentWebview().onDragDropEvent.
  * @outputs DroppedInsert descriptors, FileDrop lifecycle controller (available status and destroy method),
- *   IMAGE_EXTENSIONS and MARKDOWN_EXTENSIONS sets, classifyDroppedPath classifier, and installFileDrop installer.
+ *   the IMAGE_EXTENSIONS set, classifyDroppedPath classifier, and installFileDrop installer.
  * @functions
  *   - isTauri: Determines desktop runtime availability by detecting the Tauri global without throwing exceptions.
  *   - classifyDroppedPath: Pure classifier parsing a file path to derive base name label and kind ('image' vs 'link').
@@ -53,16 +53,6 @@ export const IMAGE_EXTENSIONS: ReadonlySet<string> = new Set([
   'svg',
   'avif',
   'bmp',
-]);
-
-/**
- * Recognized Markdown file extensions. Dropped Markdown files are inserted as links
- * by default per FR-7.5.
- */
-export const MARKDOWN_EXTENSIONS: ReadonlySet<string> = new Set([
-  'md',
-  'markdown',
-  'mdx',
 ]);
 
 /**

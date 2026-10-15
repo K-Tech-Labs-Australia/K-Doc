@@ -6,14 +6,14 @@
  * @functions
  *   - describe: Groups all autocorrect-settings tests under a single suite.
  *   - it: Executes individual test cases asserting parser, serializer, validator, and merge behavior.
- * @dataflow Test fixtures → parseAutocorrectSection/parseSettings/mergeSettingsLayers → assertions on results.
+ * @dataflow Test fixtures → parseAutocorrectSection/parseSettings → assertions on results.
  * @controlflow Suite mounts → each it() runs in isolation → expect() validates behavior → suite completes.
  * @version 1
  * @date 2026-09-16
  */
 
 import { describe, expect, it } from 'vitest';
-import { mergeSettingsLayers, parseSettings, serializeSettings, DEFAULT_SETTINGS } from '../src/index.js';
+import { parseSettings, serializeSettings, DEFAULT_SETTINGS } from '../src/index.js';
 import {
   isValidReplacementKey,
   parseAutocorrectSection,
@@ -91,12 +91,5 @@ describe('autocorrect settings', () => {
     const again = parseSettings(serializeSettings(loaded.settings, loaded.unknownKeys));
     expect(again.settings.autocorrect).toEqual(loaded.settings.autocorrect);
     expect(again.unknownKeys['autocorrect.future']).toBe(true);
-  });
-
-  // Asserts a later layer's autocorrect section fully overrides an earlier one rather than merging field by field.
-  it('takes a later layer\'s section whole', () => {
-    const merged = mergeSettingsLayers([{ autocorrect: { ...DEFAULT_AUTOCORRECT_SETTINGS, ordinals: true } }, { autocorrect: { ...DEFAULT_AUTOCORRECT_SETTINGS, dashes: false } }]);
-    expect(merged.autocorrect.ordinals).toBe(false);
-    expect(merged.autocorrect.dashes).toBe(false);
   });
 });

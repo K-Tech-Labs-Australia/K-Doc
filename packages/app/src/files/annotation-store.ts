@@ -16,7 +16,6 @@
  *   resolve invokes store_resolve -> peekId inspects text without writing ->
  *   load inspects kdoc_id, invokes store_read, and decodes JSONL ->
  *   save manages identity lazily (acquires on first record, strips on last deletion) and writes JSONL ->
- *   createVault invokes store_create_vault -> migrateToVault invokes store_migrate ->
  *   destroy marks store inert and stops in-flight callbacks.
  * @version 1
  * @date 2026-09-06
@@ -63,8 +62,6 @@ export interface AnnotationStore {
   peekId(): string | null;
   load<T extends JsonlRecord>(kind: AnnotationKind): Promise<{ records: readonly T[]; problems: readonly JsonlProblem[] }>;
   save<T extends JsonlRecord>(kind: AnnotationKind, records: readonly T[]): Promise<void>;
-  createVault(folder: string): Promise<string | null>;
-  migrateToVault(folder: string): Promise<number>;
   destroy(): void;
 }
 
@@ -496,121 +493,6 @@ export function createAnnotationStore(options: AnnotationStoreOptions): Annotati
   }
 
   /**
-   * Initializes a vault store inside the specified folder.
-   *
-   * @purpose Creates `<folder>/.k-doc/` idempotently with standard layout and .gitignore (FR-6.19, FR-6.20).
-   * @inputs folder: string - Absolute path of the folder to initialize as a vault.
-   * @outputs Promise<string | null> - The store root path string on success, or null on error / unavailable / destroyed.
-   * @dataflow folder -> invoke store_create_vault -> return store root string.
-   * @controlflow Guard available -> guard destroyed -> invoke store_create_vault -> guard destroyed -> return vault root or null.
-   */
-  async function createVault(folder: string): Promise<string | null> {
-    // Guard against running outside desktop environment.
-    // Every method is a benign no-op returning an empty/neutral value when available is false,
-    // so the browser dev harness runs unchanged.
-    if (!available) {
-      // Branch: Running outside Tauri desktop environment; return neutral null.
-      return null;
-    } else {
-      // Branch: Desktop environment available; check destroyed state.
-    }
-
-    // Guard against invocations after store destruction.
-    if (destroyed) {
-      // Branch: Store has been destroyed; return null.
-      return null;
-    } else {
-      // Branch: Store active; proceed with vault creation.
-    }
-
-    try {
-      // Tauri v2 converts camelCase JS argument names to snake_case Rust parameters.
-      const vaultRoot = await invoke<string>('store_create_vault', {
-        folder,
-      });
-
-      // Guard against destruction during in-flight invoke.
-      if (destroyed) {
-        // Branch: Store was destroyed while creating vault; return null.
-        return null;
-      } else {
-        // Branch: Store active; return created vault root path.
-      }
-
-      return vaultRoot;
-    } catch (err: unknown) {
-      // Branch: store_create_vault failed; report error and return neutral null.
-      reportError(err);
-      return null;
-    }
-  }
-
-  /**
-   * Migrates existing global store annotations for the current document into a target vault store.
-   *
-   * @purpose Losslessly moves annotation files from global fallback into `<folder>/.k-doc/` (FR-6.19).
-   * @inputs folder: string - Destination vault folder path.
-   * @outputs Promise<number> - Count of annotation files successfully migrated (0 to 2).
-   * @dataflow readText() -> readKdocId() -> invoke store_migrate -> return moved count.
-   * @controlflow Guard available -> guard destroyed -> read kdoc_id:
-   *   - If null: return 0 (no annotations exist to migrate).
-   *   - If present: invoke store_migrate -> guard destroyed -> return count or 0 on error.
-   */
-  async function migrateToVault(folder: string): Promise<number> {
-    // Guard against running outside desktop environment.
-    // Every method is a benign no-op returning an empty/neutral value when available is false,
-    // so the browser dev harness runs unchanged.
-    if (!available) {
-      // Branch: Running outside Tauri desktop environment; return neutral 0.
-      return 0;
-    } else {
-      // Branch: Desktop environment available; check destroyed state.
-    }
-
-    // Guard against invocations after store destruction.
-    if (destroyed) {
-      // Branch: Store has been destroyed; return 0.
-      return 0;
-    } else {
-      // Branch: Store active; read document identity.
-    }
-
-    const currentText = options.readText();
-    const id = readKdocId(currentText);
-
-    // Check if the document has a kdoc_id.
-    if (id === null) {
-      // Branch: Document has no kdoc_id; no annotations exist to migrate, return 0 without invoking Rust.
-      return 0;
-    } else {
-      // Branch: Document has an identity; proceed to invoke store_migrate.
-    }
-
-    try {
-      // Tauri v2 converts camelCase JS argument names to snake_case Rust parameters,
-      // so pass `kdocId` and `targetFolder` from JavaScript.
-      const count = await invoke<number>('store_migrate', {
-        kdocId: id,
-        targetFolder: folder,
-      });
-
-      // Guard against destruction during in-flight invoke.
-      if (destroyed) {
-        // Branch: Store was destroyed while migrating; return 0.
-        return 0;
-      } else {
-        // Branch: Store active; return migrated files count.
-      }
-
-      return count;
-    } catch (err: unknown) {
-      // Branch: store_migrate failed; report error and return neutral 0.
-      reportError(err);
-      return 0;
-    }
-  }
-
-  /**
    * Destroys the annotation store instance and marks all methods inert.
    *
    * @purpose Makes the store instance inert and ensures in-flight operations cannot modify document state.
@@ -638,8 +520,6 @@ export function createAnnotationStore(options: AnnotationStoreOptions): Annotati
     peekId,
     load,
     save,
-    createVault,
-    migrateToVault,
     destroy,
   };
 }

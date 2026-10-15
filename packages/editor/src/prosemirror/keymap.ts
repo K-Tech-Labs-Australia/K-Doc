@@ -74,6 +74,9 @@ export interface KdocKeymapOptions {
    * a link, never draw the box that collects one.
    */
   readonly onRequestLink?: (current: LinkRange | null) => void;
+
+  /** Whether Markdown input rules (typing `# ` for a heading, and so on) apply; read on every keystroke. */
+  readonly inputRulesEnabled?: () => boolean;
 }
 
 /**
@@ -290,7 +293,10 @@ export function createKdocKeymap(options: KdocKeymapOptions): readonly Plugin[] 
   // 3. Base keymap last as the fallback for Enter (paragraph split), Backspace, Delete, and arrow keys.
   // The input-rules plugin sits ahead of every keymap because it reacts to text insertion rather
   // than to keys; ordering it here keeps a single place assembling the pane's plugin array.
-  const inputRulesPlugin = createKdocInputRules({ schema });
+  const inputRulesPlugin = createKdocInputRules({
+    schema,
+    ...(options.inputRulesEnabled === undefined ? {} : { enabled: options.inputRulesEnabled }),
+  });
 
   return [inputRulesPlugin, kdocKeymapPlugin, listKeymapPlugin, baseKeymapPlugin];
 }

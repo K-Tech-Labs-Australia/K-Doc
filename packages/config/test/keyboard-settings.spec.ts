@@ -7,7 +7,7 @@
  *   - parse: Helper wrapping parseKeyboardSection with fresh problem/unknown-key collectors.
  *   - describe('the keyboard settings section'): Unit tests for the standalone keyboard section logic.
  *   - describe('the keyboard section in settings.json'): Integration tests through the whole-file schema and layer merging.
- * @dataflow Test input → parseKeyboardSection / serializeKeyboardSection / parseSettings / serializeSettings / mergeSettingsLayers → expect() assertions against exact expected values.
+ * @dataflow Test input → parseKeyboardSection / serializeKeyboardSection / parseSettings / serializeSettings → expect() assertions against exact expected values.
  * @controlflow For each scenario, build a parse result, then assert settings, problems, and unknown keys match exactly; return on completion.
  * @version 1
  * @date 2026-09-15
@@ -15,7 +15,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { DEFAULT_KEYBOARD_SETTINGS, parseKeyboardSection, serializeKeyboardSection, type KeyboardProblem } from '../src/keymap/keyboard-settings.js';
-import { DEFAULT_SETTINGS, mergeSettingsLayers, parseSettings, serializeSettings } from '../src/index.js';
+import { DEFAULT_SETTINGS, parseSettings, serializeSettings } from '../src/index.js';
 
 /**
  * Helper that runs parseKeyboardSection with fresh collectors so each test starts clean.
@@ -93,10 +93,5 @@ describe('the keyboard section in settings.json', (): void => {
   it('reports the section\'s problems with the rest', (): void => {
     const loaded = parseSettings(JSON.stringify({ keyboard: { preset: 'emacs' } }));
     expect(loaded.problems.map((p) => p.path)).toContain('keyboard.preset');
-  });
-
-  it('merges layers command by command, the later preset winning', (): void => {
-    const merged = mergeSettingsLayers([{ keyboard: { preset: 'typora', bindings: { 'format:bold': ['Ctrl+Alt+B'] } } }, { keyboard: { preset: 'vscode', bindings: { 'format:italic': [] } } }]);
-    expect(merged.keyboard).toEqual({ preset: 'vscode', bindings: { 'format:bold': ['Ctrl+Alt+B'], 'format:italic': [] } });
   });
 });

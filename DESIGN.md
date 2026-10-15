@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| **Doc Version** | 173 |
+| **Doc Version** | 174 |
 | **Last Updated** | 2026-10-15 |
 | **Version** | 0.1.0 (first public release) |
 | **Scope** | **Windows only, for now.** macOS and Linux are deferred, not cancelled: portability discipline stays (NFR-9) and nothing may assume Windows in `@k-doc/core`, but neither is a release target and neither is tested. |
@@ -557,7 +557,7 @@ pointing device - a mouse-only divider fails WCAG 2.2, so that is a requirement 
 GFM tables round-tripped from the beginning — the schema, both converters and the serializer already
 handled them — but nothing let a user make one, and Phase 1's definition of done is writing a document
 without seeing raw Markdown. `table-query.ts`, `table-build.ts`, `table.ts` and `table-columns.ts` close
-that, with `table-toolbar.ts` surfacing them as Word-style contextual controls.
+that; the ribbon's contextual Table tab and the Table menu surface them as Word-style controls.
 
 Two decisions shape the whole layer:
 
@@ -585,7 +585,7 @@ tagging it would push a meaningless entry into the undo history.
 
 ### The toolbar mousedown guard
 
-Building the table toolbar exposed a bug in the existing one. Neither toolbar prevented default on
+Building the first table controls (a toolbar since replaced by the ribbon's Table tab) exposed a bug in the toolbars of the time. Neither prevented default on
 `mousedown`, so clicking any button moved DOM focus out of the ProseMirror `contentDOM`, the browser
 collapsed the selection, and the command ran against a caret at position 0. Bold silently did nothing;
 an inserted table landed at the top of the document. Every button in both toolbars now calls
@@ -603,6 +603,12 @@ move focus on `mousedown` and so cannot reproduce the bug at all.
 `input-rules.ts` implements FR-7.7: typing `# ` makes a heading, `- ` makes a bullet, `**bold**` makes
 bold. This is what the K-Doc promise actually rests on — without it a user has to reach for a toolbar
 to do what typing already means in Markdown.
+
+**Settings → Editor → Input rules** (`editor.inputRules`) switches every rule here on and off live: `createKdocInputRules`
+takes an `enabled` getter, and `gateInputRules` wraps the plugin's two entry points (`handleTextInput` and
+`compositionend`) so that with the switch off typed text is inserted as typed. The plugin's state and its
+`isInputRules` marker are kept, so Backspace still undoes a rule that did fire. The shell passes
+`() => this.settings.editor.inputRules` to both editor panes, through the binding's `inputRulesEnabled` option.
 
 `prosemirror-inputrules` ships block-level helpers but no inline-mark rule, so `markInputRule` is the
 one piece written by hand. It replaces the matched delimiters with the captured text, marks it, and then
@@ -824,6 +830,15 @@ document (FR-6.7) is now the only thing that makes the K-Doc pane read-only.
 `VIEW_MODE_CYCLE` and `nextViewMode` back `Ctrl+/` (FR-5.7), in the order of the view buttons. An unrecognised mode
 restarts the cycle rather than staying put, because a shortcut that silently does nothing is the worst response to an
 unexpected state - the user just presses it again harder.
+
+**Split orientation.** `editor.splitOrientation` lays Split out side by side (`vertical`, the default) or stacked,
+K-Doc above Source (`horizontal`). `applySplitOrientation` (run from `applySettings`, so it applies live) toggles
+`kdoc-panes-stacked` on the panes row, which turns it into a column, and calls `setOrientation` on both dividers.
+`split-divider.ts` names orientations as the setting does, which is also the separator's `aria-orientation`: a
+horizontal divider gets `kdoc-split-divider-horizontal`, measures the drag on the y axis, and shows the up-down
+cursor; the arrow keys work in either orientation, and the ratio (flex shares) carries across. The second pane is a
+sibling in the same row, so it stacks too. A `revealSyntaxMarkers` setting that nothing read was removed; an old
+settings file keeps the value as an unknown key, without a warning.
 
 **Which mode a window starts in.** A restored session's mode wins (`applyStoredLayout` sets `viewModeRestored`);
 otherwise `restoreThenRecover` applies `editor.defaultViewMode`, which defaults to Split. Settings and sessions saved
@@ -1070,8 +1085,8 @@ and nothing else reads as a bug.
 
 ### Not done
 
-**Per-vault overrides (FR-14.15).** `mergeSettingsLayers` exists in the config package and is built for
-exactly this, but vaults do not exist yet, so there is only the app-level layer to merge.
+**Per-vault overrides (FR-14.15).** Not built: there is only the app-level settings file. (A `mergeSettingsLayers`
+helper written for it in advance was removed because nothing called it.)
 
 ---
 
@@ -1112,7 +1127,7 @@ palette and the ribbon. Caching it would report stale enabled/disabled results t
 
 ## 6r. The Native Menu Bar
 
-`menu-bar.ts` built the specification and a native-menu module rendered it (FR-14.8); both were later replaced by the in-app menu bar (6r-bis).
+A native OS menu (FR-14.8) came first; it was replaced by the in-app menu bar (6r-bis), and its module was later removed.
 
 **The webview owns the menu; Rust only draws it.** This is the decision the whole file turns on. The
 commands live in the TypeScript registry, so defining the menu in Rust would mean a second
@@ -1197,9 +1212,8 @@ ones use the red status colour on an outlined pill.
 (imported in `main.ts`, weight and optical-size axes) so it works offline; `UI_FONT_STACK` falls back
 to Segoe UI.
 
-**`app-menu-bar.ts` is the in-app menu bar** and is a different thing from `menu-bar.ts` in 6r, which
-drives the native OS menu through Tauri. This one is HTML the app draws and can therefore style; the
-native one cannot be, so **it is no longer installed**. Showing both would have duplicated every
+**`app-menu-bar.ts` is the in-app menu bar**, which replaced the native OS menu of 6r. It is HTML the app draws and can therefore style; the
+native menu cannot be, so **the host clears it at startup**. Showing both would have duplicated every
 command in two places, one of which could not be made to look like the rest of the app. The unused
 native-menu module was removed before the first public release (it is in the git history):
 FR-14.8 is superseded, not abandoned, and is now met by this bar instead. It carries ten menus - File, Edit,
@@ -1229,7 +1243,7 @@ scrolling — a defect caught in review rather than shipped.
 ribbon carrying the fast path, the standalone format and table toolbars were duplicates. Both rows
 were removed, and the caret-in-table signal that used to show and hide the table toolbar now drives
 the ribbon's contextual Table tab in all four places that computed it, so the behaviour moved rather
-than being dropped. `format-toolbar.ts` and `table-toolbar.ts` remain, unmounted.
+than being dropped. The two toolbar modules were later deleted.
 
 **Panels float rather than dock.** Both sidebar hosts leave the flex row for `position: absolute`
 against `.kdoc-panes`, which already established a containing block. A panel now overlays the
@@ -4611,7 +4625,7 @@ unchanged save is still free.
   - `setColumnWidthHint(width | null)`, a structural `setNodeMarkup` on the caret column's header cell, refusing
     non-integers, values outside 1–200 (`MAX_WIDTH_HINT`), and unchanged widths;
   - `parseWidthHint(text)`, which reads the prompt's answer.
-- The shell's `askColumnWidth` is reached from Column Width… in the palette and the table toolbar's ↔ button.
+- The shell's `askColumnWidth` is reached from Column Width… in the palette, the Table menu and the ribbon.
 
 ### Cell formatting within GFM's constraints
 
@@ -6539,7 +6553,7 @@ build names and remove it. The alternative — hiding it — would leave them ed
 - Groups cannot be added, renamed or removed, and tabs cannot be added or renamed. The reader arranges the
   commands within the shape K-Doc draws.
 - Only the three tabs K-Doc has. A tab is a thing the ribbon knows how to build, not just a name.
-- The quick-access toolbar and the format toolbar are not arrangeable; this is the ribbon only.
+- The quick-access toolbar is not arrangeable; this is the ribbon only.
 
 ## 6dp. The graph of a vault (FR-6.15)
 
@@ -6875,7 +6889,7 @@ element is the **sliced-K mark**: three polygons on a 100-unit grid, stroked 7 w
 gitignored. It gathers what K-Doc actually ships:
 
 - the production npm tree of the four workspaces (`npm ls --omit=dev --all --parseable`)
-- the Rust crates reached from `kdoc-spike` over normal dependency edges only (`cargo metadata --filter-platform
+- the Rust crates reached from `k-doc` over normal dependency edges only (`cargo metadata --filter-platform
   x86_64-pc-windows-msvc`; build and dev edges are not followed, so `tauri-build` and friends are excluded)
 - each fetched dictionary's `license` file (`fetch-dictionary.mjs` now downloads it)
 

@@ -6,7 +6,6 @@
  * @inputs ProseMirror EditorState instances, target mark/block identifiers, heading levels, list kinds, and optional dispatch callbacks.
  * @outputs ProseMirror Command functions returning booleans and dispatching tagged Transactions, along with mark/block activity predicates.
  * @functions
- *   - isMarkActive: Checks whether a given inline mark is active at the current selection or stored marks.
  *   - isBlockActive: Checks whether a given block node type (and optional attributes) is active in selection ancestors.
  *   - toggleKdocMark: Creates a command toggling a specific inline mark on the selection.
  *   - clearFormatting: Creates a command removing all schema marks from the selection range and tagging transaction structural.
@@ -118,39 +117,6 @@ function withStructuralMeta(command: Command): Command {
       return command(state, undefined);
     }
   };
-}
-
-/**
- * @purpose Checks whether a given K-Doc mark is active at the current editor selection.
- * @inputs
- *   - state: EditorState - The current ProseMirror editor state.
- *   - mark: KdocMark - The mark name to check ('strong', 'emphasis', 'strikethrough', 'inlineCode').
- * @outputs boolean - True if the mark is active at the selection; false otherwise.
- * @dataflow Resolves MarkType from schema -> checks storedMarks / $from.marks for empty selection or rangeHasMark for non-empty selection -> returns boolean.
- * @controlflow Resolve mark type (return false if null) -> check if selection is empty -> if empty, inspect storedMarks or $from.marks(); if non-empty, test doc.rangeHasMark(from, to, type).
- */
-export function isMarkActive(state: EditorState, mark: KdocMark): boolean {
-  const type = markType(state.schema, mark);
-  // Check if the requested mark type exists in the schema.
-  if (type === null) {
-    // Mark type not found in schema: report inactive.
-    return false;
-  } else {
-    // Mark type resolved: proceed to test selection.
-  }
-
-  const { selection } = state;
-  // Check whether the editor selection is an empty cursor or a non-empty range.
-  // The empty-selection case must consult storedMarks, because that is where a mark toggled with no
-  // selection lives until the user types — without it the toolbar button would flicker off the instant it was pressed.
-  if (selection.empty) {
-    // Selection is empty: consult storedMarks if set, falling back to marks present at the cursor position ($from).
-    const activeMarks = state.storedMarks ?? selection.$from.marks();
-    return type.isInSet(activeMarks) !== undefined;
-  } else {
-    // Selection is a non-empty range: check if the mark spans across the selection range in the document.
-    return state.doc.rangeHasMark(selection.from, selection.to, type);
-  }
 }
 
 /**

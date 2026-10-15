@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import { installSplitDivider, type SplitDivider } from '../src/shell/split-divider.js';
+import { installSplitDivider, type SplitDivider, type DividerOrientation } from '../src/shell/split-divider.js';
 
 // jsdom reports zero for every layout measurement, so getBoundingClientRect returns all zeros and the
 // pointer-drag arithmetic cannot be exercised meaningfully. Faking a rect would only prove the
@@ -57,7 +57,7 @@ afterEach((): void => {
  * @dataflow createElement calls → appendChild into body → installSplitDivider(options) → push controllers and containers onto shared arrays.
  * @controlflow Build container → build first/element/second panes in order → install divider with those panes → record everything for afterEach cleanup.
  */
-function mount(): {
+function mount(orientation?: DividerOrientation): {
   container: HTMLElement;
   first: HTMLElement;
   second: HTMLElement;
@@ -77,7 +77,7 @@ function mount(): {
   const second = document.createElement('div');
   container.appendChild(second);
 
-  const divider = installSplitDivider({ element, doc: document, first, second, container });
+  const divider = installSplitDivider({ element, doc: document, first, second, container, ...(orientation === undefined ? {} : { orientation }) });
   dividers.push(divider);
 
   return { container, first, second, element, divider };
@@ -269,5 +269,49 @@ describe('SplitDivider', () => {
     expect(() => {
       divider.setRatio(0.7);
     }).not.toThrow();
+  });
+
+  describe('orientation (editor.splitOrientation)', () => {
+    it('runs vertically between side-by-side panes by default', (): void => {
+      const { divider, element } = mount();
+      expect(divider.orientation).toBe('vertical');
+      expect(element.classList.contains('kdoc-split-divider-horizontal')).toBe(false);
+    });
+
+    it('runs horizontally between stacked panes when asked', (): void => {
+      const { divider, element } = mount('horizontal');
+      expect(divider.orientation).toBe('horizontal');
+      expect(element.getAttribute('aria-orientation')).toBe('horizontal');
+      expect(element.classList.contains('kdoc-split-divider-horizontal')).toBe(true);
+    });
+
+    it('switches orientation in place and keeps the ratio', (): void => {
+      const { divider, element, first } = mount();
+      divider.setRatio(0.7);
+      divider.setOrientation('horizontal');
+      expect(element.getAttribute('aria-orientation')).toBe('horizontal');
+      expect(divider.ratio).toBe(0.7);
+      expect(first.style.flexGrow).toBe('0.7');
+      divider.setOrientation('vertical');
+      expect(element.getAttribute('aria-orientation')).toBe('vertical');
+      expect(element.classList.contains('kdoc-split-divider-horizontal')).toBe(false);
+    });
+
+    it('moves with ArrowUp and ArrowDown, in either orientation', (): void => {
+      const { divider, element } = mount('horizontal');
+      expect(key(element, 'ArrowDown').defaultPrevented).toBe(true);
+      expect(divider.ratio).toBe(0.52);
+      expect(key(element, 'ArrowUp').defaultPrevented).toBe(true);
+      expect(divider.ratio).toBe(0.5);
+    });
+
+    it('drops its orientation class on destroy and ignores setOrientation afterwards', (): void => {
+      const { divider, element } = mount('horizontal');
+      divider.destroy();
+      expect(element.classList.contains('kdoc-split-divider-horizontal')).toBe(false);
+      divider.setOrientation('vertical');
+      expect(element.classList.contains('kdoc-split-divider-horizontal')).toBe(false);
+      expect(element.hasAttribute('aria-orientation')).toBe(false);
+    });
   });
 });

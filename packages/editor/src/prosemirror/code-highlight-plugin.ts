@@ -1,8 +1,7 @@
 /**
  * @file code-highlight-plugin.ts
  * @purpose ProseMirror plugin providing syntax highlighting inside code blocks in the K-Doc pane (FR-8.8).
- *   The rendered view is the K-Doc pane — Preview makes it read-only rather than swapping in a second
- *   renderer — so highlighting happens there.
+ *   The K-Doc pane is the only rendered view of the document, so highlighting happens there.
  *   It reuses the same Lezer parsers the Source pane already loads. A second highlighting engine would
  *   colour the same code two different ways in two panes of one window, and the only thing worse than no
  *   highlighting is highlighting that disagrees with itself.

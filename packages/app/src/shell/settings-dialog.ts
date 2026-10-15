@@ -1091,15 +1091,6 @@ export function installSettingsDialog(options: SettingsDialogOptions): SettingsD
       (s: KdocSettings): SplitOrientation => s.editor.splitOrientation,
     ),
     createCheckboxRow(
-      `kdoc-setting-${dialogId}-editor-revealSyntaxMarkers`,
-      'Reveal syntax markers',
-      currentSettings.editor.revealSyntaxMarkers,
-      (v: boolean): void => {
-        updateSetting('editor', 'revealSyntaxMarkers', v);
-      },
-      (s: KdocSettings): boolean => s.editor.revealSyntaxMarkers,
-    ),
-    createCheckboxRow(
       `kdoc-setting-${dialogId}-editor-smartSubstitutions`,
       'Smart substitutions',
       currentSettings.editor.smartSubstitutions,

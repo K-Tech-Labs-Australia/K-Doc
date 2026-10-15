@@ -18,9 +18,6 @@ import type { Extension } from '@codemirror/state';
 import { EditorView, lineNumbers, keymap } from '@codemirror/view';
 import { foldGutter, foldKeymap, bracketMatching } from '@codemirror/language';
 
-/** The CSS class the shell and tests use to target the Source pane's number gutter. Exported for external consumers; not attached inside this module. */
-export const SOURCE_GUTTER_CLASS: string = 'kdoc-cm-line-numbers';
-
 /**
  * @purpose Composes the CodeMirror extensions enabling line numbers, code folding, and bracket matching for K-Doc's Source pane (FR-5.2).
  * @inputs void.
