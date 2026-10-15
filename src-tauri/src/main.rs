@@ -366,8 +366,6 @@ fn main() {
             store::store_read,
             store::store_write,
             store::store_delete,
-            store::store_create_vault,
-            store::store_migrate,
             snapshots::snapshot_list,
             snapshots::snapshot_read,
             snapshots::snapshot_write,

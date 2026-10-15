@@ -442,7 +442,7 @@ const SHELL_STYLES: string = `
 .kdoc-shell {
   height: 100vh;
   /* Flex column rather than a grid with a fixed row template. The template named five rows and the
-     shell has grown to eight (toolbar, tabs, ribbon, format, table, find, panes, status), so the 1fr
+     shell has grown to more than that (toolbar, tabs, ribbon, find, panes, status), so the 1fr
      had drifted onto the table toolbar and was stretching it while the panes collapsed. A column that
      lets every chrome row size itself and gives the remainder to the panes cannot drift that way when
      the next row is added. */
@@ -2429,8 +2429,6 @@ export class EditorShell {
     });
     this.gitService = createGitService({ available: fileService.available });
 
-    // The dialog is installed before the toolbar because the toolbar's Link button opens it, and
-    // installFormatToolbar runs an initial refresh as its last act.
     this.linkDialog = installLinkDialog({
       doc: document,
       // Read at the moment the dialog opens rather than held, because the document it is about to

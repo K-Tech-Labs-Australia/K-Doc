@@ -2,10 +2,9 @@
  * @file icons.ts
  * @purpose Chrome line-icon set and SVG factory for the application interface (Material 3 Expressive restyle).
  * @inputs IconName identifiers, Document instances, and numeric dimensions.
- * @outputs IconName type, ICON_PATHS registry, createIcon factory, and isIconName type guard.
+ * @outputs IconName type, ICON_PATHS registry and createIcon factory.
  * @functions
  *   - createIcon: Generates an SVGSVGElement configured with icon stroke geometry and dimensions.
- *   - isIconName: Type guard validating whether a string is a recognized IconName.
  * @dataflow IconName -> ICON_PATHS lookup -> SVG elements constructed via Document -> SVGSVGElement
  * @controlflow Module evaluated on import; functions invoked on demand by shell components.
  * @version 3
@@ -100,17 +99,4 @@ export function createIcon(doc: Document, name: IconName, size: number = 20): SV
   }
 
   return svg;
-}
-
-/**
- * Type guard checking if an arbitrary string corresponds to a valid IconName.
- * @purpose Determines whether a given string key exists in ICON_PATHS.
- * @inputs value - String identifier to validate.
- * @outputs value is IconName - True if value is a valid IconName, narrowing the type.
- * @dataflow value -> Object.prototype.hasOwnProperty check on ICON_PATHS -> boolean
- * @controlflow Perform prototype property check and return boolean result.
- */
-export function isIconName(value: string): value is IconName {
-  // Test whether value is an own property of ICON_PATHS.
-  return Object.prototype.hasOwnProperty.call(ICON_PATHS, value);
 }

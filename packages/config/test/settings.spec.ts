@@ -4,7 +4,7 @@
  * @inputs JSON configuration strings, partial settings layer objects, default and custom KdocSettings structures.
  * @outputs Vitest assertions validating defaults, error resilience, fallback degradation, unknown key preservation, layer merging, and JSON serialization.
  * @functions None (test suite file executing describe and it blocks).
- * @dataflow Test JSON strings / layer objects -> parseSettings / mergeSettingsLayers / serializeSettings -> LoadedSettings / KdocSettings / JSON strings -> Vitest equality and property assertions.
+ * @dataflow Test JSON strings / layer objects -> parseSettings / serializeSettings -> LoadedSettings / KdocSettings / JSON strings -> Vitest equality and property assertions.
  * @controlflow Execute test suites across default values, error resilience (never throws), valid inputs, invalid field degradation, unknown-key preservation and round-trip, layer merging precedence, and serialization formatting/ordering.
  * @version 4
  * @date 2026-09-18
@@ -14,7 +14,6 @@ import { describe, expect, it } from 'vitest';
 import type { KdocSettings, LoadedSettings } from '../src/index.js';
 import {
   DEFAULT_SETTINGS,
-  mergeSettingsLayers,
   parseSettings,
   serializeSettings,
 } from '../src/index.js';
@@ -387,64 +386,6 @@ describe('unknown keys are preserved', () => {
   });
 });
 
-describe('mergeSettingsLayers', () => {
-  it('returns default settings when given no layers', () => {
-    const result = mergeSettingsLayers([]);
-    // Assert that an empty layer list produces default settings.
-    expect(result).toEqual(DEFAULT_SETTINGS);
-  });
-
-  it('resolves conflicting settings such that later layers win', () => {
-    const layer1: Partial<KdocSettings> = {
-      appearance: {
-        ...DEFAULT_SETTINGS.appearance,
-        theme: 'light',
-      },
-    };
-    const layer2: Partial<KdocSettings> = {
-      appearance: {
-        ...DEFAULT_SETTINGS.appearance,
-        theme: 'dark',
-      },
-    };
-
-    const result = mergeSettingsLayers([layer1, layer2]);
-    // Assert later layer overrides earlier layer.
-    expect(result.appearance.theme).toBe('dark');
-  });
-
-  it('does not wipe sibling fields in a section when a layer supplies partial section properties', () => {
-    // Partial layer providing only the theme property in the appearance section.
-    const partialLayer: Partial<KdocSettings> = {
-      appearance: {
-        theme: 'dark',
-      } as unknown as KdocSettings['appearance'],
-    };
-
-    const merged = mergeSettingsLayers([partialLayer]);
-
-    // Assert specified property is updated.
-    expect(merged.appearance.theme).toBe('dark');
-    // Assert sibling properties remain at their default values.
-    expect(merged.appearance.editorFontSizePx).toBe(
-      DEFAULT_SETTINGS.appearance.editorFontSizePx,
-    );
-  });
-
-  it('returns a frozen settings object', () => {
-    const layer: Partial<KdocSettings> = {
-      editor: {
-        ...DEFAULT_SETTINGS.editor,
-        autosave: 'interval',
-      },
-    };
-
-    const merged = mergeSettingsLayers([layer]);
-    // Assert merged result root object is frozen.
-    expect(Object.isFrozen(merged)).toBe(true);
-  });
-});
-
 describe('serializeSettings', () => {
   it('emits output that ends with a newline and parses as valid JSON', () => {
     const output = serializeSettings(DEFAULT_SETTINGS);
@@ -476,18 +417,11 @@ describe('serializeSettings', () => {
   });
 
   it('losslessly round-trips non-default settings through serialization and parsing', () => {
-    const layer1: Partial<KdocSettings> = {
-      appearance: {
-        theme: 'dark',
-      } as unknown as KdocSettings['appearance'],
+    const nonDefaultSettings: KdocSettings = {
+      ...DEFAULT_SETTINGS,
+      appearance: { ...DEFAULT_SETTINGS.appearance, theme: 'dark' },
+      proofing: { ...DEFAULT_SETTINGS.proofing, language: 'fr-FR' },
     };
-    const layer2: Partial<KdocSettings> = {
-      proofing: {
-        language: 'fr-FR',
-      } as unknown as KdocSettings['proofing'],
-    };
-
-    const nonDefaultSettings = mergeSettingsLayers([layer1, layer2]);
     const serialized = serializeSettings(nonDefaultSettings);
     const parsed = parseSettings(serialized);
 

@@ -5,7 +5,6 @@
  * @outputs LoadedSettings with validated configuration, problem diagnostics, and preserved unknown keys; frozen KdocSettings; serialized JSON string.
  * @functions
  *   - parseSettings: Safely parses and validates JSON settings without throwing, falling back to defaults and collecting diagnostics.
- *   - mergeSettingsLayers: Merges hierarchical partial settings layers over DEFAULT_SETTINGS with section-level shallow merging.
  *   - serializeSettings: Serializes settings and preserved unknown keys to diffable, human-readable JSON with stable key ordering.
  * @dataflow Raw JSON string → narrow parse → validate sections & fields → fallback to defaults on error → LoadedSettings with preserved unknown keys.
  * @controlflow Parse JSON → validate root → validate general, editor, appearance, proofing sections → collect unknown keys → return frozen LoadedSettings.
@@ -1344,123 +1343,6 @@ export function parseSettings(json: string): LoadedSettings {
     settings,
     problems: Object.freeze<readonly SettingsProblem[]>(problems),
     unknownKeys: Object.freeze<Readonly<Record<string, unknown>>>(unknownKeys),
-  });
-}
-
-/**
- * Merges multiple partial settings layers over DEFAULT_SETTINGS.
- *
- * Layer order is app defaults, then user settings, then per-vault overrides, and later layers win.
- * Performs a section-level shallow merge so that a layer supplying only a subset of section fields
- * does not wipe the remaining fields of that section.
- *
- * @purpose Merges hierarchical settings layers from base defaults up through vault overrides.
- * @inputs layers - Array of partial settings objects to merge left-to-right.
- * @outputs KdocSettings - Complete, frozen settings object with all layers applied.
- * @dataflow DEFAULT_SETTINGS → fold over layer array applying section-level merges → frozen KdocSettings.
- * @controlflow Start with DEFAULT_SETTINGS sections → loop through layers → merge each defined section over accumulator → freeze and return result.
- */
-export function mergeSettingsLayers(layers: readonly Partial<KdocSettings>[]): KdocSettings {
-  let general: GeneralSettings = DEFAULT_SETTINGS.general;
-  let editor: EditorSettings = DEFAULT_SETTINGS.editor;
-  let appearance: AppearanceSettings = DEFAULT_SETTINGS.appearance;
-  let proofing: ProofingSettings = DEFAULT_SETTINGS.proofing;
-  let keyboard: KeyboardSettings = DEFAULT_SETTINGS.keyboard;
-  let autocorrect: AutocorrectSettings = DEFAULT_SETTINGS.autocorrect;
-  let snippets: SnippetSettings = DEFAULT_SETTINGS.snippets;
-  let history: HistorySettings = DEFAULT_SETTINGS.history;
-  let exportSettings: ExportSettings = DEFAULT_SETTINGS.export;
-
-  // Iterate left-to-right through layers (app defaults → user settings → per-vault overrides).
-  for (const layer of layers) {
-    // Check if layer is defined.
-    if (!layer) {
-      continue;
-    }
-
-    // Check if general section is provided in this layer.
-    if (layer.general) {
-      general = Object.freeze<GeneralSettings>({
-        ...general,
-        ...layer.general,
-      });
-    }
-
-    // Check if editor section is provided in this layer.
-    if (layer.editor) {
-      editor = Object.freeze<EditorSettings>({
-        ...editor,
-        ...layer.editor,
-      });
-    }
-
-    // Check if appearance section is provided in this layer.
-    if (layer.appearance) {
-      appearance = Object.freeze<AppearanceSettings>({
-        ...appearance,
-        ...layer.appearance,
-      });
-    }
-
-    // Check if proofing section is provided in this layer.
-    if (layer.proofing) {
-      proofing = Object.freeze<ProofingSettings>({
-        ...proofing,
-        ...layer.proofing,
-      });
-    }
-
-    // Check if keyboard section is provided in this layer.
-    if (layer.keyboard) {
-      // A layer's keyboard section replaces the preset and merges bindings command by command.
-      keyboard = Object.freeze<KeyboardSettings>({ preset: layer.keyboard.preset, bindings: Object.freeze({ ...keyboard.bindings, ...layer.keyboard.bindings }) });
-    } else {
-      // No keyboard section in this layer: keep the accumulated one.
-    }
-
-    // Check if autocorrect section is provided in this layer.
-    if (layer.autocorrect) {
-      // A layer's autocorrect section replaces the accumulated one whole, table included, so a vault can remove an entry.
-      autocorrect = layer.autocorrect;
-    } else {
-      // No autocorrect section in this layer: keep the accumulated one.
-    }
-
-    // Check if snippets section is provided in this layer.
-    if (layer.snippets) {
-      // A layer's snippets section replaces the accumulated one whole, so a vault can remove a snippet.
-      snippets = layer.snippets;
-    } else {
-      // No snippets section in this layer: keep the accumulated one.
-    }
-
-    // Check if export section is provided in this layer.
-    if (layer.export) {
-      // A layer's export section replaces the accumulated one whole.
-      exportSettings = layer.export;
-    } else {
-      // No export section in this layer: keep the accumulated one.
-    }
-
-    // Check if history section is provided in this layer.
-    if (layer.history) {
-      // A layer's history section replaces the accumulated one whole.
-      history = layer.history;
-    } else {
-      // No history section in this layer: keep the accumulated one.
-    }
-  }
-
-  return Object.freeze<KdocSettings>({
-    general,
-    editor,
-    appearance,
-    proofing,
-    keyboard,
-    autocorrect,
-    snippets,
-    history,
-    export: exportSettings,
   });
 }
 

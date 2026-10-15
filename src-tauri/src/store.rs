@@ -4,7 +4,7 @@
 //! Note: Commenting therefore works on a file double-clicked out of Downloads, with no vault and no setup — the fallback is not a degraded mode, it is the default one.
 //! Annotations are keyed by the document's kdoc_id (a ULID in its front matter), never by path, so renaming or moving a file never orphans its annotations.
 //!
-//! @inputs Webview IPC invoke requests (`store_resolve`, `store_read`, `store_write`, `store_delete`, `store_create_vault`, `store_migrate`) containing document paths, kind strings, kdoc_id ULIDs, and contents payloads.
+//! @inputs Webview IPC invoke requests (`store_resolve`, `store_read`, `store_write`, `store_delete`) containing document paths, kind strings, kdoc_id ULIDs, and contents payloads.
 //! @outputs Persisted annotation JSON files, generated vault layouts and .gitignore files, ResolvedStore metadata, and Result responses returned over IPC.
 //! @functions
 //!   - validate_kind: Validates that an annotation kind is exactly "comments" or "changes".
@@ -15,14 +15,10 @@
 //!   - read_store_file: Reads an annotation file from a store root, returning an empty string if absent (FR-6.23).
 //!   - write_store_file: Atomically writes annotation contents via a temporary sibling file in a store root.
 //!   - delete_store_file: Deletes an annotation file from a store root, succeeding if already absent.
-//!   - create_vault_layout: Creates the vault directory layout and generated .gitignore idempotently.
-//!   - migrate_store_files: Migrates annotation files for a kdoc_id from a global store into a target vault.
 //!   - store_resolve: Resolves whether a document uses a local vault or global fallback store and returns ResolvedStore over IPC.
 //!   - store_read: Reads an annotation file from the resolved store, delegating to read_store_file.
 //!   - store_write: Atomically writes annotation contents to the resolved store, delegating to write_store_file.
 //!   - store_delete: Deletes an annotation file from the resolved store, delegating to delete_store_file.
-//!   - store_create_vault: Initializes `<folder>/.k-doc/` with standard layout, delegating to create_vault_layout.
-//!   - store_migrate: Losslessly moves annotation files from global store into target vault, delegating to migrate_store_files.
 //! @dataflow Webview IPC invoke -> command dispatch -> path/kind/id validation -> store walk-up/fallback resolution -> atomic filesystem I/O -> serialized Result response returned over IPC.
 //! @controlflow Tauri invoke handler dispatches command -> validate kind & kdoc_id -> resolve vault root via walk-up or global fallback -> perform atomic write / read / delete / migration -> Result returned.
 //! @version 2
@@ -459,155 +455,6 @@ fn delete_store_file(root: &Path, kind: &str, kdoc_id: &str) -> Result<(), Strin
     }
 }
 
-/// Creates the standard vault layout and generated `.gitignore` inside `<folder>/.k-doc/`.
-///
-/// @purpose Creates `<folder>/.k-doc/` (FR-6.19, FR-6.20) idempotently with layout and gitignore.
-/// @inputs folder - Filesystem Path of the folder to turn into a vault.
-/// @outputs Result<PathBuf, String> - Returns Ok(PathBuf) containing the vault root path (`<folder>/.k-doc`) on success, or Err on failure.
-/// @dataflow folder Path -> resolve `<folder>/.k-doc` -> create layout directories -> generate .gitignore if absent -> Ok(vault_root).
-/// @controlflow Validate folder non-empty -> construct vault root -> create subdirectories (comments, changes, local/snapshots, local/journal) -> check .gitignore -> write .gitignore if missing -> return Ok(vault_root).
-fn create_vault_layout(folder: &Path) -> Result<PathBuf, String> {
-    // Validate folder parameter.
-    if folder.as_os_str().is_empty() || folder.to_string_lossy().trim().is_empty() {
-        // Branch: Folder path is empty; return descriptive error.
-        return Err("Cannot create vault: folder path must not be empty".to_string());
-    } else {
-        // Branch: Folder path is non-empty; proceed.
-    }
-
-    let vault_root = folder.join(".k-doc");
-
-    // Layout (FR-6.20):
-    // <store>/
-    //   comments/<kdoc_id>.json      shared - commit to git
-    //   changes/<kdoc_id>.json       shared - commit to git
-    //   .gitignore                  generated; ignores local/
-    //   local/
-    //     index.db
-    //     snapshots/<kdoc_id>/
-    //     journal/
-    //     state.json
-    let comments_dir = vault_root.join("comments");
-    let changes_dir = vault_root.join("changes");
-    let local_dir = vault_root.join("local");
-    let snapshots_dir = local_dir.join("snapshots");
-    let journal_dir = local_dir.join("journal");
-
-    // Create the full directory layout.
-    // Creating directories where they already exist is idempotent and succeeds.
-    for dir in &[&comments_dir, &changes_dir, &snapshots_dir, &journal_dir] {
-        if let Err(err) = fs::create_dir_all(dir) {
-            // Branch: Failed to create layout directory; return error naming path and cause.
-            return Err(format!(
-                "Failed to create vault directory '{}': {err}",
-                dir.display()
-            ));
-        } else {
-            // Branch: Directory created or already exists; proceed.
-        }
-    }
-
-    // Generate .gitignore inside .k-doc/ if not already present.
-    // Generating .gitignore containing 'local/' and an explanatory comment is what makes
-    // "commit the shared half, ignore the rest" the default rather than something each user
-    // has to know to configure. Creating a vault where one exists must not fail or overwrite (idempotent).
-    let gitignore_path = vault_root.join(".gitignore");
-    if !gitignore_path.exists() {
-        // Branch: .gitignore does not exist; generate default configuration.
-        let gitignore_content = "# Machine-local state and cache: do not commit to version control.\nlocal/\n";
-        if let Err(err) = fs::write(&gitignore_path, gitignore_content) {
-            // Branch: Failed to write generated .gitignore; return error naming path and cause.
-            return Err(format!(
-                "Failed to write generated .gitignore in vault '{}': {err}",
-                gitignore_path.display()
-            ));
-        } else {
-            // Branch: .gitignore generated successfully.
-        }
-    } else {
-        // Branch: .gitignore already exists; do not overwrite to preserve existing user customizations.
-    }
-
-    Ok(vault_root)
-}
-
-/// Migrates annotation files for a kdoc_id from a global store into a target vault store.
-///
-/// @purpose Moves comments and changes for an id from global fallback store into `<target_folder>/.k-doc/` (FR-6.19).
-/// @inputs global_root - Root Path of the global fallback store.
-/// @inputs target_folder - Destination folder Path where the vault resides.
-/// @inputs kdoc_id - 26-character Crockford Base32 document identifier.
-/// @outputs Result<u32, String> - Returns Ok(u32) with count of files moved (0 to 2), or Err on failure.
-/// @dataflow (global_root, target_folder, kdoc_id) -> validate id -> create_vault_layout -> scan global store -> move existing files -> return moved count.
-/// @controlflow Validate kdoc_id -> ensure target vault exists via create_vault_layout -> iterate ["comments", "changes"] -> if global file exists move to vault (rename with copy fallback) -> return count of moved files.
-fn migrate_store_files(
-    global_root: &Path,
-    target_folder: &Path,
-    kdoc_id: &str,
-) -> Result<u32, String> {
-    // Validate kdoc_id parameter (26-character Crockford Base32).
-    validate_kdoc_id(kdoc_id)?;
-
-    // Validate target_folder parameter.
-    if target_folder.as_os_str().is_empty() || target_folder.to_string_lossy().trim().is_empty() {
-        // Branch: Target folder path is empty; return descriptive error.
-        return Err("Cannot migrate store files: target folder path must not be empty".to_string());
-    } else {
-        // Branch: Target folder path is non-empty; proceed.
-    }
-
-    // Ensure the destination vault exists with its full layout and .gitignore.
-    let vault_root = create_vault_layout(target_folder)?;
-
-    let mut moved_count: u32 = 0;
-
-    // Migration is lossless and reversible precisely because the key is the id rather than the path,
-    // so nothing has to be rewritten — only moved.
-    for kind in &["comments", "changes"] {
-        let source_file = global_root.join(kind).join(format!("{kdoc_id}.json"));
-        let target_dir = vault_root.join(kind);
-        let target_file = target_dir.join(format!("{kdoc_id}.json"));
-
-        // Check if the annotation file exists in the global fallback store.
-        if source_file.exists() {
-            // Branch: Source file exists in global store; move it into vault store.
-            if let Err(err) = fs::create_dir_all(&target_dir) {
-                // Branch: Failed to ensure target directory exists; return error naming path.
-                return Err(format!(
-                    "Failed to create target directory '{}' for store migration: {err}",
-                    target_dir.display()
-                ));
-            } else {
-                // Branch: Target directory is ready.
-            }
-
-            // Attempt atomic rename first.
-            if let Err(_) = fs::rename(&source_file, &target_file) {
-                // Branch: Rename failed (e.g. moving across different filesystem volumes); fallback to copy and remove.
-                if let Err(err) = fs::copy(&source_file, &target_file) {
-                    // Branch: Copy failed; return error naming source and target.
-                    return Err(format!(
-                        "Failed to copy store file during migration from '{}' to '{}': {err}",
-                        source_file.display(),
-                        target_file.display()
-                    ));
-                } else {
-                    // Branch: Copy succeeded; remove original source file from global store.
-                    let _ = fs::remove_file(&source_file);
-                }
-            } else {
-                // Branch: Atomic rename succeeded on same filesystem volume.
-            }
-
-            moved_count += 1;
-        } else {
-            // Branch: File does not exist in global store; skip cleanly without error.
-        }
-    }
-
-    Ok(moved_count)
-}
-
 /// Reads an annotation file from the resolved document store.
 ///
 /// @purpose Reads `<store>/<kind>/<kdoc_id>.json` (FR-6.20, FR-6.23), returning an empty string if the file does not exist.
@@ -725,70 +572,6 @@ pub fn store_delete(
 
     // Delegate to testable free function.
     delete_store_file(&location.root, &kind, &kdoc_id)
-}
-
-/// Initializes a `.k-doc/` vault store with full directory layout and generated `.gitignore`.
-///
-/// @purpose Creates `<folder>/.k-doc/` (FR-6.19, FR-6.20) idempotently with layout and gitignore.
-/// @inputs _app - The Tauri application handle.
-/// @inputs folder - Filesystem path of the folder to turn into a vault.
-/// @outputs Result<String, String> - Returns Ok(String) containing the store root path on success, or Err on failure.
-/// @dataflow folder string -> create_vault_layout -> Ok(store_root).
-/// @controlflow Validate folder non-empty -> delegate to create_vault_layout -> format to string -> return Ok(store_root).
-#[tauri::command]
-pub fn store_create_vault(
-    grants: tauri::State<'_, crate::grants::GrantState>,
-    _app: tauri::AppHandle,
-    folder: String,
-) -> Result<String, String> {
-    // A vault store is created only in a folder the user chose.
-    grants.require_vault(&folder)?;
-    // Validate folder parameter.
-    if folder.trim().is_empty() {
-        // Branch: Folder path is empty; return descriptive error.
-        return Err("Cannot create vault: folder path must not be empty".to_string());
-    } else {
-        // Branch: Folder path is non-empty; proceed.
-    }
-
-    let vault_root = create_vault_layout(Path::new(&folder))?;
-    Ok(vault_root.display().to_string())
-}
-
-/// Migrates annotation files for a kdoc_id from the global store into a target vault store.
-///
-/// @purpose Moves comments and changes for an id from global fallback store into `<target_folder>/.k-doc/` (FR-6.19).
-/// @inputs app - The Tauri application handle.
-/// @inputs kdoc_id - 26-character Crockford Base32 document identifier.
-/// @inputs target_folder - Destination vault folder path.
-/// @outputs Result<u32, String> - Returns Ok(u32) with count of files moved (0 to 2), or Err on failure.
-/// @dataflow (kdoc_id, target_folder) -> validate id & folder -> resolve global store -> migrate_store_files -> return moved count.
-/// @controlflow Validate kdoc_id -> validate target_folder -> resolve global store -> delegate to migrate_store_files -> return count of moved files.
-#[tauri::command]
-pub fn store_migrate(
-    grants: tauri::State<'_, crate::grants::GrantState>,
-    app: tauri::AppHandle,
-    kdoc_id: String,
-    target_folder: String,
-) -> Result<u32, String> {
-    // Annotations move only into a folder the user chose.
-    grants.require_vault(&target_folder)?;
-    // Validate kdoc_id parameter (26-character Crockford Base32).
-    validate_kdoc_id(&kdoc_id)?;
-
-    // Validate target_folder parameter.
-    if target_folder.trim().is_empty() {
-        // Branch: Target folder path is empty; return descriptive error.
-        return Err("Cannot migrate store files: target folder path must not be empty".to_string());
-    } else {
-        // Branch: Target folder path is non-empty; proceed.
-    }
-
-    // Resolve global fallback store directory in application data.
-    let global_root = global_store_dir(&app)?;
-
-    // Delegate to testable free function.
-    migrate_store_files(&global_root, Path::new(&target_folder), &kdoc_id)
 }
 
 #[cfg(test)]
@@ -1078,130 +861,6 @@ mod tests {
         let del_existing = delete_store_file(&root, "comments", kdoc_id);
         assert!(del_existing.is_ok(), "Deleting existing file must succeed");
         assert!(!target.exists(), "File must no longer exist after delete");
-
-        let _ = fs::remove_dir_all(&root);
-    }
-
-    #[test]
-    fn create_vault_layout_creates_full_layout_and_gitignore() {
-        // Pins: create_vault_layout creates comments, changes, local/snapshots, local/journal, and .gitignore.
-        let root = temp_test_dir("vault_layout");
-        let folder = root.join("vault_root");
-
-        let layout_res = create_vault_layout(&folder);
-        assert!(layout_res.is_ok(), "create_vault_layout should succeed");
-        let vault_root = layout_res.unwrap();
-
-        assert_eq!(vault_root, folder.join(".k-doc"));
-        assert!(vault_root.join("comments").is_dir(), "comments/ directory must exist");
-        assert!(vault_root.join("changes").is_dir(), "changes/ directory must exist");
-        assert!(vault_root.join("local").join("snapshots").is_dir(), "local/snapshots/ directory must exist");
-        assert!(vault_root.join("local").join("journal").is_dir(), "local/journal/ directory must exist");
-
-        let gitignore_path = vault_root.join(".gitignore");
-        assert!(gitignore_path.is_file(), ".gitignore must exist");
-        let gitignore_content = fs::read_to_string(&gitignore_path).expect("read gitignore");
-        assert!(
-            gitignore_content.contains("local/"),
-            "Expected .gitignore to contain 'local/'"
-        );
-
-        let _ = fs::remove_dir_all(&root);
-    }
-
-    #[test]
-    fn create_vault_layout_is_idempotent_and_preserves_custom_gitignore() {
-        // Pins: create_vault_layout is idempotent and does not overwrite user's customized .gitignore.
-        let root = temp_test_dir("vault_idempotent");
-        let folder = root.join("vault_root");
-
-        create_vault_layout(&folder).expect("first layout creation should succeed");
-
-        let gitignore_path = folder.join(".k-doc").join(".gitignore");
-        let custom_content = "# User custom gitignore rule\n*.log\nlocal/\n";
-        fs::write(&gitignore_path, custom_content).expect("write custom gitignore");
-
-        // Second run must be idempotent and not clobber custom content.
-        // A vault command that clobbers a user's own gitignore is worse than one that does nothing.
-        let second_res = create_vault_layout(&folder);
-        assert!(second_res.is_ok(), "second create_vault_layout call must succeed");
-
-        let final_content = fs::read_to_string(&gitignore_path).expect("read gitignore after second run");
-        assert_eq!(
-            final_content,
-            custom_content,
-            "Expected custom .gitignore to be preserved across repeated create_vault_layout calls"
-        );
-
-        let _ = fs::remove_dir_all(&root);
-    }
-
-    #[test]
-    fn migrate_store_files_moves_both_files() {
-        // Pins: migrate_store_files moves both comments and changes files and returns 2.
-        let root = temp_test_dir("migrate_both");
-        let global_root = root.join("global_store");
-        let target_folder = root.join("target_vault");
-        let kdoc_id = "01AN4Z07BY79KA1307SR9X4MV3";
-
-        let comments_payload = "{\"comments\": [\"note 1\"]}";
-        let changes_payload = "{\"changes\": [\"edit 1\"]}";
-
-        write_store_file(&global_root, "comments", kdoc_id, comments_payload)
-            .expect("write global comments");
-        write_store_file(&global_root, "changes", kdoc_id, changes_payload)
-            .expect("write global changes");
-
-        let moved_count = migrate_store_files(&global_root, &target_folder, kdoc_id)
-            .expect("migration should succeed");
-        assert_eq!(moved_count, 2, "Expected migrate_store_files to return 2 when both files move");
-
-        let global_comments = global_root.join("comments").join(format!("{kdoc_id}.json"));
-        let global_changes = global_root.join("changes").join(format!("{kdoc_id}.json"));
-        assert!(!global_comments.exists(), "Source comments file must be gone");
-        assert!(!global_changes.exists(), "Source changes file must be gone");
-
-        let vault_root = target_folder.join(".k-doc");
-        let vault_comments = vault_root.join("comments").join(format!("{kdoc_id}.json"));
-        let vault_changes = vault_root.join("changes").join(format!("{kdoc_id}.json"));
-
-        assert_eq!(
-            fs::read_to_string(&vault_comments).unwrap(),
-            comments_payload,
-            "Target vault comments must hold original content"
-        );
-        assert_eq!(
-            fs::read_to_string(&vault_changes).unwrap(),
-            changes_payload,
-            "Target vault changes must hold original content"
-        );
-
-        let _ = fs::remove_dir_all(&root);
-    }
-
-    #[test]
-    fn migrate_store_files_skips_missing_file_and_counts_moved() {
-        // Pins: migrate_store_files skips missing files and returns the count of files actually moved.
-        let root = temp_test_dir("migrate_skip_missing");
-        let global_root = root.join("global_store");
-        let target_folder = root.join("target_vault");
-        let kdoc_id = "01AN4Z07BY79KA1307SR9X4MV3";
-
-        let comments_payload = "{\"comments\": [\"only comments exist\"]}";
-        write_store_file(&global_root, "comments", kdoc_id, comments_payload)
-            .expect("write global comments");
-
-        let moved_count = migrate_store_files(&global_root, &target_folder, kdoc_id)
-            .expect("migration should succeed");
-        assert_eq!(moved_count, 1, "Expected migrate_store_files to return 1 when only one file exists");
-
-        let vault_root = target_folder.join(".k-doc");
-        let vault_comments = vault_root.join("comments").join(format!("{kdoc_id}.json"));
-        assert_eq!(
-            fs::read_to_string(&vault_comments).unwrap(),
-            comments_payload,
-            "Target vault comments must hold original content"
-        );
 
         let _ = fs::remove_dir_all(&root);
     }

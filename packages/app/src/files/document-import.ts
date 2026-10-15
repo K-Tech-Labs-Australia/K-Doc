@@ -28,11 +28,6 @@ import { importHtml, importPlainText, importRtf, mergeLosses, type ImportLoss, t
 export type ImportFormat = 'docx' | 'html' | 'rtf' | 'text';
 
 /**
- * Every file extension that importDocument recognises, mirroring the cases handled in importFormatOf.
- */
-export const IMPORT_EXTENSIONS: readonly string[] = ['docx', 'html', 'htm', 'rtf', 'txt'];
-
-/**
  * Lists what an import leaves behind, for the pre-import report.
  *
  * @purpose Turns the loss list into one readable phrase.

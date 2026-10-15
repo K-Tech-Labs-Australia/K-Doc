@@ -150,7 +150,7 @@ interface RustFileContents {
  */
 
 
-/** File dialog filter for the formats K-Doc can import (FR-13.5); kept in step with IMPORT_EXTENSIONS in document-import.ts. */
+/** File dialog filter for the formats K-Doc can import (FR-13.5); kept in step with importFormatOf in document-import.ts. */
 
 
 /** A document picked for import: where it was, and its bytes, untouched. */

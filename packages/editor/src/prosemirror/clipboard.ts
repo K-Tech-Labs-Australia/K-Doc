@@ -6,12 +6,11 @@
  *   through the transaction, not wherever the selection landed.
  * @inputs EditorView and ClipboardEvent on paste events; ProseMirror EditorState on selection queries;
  *   raw HTML or plain text strings for programmatic paste commands.
- * @outputs ClipboardHandlers interface containing handlePaste prop; pasteContent utility; pasteAsPlainText
+ * @outputs ClipboardHandlers interface containing handlePaste prop; pasteContent utility
  *   command; selectionAsMarkdown and selectionAsHtml serializers; and RichPasteInfo descriptors.
  * @functions
  *   - createClipboardHandlers: Installs the ProseMirror handlePaste prop handler with rich paste notifications.
  *   - pasteContent: Single point of entry for executing plain, markdown, or html pastes into an EditorView.
- *   - pasteAsPlainText: Command placeholder declaring paste-as-plain-text (Ctrl+Shift+V) capability.
  *   - selectionAsMarkdown: Extracts the active EditorState selection and serializes it to Markdown.
  *   - selectionAsHtml: Extracts the active EditorState selection and renders it to an HTML fragment.
  *   - isInsideCodeBlock: Helper predicate detecting whether the caret or selection resides within a codeBlock.
@@ -24,7 +23,7 @@
  * @date 2026-09-18
  */
 
-import type { Command, EditorState, Transaction } from 'prosemirror-state';
+import type { EditorState, Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { Slice, Fragment, type Node as PMNode, type Schema } from 'prosemirror-model';
 import {
@@ -519,26 +518,6 @@ export function createClipboardHandlers(options: ClipboardOptions): ClipboardHan
         return false;
       }
     },
-  };
-}
-
-/**
- * Command placeholder for pasting clipboard content as plain text.
- *
- * @purpose Registry placeholder command for paste-as-plain-text (Ctrl+Shift+V).
- * @inputs None.
- * @outputs Command - A ProseMirror Command returning false always.
- * @dataflow None.
- * @controlflow Returns a command that returns false unconditionally.
- */
-export function pasteAsPlainText(): Command {
-  // `pasteAsPlainText()` is a Command that reads nothing itself — it cannot, since a command
-  // has no clipboard access. Instead it returns false always, and carries a comment saying it
-  // exists as a registry placeholder whose real work is done by the shell's keydown handler
-  // calling `pasteContent(..., 'plain')` with the clipboard event; a command that silently
-  // did nothing would be worse than one that declares it cannot apply.
-  return (_state: EditorState, _dispatch?: (tr: Transaction) => void, _view?: EditorView): boolean => {
-    return false;
   };
 }
 

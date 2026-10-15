@@ -176,7 +176,7 @@ describe('zen mode', () => {
 
   // the stylesheet names each chrome part and never the panes.
   it('hides every piece of chrome and keeps the panes', () => {
-    for (const selector of ['.kdoc-toolbar', '.kdoc-tab-bar', '.kdoc-ribbon', '.kdoc-format-toolbar', '.kdoc-table-toolbar', '.kdoc-breadcrumbs', '.kdoc-sidebar', '.kdoc-status', '.kdoc-key-hint']) {
+    for (const selector of ['.kdoc-toolbar', '.kdoc-tab-bar', '.kdoc-ribbon', '.kdoc-breadcrumbs', '.kdoc-sidebar', '.kdoc-status', '.kdoc-key-hint']) {
       expect(ZEN_MODE_STYLES).toContain(`.${ZEN_CLASS} ${selector}`);
     }
     expect(ZEN_MODE_STYLES).not.toContain('.kdoc-panes');

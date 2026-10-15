@@ -85,8 +85,6 @@ function harness(text: string): {
     // An empty read is the neutral baseline every test starts from; no persisted changes are staged unless a test overrides load().
     load: async <T>() => ({ records: [] as unknown as T[], problems: [] }),
     save: async (_kind, recs) => { saved.push([...recs] as unknown as TrackedChange[]); },
-    createVault: async () => null,
-    migrateToVault: async () => 0,
     destroy: () => {},
   };
 
