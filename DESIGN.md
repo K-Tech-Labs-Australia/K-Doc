@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| **Doc Version** | 172 |
-| **Last Updated** | 2026-10-13 |
+| **Doc Version** | 173 |
+| **Last Updated** | 2026-10-15 |
 | **Version** | 0.1.0 (first public release) |
 | **Scope** | **Windows only, for now.** macOS and Linux are deferred, not cancelled: portability discipline stays (NFR-9) and nothing may assume Windows in `@k-doc/core`, but neither is a release target and neither is tested. |
 | **Requirements** | [docs/internal/PRELIM-SPEC.md](docs/internal/PRELIM-SPEC.md) — this document says *how*, that one says *what*; per-requirement status is in [docs/internal/FR-STATUS.md](docs/internal/FR-STATUS.md) |
@@ -123,6 +123,17 @@ listener exists loses nothing. In the shell, `files/launch-files.ts` wraps the t
 switching to a file that is already open and dropping the untitled launch document. A window opened for a detached tab
 does not take the startup queue, but every window listens. **Make K-Doc the Default for Markdown…** (Tools menu) calls
 `open_default_apps_settings`.
+
+**The user guide.** `docs/guide/` is the user guide, written for people using K-Doc (task pages plus a settings
+reference and a shortcut list). The pages carry no front matter, because K-Doc would show it at the top of
+each page. It ships with the installer as the bundle resource folder
+`guide` (`bundle.resources` maps `../docs/guide/` to `guide/`). **Help → User Guide** (`help:user-guide`, `F1`) calls
+`user_guide_path` in `src-tauri/src/guide.rs`, which finds `<resource dir>/guide/index.md` (stripping a Windows `\\?\`
+prefix so the grant store does not mistake it for a network path), grants the whole folder so links between pages
+open, and returns the index; the shell opens it like any note. `read_text_file` reports every file inside that
+folder as read-only (`guide::is_guide_file`), so a guide page opens locked however it is reached (the menu, a link,
+session restore), and an edit is never made to the copy the next update replaces. The browser build has no installed
+copy and opens the published guide on GitHub instead (`files/user-guide.ts`).
 
 **File-access grants.** `src-tauri/src/grants.rs` keeps the files and folders the user has chosen
 (`GrantState`, persisted to `<app data>/grants.json`, the 2000 most recent files and 200 folders), and

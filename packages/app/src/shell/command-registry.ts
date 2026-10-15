@@ -100,6 +100,8 @@ export interface CommandRegistryDeps {
   readonly openKeyboardShortcuts: () => void;
   /** Opens Help > About K-Doc. */
   readonly openAbout: () => void;
+  /** Opens the user guide installed with K-Doc (Help > User Guide). */
+  readonly openUserGuide: () => void;
   /** Opens the autocorrect replacement table (FR-7.8). */
   readonly openReplacements: () => void;
   /** Opens the snippets editor (FR-7.10). */
@@ -521,6 +523,7 @@ export function buildCommandRegistry(deps: CommandRegistryDeps): readonly KdocCo
     appCommand('view:zoom-reset', 'Reset Zoom', 'View', 'Ctrl+0', deps.zoomReset),
     appCommand('view:settings', 'Settings', 'View', 'Ctrl+,', deps.openSettings),
     appCommand('view:keyboard-shortcuts', 'Keyboard Shortcuts', 'View', '', deps.openKeyboardShortcuts),
+    appCommand('help:user-guide', 'User Guide', 'View', 'F1', deps.openUserGuide),
     appCommand('help:about', 'About K-Doc', 'View', '', deps.openAbout),
     appCommand('view:autocorrect-replacements', 'Autocorrect Replacements…', 'View', '', deps.openReplacements),
     appCommand('view:snippets', 'Snippets…', 'View', '', deps.openSnippets),

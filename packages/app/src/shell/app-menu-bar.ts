@@ -464,6 +464,7 @@ export const APP_MENU_BAR_SPEC: readonly AppMenuSpec[] = [
     label: 'Help',
     accessKey: 'H',
     items: [
+      { kind: 'command', commandId: 'help:user-guide' },
       { kind: 'command', commandId: 'view:keyboard-shortcuts' },
       { kind: 'separator' },
       { kind: 'command', commandId: 'help:about' },
