@@ -716,9 +716,16 @@ html, body {
   border-radius: var(--kdoc-radius-lg);
 }
 
+/* Split orientation Horizontal (editor.splitOrientation): the panes stack, K-Doc above Source. */
+.kdoc-panes.kdoc-panes-stacked {
+  flex-direction: column;
+}
+
 .kdoc-pane {
   flex: 1;
   min-width: 0;
+  /* Lets a stacked pane shrink below its content's height; side by side it changes nothing. */
+  min-height: 0;
   /* The pane is the document's scroll container, so it cannot be overflow: hidden outright. Hiding
      only the horizontal axis is what clips the page to the card's rounded corners while leaving the
      vertical scroll the document depends on. */
@@ -2469,6 +2476,7 @@ export class EditorShell {
       first: this.kdocPane,
       second: this.sourcePane,
       container: this.panesElement,
+      orientation: this.settings.editor.splitOrientation,
     });
 
     // Each tab journals under its own id (journalIdFor); ids stay within [A-Za-z0-9_-], which the Rust side
@@ -4646,6 +4654,7 @@ export class EditorShell {
   private applySettings(): void {
     this.applyZoom();
     this.restartSnapshotTimer();
+    this.applySplitOrientation();
 
     // Guarded because applySettings runs from the settings load, which can land before the first
     // document is mounted.
@@ -8126,6 +8135,7 @@ export class EditorShell {
       first: this.kdocPane,
       second: this.secondaryPane,
       container: this.panesElement,
+      orientation: this.settings.editor.splitOrientation,
     });
     this.applyLock();
   }
@@ -8303,6 +8313,28 @@ export class EditorShell {
       this.secondaryBinding?.setEditable(!this.secondaryDocument.readOnly);
     }
     this.statusLock.hidden = !this.locked;
+  }
+
+  /**
+   * @purpose Lays the panes out as editor.splitOrientation says: side by side (Vertical) or stacked (Horizontal).
+   * @inputs void; reads this.settings.editor.splitOrientation.
+   * @outputs void.
+   * @dataflow The setting -> the panes container's stacked class -> both dividers' orientation.
+   * @controlflow The main divider is guarded because applySettings can run before the constructor installs it; the
+   *   second pane's divider exists only while that pane is open.
+   */
+  private applySplitOrientation(): void {
+    const orientation = this.settings.editor.splitOrientation;
+    // The whole row stacks, so a second document beside the first stacks with it.
+    this.panesElement.classList.toggle('kdoc-panes-stacked', orientation === 'horizontal');
+    const main = this.splitDivider as SplitDivider | undefined;
+    // Installed: turn it to match. Not yet: it is installed with the current setting.
+    if (main !== undefined) {
+      main.setOrientation(orientation);
+    } else {
+      // Constructor still running; installSplitDivider reads the setting itself.
+    }
+    this.secondaryDivider?.setOrientation(orientation);
   }
 
   /**

@@ -248,4 +248,25 @@ describe('EditorShell view-mode split-pane sizing', (): void => {
     shell.setViewMode('kdoc');
     expect(focus?.hidden).toBe(true);
   });
+
+  it('(6) stacks the panes when Split orientation is Horizontal, and puts them back side by side, live', (): void => {
+    const { shell, splitDividerElement } = mountShell('split');
+    const internal = shell as unknown as {
+      settings: { editor: Record<string, unknown> } & Record<string, unknown>;
+      applySettings(): void;
+      panesElement: HTMLElement;
+    };
+    const withOrientation = (splitOrientation: 'vertical' | 'horizontal'): void => {
+      internal.settings = { ...internal.settings, editor: { ...internal.settings.editor, splitOrientation } };
+      internal.applySettings();
+    };
+
+    expect(internal.panesElement.classList.contains('kdoc-panes-stacked')).toBe(false);
+    withOrientation('horizontal');
+    expect(internal.panesElement.classList.contains('kdoc-panes-stacked')).toBe(true);
+    expect(splitDividerElement.getAttribute('aria-orientation')).toBe('horizontal');
+    withOrientation('vertical');
+    expect(internal.panesElement.classList.contains('kdoc-panes-stacked')).toBe(false);
+    expect(splitDividerElement.getAttribute('aria-orientation')).toBe('vertical');
+  });
 });
