@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| **Doc Version** | 174 |
+| **Doc Version** | 175 |
 | **Last Updated** | 2026-10-15 |
 | **Version** | 0.1.0 (first public release) |
 | **Scope** | **Windows only, for now.** macOS and Linux are deferred, not cancelled: portability discipline stays (NFR-9) and nothing may assume Windows in `@k-doc/core`, but neither is a release target and neither is tested. |
@@ -3431,6 +3431,10 @@ generated `.gitignore` ignores `local/` for the obvious reason: the index is der
 committing it would put a large, constantly-churning file into everyone's history to say something
 the vault already says. Two readings of one spec, and this is the one that agrees with the rest of it.
 
+`vault_index_write` calls `store::ensure_vault_layout` first, so opening a vault is what lays out `.k-doc/`
+(`comments/`, `changes/`, `local/snapshots/`, `local/journal/`) and writes that `.gitignore`. It is idempotent and
+never overwrites a `.gitignore` the user has changed, and an existing vault gets it the next time it is opened.
+
 ### What makes it incremental
 
 The Rust walk already reported each file's modification time and size, so nothing new had to be
@@ -5965,6 +5969,8 @@ was checked, and after an edit they point at the wrong words.
 - No check as you type, no per-rule configuration, no way to dismiss a rule, and no authentication: a service
   needing an API key cannot be used.
 - A document over 60,000 characters is refused rather than sent in pieces.
+- Every request times out after `GRAMMAR_TIMEOUT_MS` (20 s, sending and reading the answer) with its own message,
+  combined with any signal the caller passes, so a service that stops answering never leaves a check hanging.
 - The language sent is the one proofing is set to; there is no per-document language yet (FR-12.3).
 
 ## 6de. Exporting to Word (FR-13.4)

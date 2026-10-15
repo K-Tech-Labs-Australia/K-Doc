@@ -18,6 +18,7 @@
 //!   - store_resolve: Resolves whether a document uses a local vault or global fallback store and returns ResolvedStore over IPC.
 //!   - store_read: Reads an annotation file from the resolved store, delegating to read_store_file.
 //!   - store_write: Atomically writes annotation contents to the resolved store, delegating to write_store_file.
+//!   - ensure_vault_layout: Creates `<folder>/.k-doc/` with its standard layout and a generated .gitignore, idempotently.
 //!   - store_delete: Deletes an annotation file from the resolved store, delegating to delete_store_file.
 //! @dataflow Webview IPC invoke -> command dispatch -> path/kind/id validation -> store walk-up/fallback resolution -> atomic filesystem I/O -> serialized Result response returned over IPC.
 //! @controlflow Tauri invoke handler dispatches command -> validate kind & kdoc_id -> resolve vault root via walk-up or global fallback -> perform atomic write / read / delete / migration -> Result returned.
@@ -574,6 +575,81 @@ pub fn store_delete(
     delete_store_file(&location.root, &kind, &kdoc_id)
 }
 
+/// Creates the standard vault layout and generated `.gitignore` inside `<folder>/.k-doc/`, idempotently.
+///
+/// Called whenever K-Doc writes a vault's search index, which is the moment opening a vault first writes into
+/// `.k-doc/`, so every vault gets the layout and a `.gitignore` that keeps machine-local state out of Git.
+///
+/// @purpose Creates `<folder>/.k-doc/` (FR-6.19, FR-6.20) idempotently with layout and gitignore.
+/// @inputs folder - Filesystem Path of the folder to turn into a vault.
+/// @outputs Result<PathBuf, String> - Returns Ok(PathBuf) containing the vault root path (`<folder>/.k-doc`) on success, or Err on failure.
+/// @dataflow folder Path -> resolve `<folder>/.k-doc` -> create layout directories -> generate .gitignore if absent -> Ok(vault_root).
+/// @controlflow Validate folder non-empty -> construct vault root -> create subdirectories (comments, changes, local/snapshots, local/journal) -> check .gitignore -> write .gitignore if missing -> return Ok(vault_root).
+pub fn ensure_vault_layout(folder: &Path) -> Result<PathBuf, String> {
+    // Validate folder parameter.
+    if folder.as_os_str().is_empty() || folder.to_string_lossy().trim().is_empty() {
+        // Branch: Folder path is empty; return descriptive error.
+        return Err("Cannot create vault: folder path must not be empty".to_string());
+    } else {
+        // Branch: Folder path is non-empty; proceed.
+    }
+
+    let vault_root = folder.join(".k-doc");
+
+    // Layout (FR-6.20):
+    // <store>/
+    //   comments/<kdoc_id>.json      shared - commit to git
+    //   changes/<kdoc_id>.json       shared - commit to git
+    //   .gitignore                  generated; ignores local/
+    //   local/
+    //     index.db
+    //     snapshots/<kdoc_id>/
+    //     journal/
+    //     state.json
+    let comments_dir = vault_root.join("comments");
+    let changes_dir = vault_root.join("changes");
+    let local_dir = vault_root.join("local");
+    let snapshots_dir = local_dir.join("snapshots");
+    let journal_dir = local_dir.join("journal");
+
+    // Create the full directory layout.
+    // Creating directories where they already exist is idempotent and succeeds.
+    for dir in &[&comments_dir, &changes_dir, &snapshots_dir, &journal_dir] {
+        if let Err(err) = fs::create_dir_all(dir) {
+            // Branch: Failed to create layout directory; return error naming path and cause.
+            return Err(format!(
+                "Failed to create vault directory '{}': {err}",
+                dir.display()
+            ));
+        } else {
+            // Branch: Directory created or already exists; proceed.
+        }
+    }
+
+    // Generate .gitignore inside .k-doc/ if not already present.
+    // Generating .gitignore containing 'local/' and an explanatory comment is what makes
+    // "commit the shared half, ignore the rest" the default rather than something each user
+    // has to know to configure. Creating a vault where one exists must not fail or overwrite (idempotent).
+    let gitignore_path = vault_root.join(".gitignore");
+    if !gitignore_path.exists() {
+        // Branch: .gitignore does not exist; generate default configuration.
+        let gitignore_content = "# Machine-local state and cache: do not commit to version control.\nlocal/\n";
+        if let Err(err) = fs::write(&gitignore_path, gitignore_content) {
+            // Branch: Failed to write generated .gitignore; return error naming path and cause.
+            return Err(format!(
+                "Failed to write generated .gitignore in vault '{}': {err}",
+                gitignore_path.display()
+            ));
+        } else {
+            // Branch: .gitignore generated successfully.
+        }
+    } else {
+        // Branch: .gitignore already exists; do not overwrite to preserve existing user customizations.
+    }
+
+    Ok(vault_root)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -883,6 +959,60 @@ mod tests {
         assert!(
             !comments_dir.exists(),
             "write_store_file must create nothing when validation fails"
+        );
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn ensure_vault_layout_creates_full_layout_and_gitignore() {
+        // Pins: ensure_vault_layout creates comments, changes, local/snapshots, local/journal, and .gitignore.
+        let root = temp_test_dir("vault_layout");
+        let folder = root.join("vault_root");
+
+        let layout_res = ensure_vault_layout(&folder);
+        assert!(layout_res.is_ok(), "ensure_vault_layout should succeed");
+        let vault_root = layout_res.unwrap();
+
+        assert_eq!(vault_root, folder.join(".k-doc"));
+        assert!(vault_root.join("comments").is_dir(), "comments/ directory must exist");
+        assert!(vault_root.join("changes").is_dir(), "changes/ directory must exist");
+        assert!(vault_root.join("local").join("snapshots").is_dir(), "local/snapshots/ directory must exist");
+        assert!(vault_root.join("local").join("journal").is_dir(), "local/journal/ directory must exist");
+
+        let gitignore_path = vault_root.join(".gitignore");
+        assert!(gitignore_path.is_file(), ".gitignore must exist");
+        let gitignore_content = fs::read_to_string(&gitignore_path).expect("read gitignore");
+        assert!(
+            gitignore_content.contains("local/"),
+            "Expected .gitignore to contain 'local/'"
+        );
+
+        let _ = fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn ensure_vault_layout_is_idempotent_and_preserves_custom_gitignore() {
+        // Pins: ensure_vault_layout is idempotent and does not overwrite user's customized .gitignore.
+        let root = temp_test_dir("vault_idempotent");
+        let folder = root.join("vault_root");
+
+        ensure_vault_layout(&folder).expect("first layout creation should succeed");
+
+        let gitignore_path = folder.join(".k-doc").join(".gitignore");
+        let custom_content = "# User custom gitignore rule\n*.log\nlocal/\n";
+        fs::write(&gitignore_path, custom_content).expect("write custom gitignore");
+
+        // Second run must be idempotent and not clobber custom content.
+        // A vault command that clobbers a user's own gitignore is worse than one that does nothing.
+        let second_res = ensure_vault_layout(&folder);
+        assert!(second_res.is_ok(), "second ensure_vault_layout call must succeed");
+
+        let final_content = fs::read_to_string(&gitignore_path).expect("read gitignore after second run");
+        assert_eq!(
+            final_content,
+            custom_content,
+            "Expected custom .gitignore to be preserved across repeated ensure_vault_layout calls"
         );
 
         let _ = fs::remove_dir_all(&root);

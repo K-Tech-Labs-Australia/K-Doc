@@ -11,7 +11,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { MAX_GRAMMAR_TEXT, checkGrammar, isAllowedGrammarEndpoint } from '../src/spell/grammar-service.js';
+import { GRAMMAR_TIMEOUT_MS, MAX_GRAMMAR_TEXT, checkGrammar, isAllowedGrammarEndpoint } from '../src/spell/grammar-service.js';
 
 interface Call {
   readonly url: string;
@@ -132,6 +132,35 @@ describe('checkGrammar', () => {
     await expect(checkGrammar({ endpoint: 'https://x/v2/check', text: 'Hi.', language: 'en', fetchImpl: impl })).rejects.toThrow(
       'not a check result',
     );
+  });
+});
+
+describe('checkGrammar timeouts', () => {
+  // A fetch that never settles on its own, only when its signal aborts, like a service that has stopped answering.
+  function silentFetch(): typeof fetch {
+    return ((_url: string, init?: RequestInit): Promise<Response> =>
+      new Promise((_resolve, reject) => {
+        init?.signal?.addEventListener('abort', () => {
+          reject(init.signal?.reason instanceof Error ? init.signal.reason : new Error('aborted'));
+        });
+      })) as unknown as typeof fetch;
+  }
+
+  it('gives up on a service that never answers, and says so', async () => {
+    await expect(
+      checkGrammar({ endpoint: 'https://x/v2/check', text: 'Hi.', language: 'en', fetchImpl: silentFetch(), timeoutMs: 20 }),
+    ).rejects.toThrow('did not answer within');
+  });
+
+  it('defaults to GRAMMAR_TIMEOUT_MS, twenty seconds', () => {
+    expect(GRAMMAR_TIMEOUT_MS).toBe(20000);
+  });
+
+  it('still stops when the caller cancels, with the ordinary message', async () => {
+    const controller = new AbortController();
+    const pending = checkGrammar({ endpoint: 'https://x/v2/check', text: 'Hi.', language: 'en', fetchImpl: silentFetch(), signal: controller.signal });
+    controller.abort(new Error('cancelled by the caller'));
+    await expect(pending).rejects.toThrow('could not be reached');
   });
 });
 

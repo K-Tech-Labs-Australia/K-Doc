@@ -426,6 +426,10 @@ pub fn vault_index_write_at(folder: String, contents: String) -> Result<(), Stri
         }
     };
 
+    // Writing the index is the first time opening a vault writes into `.k-doc/`, so this is where the vault gets its
+    // layout and the `.gitignore` that keeps machine-local state (this index, snapshots, journals) out of Git.
+    crate::store::ensure_vault_layout(folder_path)?;
+
     // Create the parent directory with fs::create_dir_all, so writing an index works
     // in a folder the user opened as a vault without ever creating annotations in it.
     if let Err(err) = fs::create_dir_all(parent_dir) {
@@ -697,6 +701,9 @@ mod tests {
         vault_index_write_at(folder, "sample index".to_string()).expect("write should succeed");
 
         assert!(expected_file.is_file(), "index.db must exist as a regular file");
+        // Opening a vault also lays out `.k-doc/` and ignores its machine-local half.
+        let gitignore = fs::read_to_string(root.join(".k-doc").join(".gitignore")).expect("a generated .gitignore");
+        assert!(gitignore.lines().any(|line| line == "local/"), ".gitignore must ignore local/");
         assert_eq!(
             fs::read_to_string(&expected_file).expect("read file"),
             "sample index"

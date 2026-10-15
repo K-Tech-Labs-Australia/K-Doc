@@ -24,14 +24,16 @@ export interface GrammarRequest {
   readonly text: string;
   readonly language: string;
   readonly signal?: AbortSignal;
+  /** How long to wait for the service before giving up; GRAMMAR_TIMEOUT_MS when omitted. Tests shorten it. */
+  readonly timeoutMs?: number;
   readonly fetchImpl?: typeof fetch;
 }
 
 /**
  * @purpose Default timeout in milliseconds for a grammar check request, named so callers that want to abort have a value rather than a magic number.
- * @inputs N/A — module-level constant read by callers who build their own AbortController.
- * @outputs N/A — consumed as the delay passed to setTimeout or an AbortController's abort timing; never used internally here.
- * @dataflow Constant → caller's timeout logic (the signal is always the caller's to make).
+ * @inputs N/A — module-level constant read by checkGrammar() when the request names no timeout of its own.
+ * @outputs N/A — the delay after which checkGrammar() stops waiting for the service.
+ * @dataflow Constant → AbortSignal.timeout in checkGrammar() → a clear "did not answer" error instead of a check that never ends.
  * @controlflow N/A — no control flow; a named limit so timeouts are not magic numbers.
  */
 export const GRAMMAR_TIMEOUT_MS: number = 20000;
@@ -120,17 +122,27 @@ export async function checkGrammar(request: GrammarRequest): Promise<readonly Gr
   body.set('language', request.language.length === 0 ? 'auto' : request.language);
 
   const send = request.fetchImpl ?? fetch;
+  // A service that never answers must not leave the check waiting for ever, so every request carries a timeout,
+  // combined with the caller's own signal when there is one. It covers reading the answer as well as sending.
+  const timeoutMs = request.timeoutMs ?? GRAMMAR_TIMEOUT_MS;
+  const timeout = AbortSignal.timeout(timeoutMs);
+  const signal = request.signal === undefined ? timeout : AbortSignal.any([timeout, request.signal]);
   let response: Response;
   try {
     response = await send(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
-      ...(request.signal === undefined ? {} : { signal: request.signal }),
+      signal,
     });
   } catch (error) {
-    const reason = error instanceof Error ? error.message : String(error);
-    throw new Error(`The grammar service could not be reached. ${reason}`);
+    // The timeout firing gets its own message, because "could not be reached" would send the reader looking for a typo.
+    if (timeout.aborted) {
+      throw new Error(`The grammar service did not answer within ${Math.round(timeoutMs / 1000)} seconds.`);
+    } else {
+      const reason = error instanceof Error ? error.message : String(error);
+      throw new Error(`The grammar service could not be reached. ${reason}`);
+    }
   }
 
   // A non-2xx status means the service rejected or failed the request; surface it rather than treating it as success.
@@ -144,7 +156,12 @@ export async function checkGrammar(request: GrammarRequest): Promise<readonly Gr
   try {
     payload = await response.json();
   } catch {
-    throw new Error('The grammar service answered with something that is not a check result.');
+    // A service that stalls part-way through its answer times out here.
+    if (timeout.aborted) {
+      throw new Error(`The grammar service did not answer within ${Math.round(timeoutMs / 1000)} seconds.`);
+    } else {
+      throw new Error('The grammar service answered with something that is not a check result.');
+    }
   }
 
   return parseGrammarResponse(payload, request.text.length);
