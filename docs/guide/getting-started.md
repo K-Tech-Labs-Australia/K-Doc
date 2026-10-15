@@ -105,7 +105,7 @@ K-Doc shows one document in three views:
 | View | What you see |
 | --- | --- |
 | **K-Doc** | The formatted document. You edit it directly, like a word processor. |
-| **Split** | K-Doc and Source side by side. |
+| **Split** | K-Doc and Source together, side by side or stacked. |
 | **Source** | The raw Markdown, as it is in the file. |
 
 To switch, click **K-Doc**, **Split** or **Source** in the top bar, or choose the view from the **View** menu. `Ctrl+/` (**View → Cycle View Mode**) moves through K-Doc, Split and Source in turn. Clicking the view name in the status bar does the same.

@@ -79,7 +79,6 @@ export interface GeneralSettings {
 export interface EditorSettings {
   readonly defaultViewMode: ViewMode;
   readonly splitOrientation: SplitOrientation;
-  readonly revealSyntaxMarkers: boolean;
   readonly smartSubstitutions: boolean;
   readonly inputRules: boolean;
   readonly autosave: AutosaveMode;
@@ -227,7 +226,6 @@ const GENERAL_FIELDS: ReadonlySet<string> = new Set<string>([
 const EDITOR_FIELDS: ReadonlySet<string> = new Set<string>([
   'defaultViewMode',
   'splitOrientation',
-  'revealSyntaxMarkers',
   'smartSubstitutions',
   'inputRules',
   'autosave',
@@ -294,7 +292,6 @@ export const DEFAULT_SETTINGS: KdocSettings = Object.freeze<KdocSettings>({
   editor: Object.freeze<EditorSettings>({
     defaultViewMode: 'split',
     splitOrientation: 'vertical',
-    revealSyntaxMarkers: true,
     smartSubstitutions: true,
     inputRules: true,
     autosave: 'idle',
@@ -732,7 +729,6 @@ export function parseSettings(json: string): LoadedSettings {
   // =========================================================================
   let defaultViewMode = DEFAULT_SETTINGS.editor.defaultViewMode;
   let splitOrientation = DEFAULT_SETTINGS.editor.splitOrientation;
-  let revealSyntaxMarkers = DEFAULT_SETTINGS.editor.revealSyntaxMarkers;
   let smartSubstitutions = DEFAULT_SETTINGS.editor.smartSubstitutions;
   let inputRules = DEFAULT_SETTINGS.editor.inputRules;
   let autosave = DEFAULT_SETTINGS.editor.autosave;
@@ -789,24 +785,6 @@ export function parseSettings(json: string): LoadedSettings {
             Object.freeze({
               path: 'editor.splitOrientation',
               message: `Invalid value ${formatReceived(val)} for "editor.splitOrientation". Expected one of: ${SPLIT_ORIENTATIONS.join(', ')}.`,
-              severity: 'warning',
-            }),
-          );
-        }
-      }
-
-      // Check if 'revealSyntaxMarkers' is specified in editor settings.
-      if ('revealSyntaxMarkers' in editorVal && editorVal.revealSyntaxMarkers !== undefined) {
-        const val = editorVal.revealSyntaxMarkers;
-        // Validate that 'revealSyntaxMarkers' is a boolean.
-        if (typeof val === 'boolean') {
-          revealSyntaxMarkers = val;
-        } else {
-          // Value is not a boolean: record warning problem and fall back to default.
-          problems.push(
-            Object.freeze({
-              path: 'editor.revealSyntaxMarkers',
-              message: `Invalid value ${formatReceived(val)} for "editor.revealSyntaxMarkers". Expected boolean (true or false).`,
               severity: 'warning',
             }),
           );
@@ -1331,7 +1309,6 @@ export function parseSettings(json: string): LoadedSettings {
     editor: Object.freeze<EditorSettings>({
       defaultViewMode,
       splitOrientation,
-      revealSyntaxMarkers,
       smartSubstitutions,
       inputRules,
       autosave,
@@ -1531,7 +1508,6 @@ export function serializeSettings(
   const editorObj: Record<string, unknown> = {
     defaultViewMode: settings.editor.defaultViewMode,
     splitOrientation: settings.editor.splitOrientation,
-    revealSyntaxMarkers: settings.editor.revealSyntaxMarkers,
     smartSubstitutions: settings.editor.smartSubstitutions,
     inputRules: settings.editor.inputRules,
     autosave: settings.editor.autosave,

@@ -35,8 +35,7 @@ The name in brackets after each label below is the setting's key in `settings.js
 | Setting | What it does | Values | Default |
 | :--- | :--- | :--- | :--- |
 | **Default view mode** (`editor.defaultViewMode`) | The view a new window starts in. A restored session uses the view it was saved in. | **K-Doc**, **Source**, **Split** | **Split** |
-| **Split orientation** (`editor.splitOrientation`) | K-Doc saves this choice but does not yet act on it. | **Vertical**, **Horizontal** | **Vertical** |
-| **Reveal syntax markers** (`editor.revealSyntaxMarkers`) | K-Doc saves this choice but does not yet act on it. | On, Off | On |
+| **Split orientation** (`editor.splitOrientation`) | How the Split view arranges the panes. **Vertical** puts the K-Doc view and Source side by side; **Horizontal** stacks the K-Doc view above Source. A second document beside the first is stacked too. The change applies at once. | **Vertical**, **Horizontal** | **Vertical** |
 | **Smart substitutions** (`editor.smartSubstitutions`) | Turns all the typing substitutions below on or off together. When off, none of them apply, whatever their own switch says. | On, Off | On |
 | **Smart quotes** (`autocorrect.smartQuotes`) | Turns straight quotes into curly quotes as you type. | On, Off | On |
 | **Dashes (-- and spaced -)** (`autocorrect.dashes`) | Turns `--` and a hyphen with a space on each side into a dash. | On, Off | On |
@@ -48,7 +47,7 @@ The name in brackets after each label below is the setting's key in `settings.js
 | **Snippets (prefix + Tab)** (`snippets.enabled`) | Expands a snippet when you type its prefix and press `Tab` in the K-Doc view. | On, Off | On |
 | **Snippet list** | Click **Edit…** to add, change, or delete snippets. | A list of prefixes and texts | K-Doc's starter snippets |
 | **Allow HTML formatting** (`editor.allowHtmlFormatting`) | Lets K-Doc write HTML into the file for formatting Markdown cannot express, such as aligning a paragraph. The alignment is lost wherever HTML is removed. | On, Off | Off |
-| **Input rules** (`editor.inputRules`) | K-Doc saves this choice but does not yet act on it. | On, Off | On |
+| **Input rules** (`editor.inputRules`) | Formats Markdown as you type in the K-Doc view: `# ` makes a heading, `**text**` makes bold text, and so on (see [Writing and formatting](writing-and-formatting.md)). When off, what you type stays as typed. The change applies at once. | On, Off | On |
 | **Autosave** (`editor.autosave`) | When K-Doc saves a document for you. **Off** never does. **On blur** saves when you switch to another window. **Interval** saves every few seconds while there are unsaved changes. **Idle** saves after you stop typing. | **Off**, **On blur**, **Interval**, **Idle** | **Idle** |
 | **Autosave delay (ms)** (`editor.autosaveDelayMs`) | For **Interval** and **Idle**, how long K-Doc waits, in milliseconds. K-Doc rounds it to whole seconds, with a minimum of 1 second. | 200 to 60000 | 2000 |
 | **Snapshot on save** (`history.snapshotOnSave`) | Takes a version-history snapshot each time you save. | On, Off | On |

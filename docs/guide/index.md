@@ -31,7 +31,7 @@ K-Doc shows each document in one of three views. Switch with the buttons in the 
 | --- | --- |
 | **K-Doc** | The formatted document. You edit it directly, as in a word processor. |
 | **Source** | The Markdown text itself. |
-| **Split** | Both side by side. They share one undo history, whichever side you type in. |
+| **Split** | Both together, side by side or stacked (**Settings → Editor → Split orientation**). They share one undo history, whichever side you type in. |
 
 ## Getting help
 
