@@ -15,7 +15,7 @@
  */
 
 import { InputRule, inputRules, textblockTypeInputRule, wrappingInputRule } from 'prosemirror-inputrules';
-import type { Plugin } from 'prosemirror-state';
+import { Plugin } from 'prosemirror-state';
 import type { MarkType, NodeType, Schema } from 'prosemirror-model';
 import { kdocSchema } from './schema.js';
 
@@ -28,6 +28,51 @@ export interface KdocInputRulesOptions {
    * Defaults to `kdocSchema` when omitted.
    */
   readonly schema?: Schema;
+
+  /**
+   * Asked before any rule fires; when it returns false, text is left exactly as typed (editor.inputRules). Read on every
+   * keystroke, so a settings change applies at once. Omitted means the rules always apply.
+   */
+  readonly enabled?: () => boolean;
+}
+
+/**
+ * @purpose Wraps an input-rules plugin so its rules fire only while `enabled()` says so.
+ * @inputs plugin - A plugin made by prosemirror-inputrules' inputRules(); enabled - Read before each rule could fire.
+ * @outputs Plugin - The same rules, state and isInputRules marker (so Backspace still undoes a rule), behind the switch.
+ * @dataflow Typed text / composition end -> enabled() -> the original handler, or nothing.
+ * @controlflow The plugin's two entry points, handleTextInput and compositionend, each check the switch first; with it
+ *   off they report the input as unhandled, so the editor inserts it as typed.
+ */
+export function gateInputRules(plugin: Plugin, enabled: () => boolean): Plugin {
+  const props = plugin.spec.props ?? {};
+  const handleTextInput = props.handleTextInput;
+  const compositionEnd = props.handleDOMEvents?.compositionend;
+  return new Plugin({
+    ...plugin.spec,
+    props: {
+      ...props,
+      handleTextInput(view, from, to, text, deflt): boolean {
+        // Off: report the input as unhandled so it is inserted as typed. On: the original rules decide.
+        if (!enabled() || handleTextInput === undefined) {
+          return false;
+        } else {
+          return handleTextInput.call(this, view, from, to, text, deflt) === true;
+        }
+      },
+      handleDOMEvents: {
+        ...props.handleDOMEvents,
+        compositionend(view, event): boolean {
+          // The same switch for text that arrives when an input method finishes composing.
+          if (!enabled() || compositionEnd === undefined) {
+            return false;
+          } else {
+            return compositionEnd.call(this, view, event) === true;
+          }
+        },
+      },
+    },
+  });
 }
 
 /**
@@ -243,5 +288,12 @@ export function createKdocInputRules(options?: KdocInputRulesOptions): Plugin {
     // Inline code mark type missing from schema: skip inline code mark rule.
   }
 
-  return inputRules({ rules });
+  const plugin = inputRules({ rules });
+  const enabled = options?.enabled;
+  // Without a switch the rules always apply; with one, they ask it first.
+  if (enabled === undefined) {
+    return plugin;
+  } else {
+    return gateInputRules(plugin, enabled);
+  }
 }

@@ -6385,6 +6385,8 @@ export class EditorShell {
       session: this.documentSession,
       // The shell's keymap dispatches the remappable shortcuts (FR-14.16), so the editor must not also bind them.
       hostOwnsShortcuts: true,
+      // Read on every keystroke, so turning Markdown input rules off in Settings applies at once.
+      inputRulesEnabled: (): boolean => this.settings.editor.inputRules,
       // Local pictures load through the host (FR-8.14).
       loadImage: (src: string): Promise<string | null> => this.loadImageSource(src),
       mount: this.kdocPane,
@@ -8089,6 +8091,7 @@ export class EditorShell {
     this.secondaryBinding = new ProseMirrorBinding({
       session,
       hostOwnsShortcuts: true,
+      inputRulesEnabled: (): boolean => this.settings.editor.inputRules,
       loadImage: (src: string): Promise<string | null> => this.loadImageSource(src),
       mount: this.secondaryPane,
       onError: (error: Error): void => {
