@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/K-Tech-Labs-Australia/K-Doc/security/policy
+    about: Report it privately, never in a public issue.
+  - name: User guide
+    url: https://github.com/K-Tech-Labs-Australia/K-Doc/blob/master/docs/guide/index.md
+    about: How to do things in K-Doc, including troubleshooting.

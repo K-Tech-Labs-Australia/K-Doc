@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest something K-Doc could do.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the task or the problem, rather than the solution, so other ways of solving it can be considered too.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help
+      description: How you imagine it working. Mention any other editor that does it well.
+  - type: checkboxes
+    id: markdown
+    attributes:
+      label: Markdown files
+      description: K-Doc keeps files as plain Markdown that other tools can read.
+      options:
+        - label: I have thought about how this would be stored in the Markdown file, if it changes what is saved.
