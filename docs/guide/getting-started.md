@@ -8,7 +8,7 @@ K-Doc runs on Windows 10 and 11.
 
 1. Download `K-Doc_<version>_x64-setup.exe` from the [K-Doc Releases page](https://github.com/K-Tech-Labs-Australia/K-Doc/releases).
 2. Run it. The installer installs K-Doc for your Windows user only, so it does not need administrator rights.
-3. If Windows SmartScreen warns that the publisher is unknown, choose **More info**, then **Run anyway**. The installer is not code-signed yet, so Windows cannot name the publisher.
+3. If Windows SmartScreen warns that the publisher is unknown, choose **More info**, then **Run anyway**. K-Doc is not code-signed, so Windows cannot name the publisher. To check the download, compare its SHA-256 checksum with the one in the release notes; see [Troubleshooting](troubleshooting.md#windows-smartscreen-warns-about-the-installer).
 
 K-Doc draws its window with Microsoft Edge WebView2. WebView2 is part of Windows 11. If K-Doc does not start on Windows 10, see [Troubleshooting](troubleshooting.md).
 

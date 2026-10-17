@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in K-Doc does not work as it should.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. **Do not report a security vulnerability here**: use the repository's Security tab, as described in the [security policy](https://github.com/K-Tech-Labs-Australia/K-Doc/security/policy).
+
+        Before you file, check [Troubleshooting](https://github.com/K-Tech-Labs-Australia/K-Doc/blob/master/docs/guide/troubleshooting.md) and the existing issues.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected to see instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: The smallest set of steps that shows the problem. If it depends on a document, attach a small sample `.md` file, with anything private removed.
+      placeholder: |
+        1. Open a new document.
+        2. Type ...
+        3. Switch to Split view.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: K-Doc version
+      description: Shown in **Help → About K-Doc**.
+      placeholder: "0.4.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows version
+      options:
+        - Windows 11
+        - Windows 10
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: view
+    attributes:
+      label: Which view were you in?
+      options:
+        - K-Doc
+        - Split
+        - Source
+        - Not relevant
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, messages K-Doc showed, or whether it happens every time.

@@ -32,9 +32,20 @@ how to report a vulnerability is in [SECURITY.md](SECURITY.md), and how to contr
 ### Install a release build
 
 Download `K-Doc_<version>_x64-setup.exe` from the [Releases page](https://github.com/K-Tech-Labs-Australia/K-Doc/releases) and run it. It installs for your
-Windows user only, so it needs no administrator rights. The installer is not code-signed yet, so Windows SmartScreen
-may warn that the publisher is unknown; choose **More info**, then **Run anyway**. To make the installer yourself,
-see [Build an installer](#build-an-installer).
+Windows user only, so it needs no administrator rights. To make the installer yourself, see
+[Build an installer](#build-an-installer).
+
+**K-Doc is not code-signed, and there are no plans to sign it.** Windows SmartScreen may therefore say the publisher
+is unknown when you run the installer; choose **More info**, then **Run anyway**. To check that the file you downloaded
+is the one the release built, compare its SHA-256 checksum with the one printed in that release's notes. In
+PowerShell, in the folder you saved it to:
+
+```powershell
+Get-FileHash .\K-Doc_<version>_x64-setup.exe
+```
+
+Every installer is built from the tagged source by the project's release workflow
+(`.github/workflows/release-please.yml`), so you can also build the same installer yourself.
 
 The installer registers K-Doc for Markdown files (`.md`, `.markdown`, `.mdown`, `.mkd`, `.mkdn`, `.mdwn`), so it appears
 under **Open with**. The first time you install, it asks whether to make K-Doc the default app for them; answering
