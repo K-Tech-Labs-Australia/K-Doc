@@ -6,7 +6,9 @@ This page lists common problems and how to fix them, and where K-Doc keeps its o
 
 ### Windows SmartScreen warns about the installer
 
-The installer is not code-signed yet, so SmartScreen cannot name the publisher. Choose **More info**, then **Run anyway**.
+K-Doc is not code-signed, and there are no plans to sign it, so SmartScreen cannot name the publisher. Choose **More info**, then **Run anyway**.
+
+To check that the installer is the file the release built, compare its SHA-256 checksum with the one in the release notes. In PowerShell, in the folder you saved it to, run `Get-FileHash .\K-Doc_<version>_x64-setup.exe`; the hash it prints should match.
 
 ### K-Doc does not start on Windows 10
 
