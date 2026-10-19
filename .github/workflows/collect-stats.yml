@@ -1,0 +1,96 @@
+name: Collect stats
+
+# GitHub keeps repository traffic (views, clones, referrers, popular pages) for only 14 days, and keeps release
+# downloads only as a running total. This job saves both once a day to JSON files on the `stats` branch, so the
+# history builds up and can be graphed later. It never touches master.
+#
+# Traffic needs a token with read access to the repository's Administration permission, which the workflow's own
+# token does not have: add a fine-grained personal access token as the secret STATS_TOKEN. Without it the job still
+# records downloads, stars, forks and watchers, and warns that traffic was skipped.
+#
+# Files on the stats branch, each a JSON object keyed by date (YYYY-MM-DD, UTC):
+#   data/views.json      per-day page views and unique visitors (a later run overwrites the same day with fuller numbers)
+#   data/clones.json     per-day clones and unique cloners
+#   data/referrers.json  the 14-day referrer list as it stood on each collection day
+#   data/paths.json      the 14-day popular-pages list as it stood on each collection day
+#   data/downloads.json  each release's cumulative installer downloads on each collection day
+#   data/repo.json       stars, forks, watchers and open issues on each collection day
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect-stats
+
+jobs:
+  collect:
+    name: Collect traffic and downloads
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Switch to the stats branch
+        run: |
+          # Create the branch with no history the first time; afterwards continue it.
+          if git fetch --depth=1 origin stats; then
+            git switch -c stats FETCH_HEAD
+          else
+            git switch --orphan stats
+          fi
+
+      - name: Collect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATS_TOKEN: ${{ secrets.STATS_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          today=$(date -u +%F)
+          mkdir -p data
+
+          # Merge a JSON object read from stdin into data/<name>.json; keys already there are replaced.
+          merge() {
+            local file="data/$1.json"
+            [ -f "$file" ] || echo '{}' > "$file"
+            jq -s '.[0] * .[1]' "$file" - > "$file.tmp"
+            mv "$file.tmp" "$file"
+          }
+
+          gh api "repos/$REPO/releases?per_page=100" \
+            | jq --arg d "$today" '{($d): (map({key: .tag_name, value: (.assets | map(.download_count) | add // 0)}) | from_entries)}' \
+            | merge downloads
+
+          gh api "repos/$REPO" \
+            | jq --arg d "$today" '{($d): {stars: .stargazers_count, forks: .forks_count, watchers: .subscribers_count, open_issues: .open_issues_count}}' \
+            | merge repo
+
+          if [ -z "$STATS_TOKEN" ]; then
+            echo "::warning::STATS_TOKEN is not set, so traffic was not collected. See the comment at the top of this workflow."
+          else
+            export GH_TOKEN="$STATS_TOKEN"
+            gh api "repos/$REPO/traffic/views" \
+              | jq '.views | map({key: .timestamp[:10], value: {views: .count, unique: .uniques}}) | from_entries' \
+              | merge views
+            gh api "repos/$REPO/traffic/clones" \
+              | jq '.clones | map({key: .timestamp[:10], value: {clones: .count, unique: .uniques}}) | from_entries' \
+              | merge clones
+            gh api "repos/$REPO/traffic/popular/referrers" | jq --arg d "$today" '{($d): .}' | merge referrers
+            gh api "repos/$REPO/traffic/popular/paths" | jq --arg d "$today" '{($d): .}' | merge paths
+          fi
+
+      - name: Save to the stats branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -q -m "chore(stats): Collect stats for $(date -u +%F)"
+            git push origin stats
+          fi
