@@ -377,3 +377,5 @@ export {
 } from './vault/file-tree.js';
 
 export { replaceImageSources } from './render/image-sources.js';
+
+export { applyDiagramImages, isMermaidCode, mermaidSources, DIAGRAM_ALT_TEXT } from './render/diagram-images.js';

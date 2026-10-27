@@ -66,6 +66,7 @@ import { planVaultSaveSync } from '../files/vault-save-sync.js';
 import { installTagsPanel, TAGS_PANEL_STYLES, type TagsPanel } from './tags-panel.js';
 import { installFileDrop, type FileDrop, type DroppedInsert } from '../files/file-drop.js';
 import { saveHtmlExport, printDocument, DEFAULT_PAGE_SETUP, type PageSetup } from '../files/export.js';
+import { drawDiagrams } from '../files/diagram-export.js';
 import { installPopupMenu, POPUP_MENU_STYLES, type PopupMenu, type PopupMenuEntry } from './popup-menu.js';
 import { installContextMenu, type ContextMenu } from './context-menu.js';
 import { installSlashMenu, type SlashMenu } from './slash-menu.js';
@@ -80,7 +81,7 @@ import { checkGrammar } from '../spell/grammar-service.js';
 import { exportDocx } from '../files/docx-export.js';
 import { createFoldPlugin, toggleFoldCommand, FOLD_STYLES } from '@k-doc/editor';
 import { createFormatPainterPlugin, FORMAT_PAINTER_STYLES } from '@k-doc/editor';
-import { FOOTNOTE_STYLES, IMAGE_VIEW_STYLES, MEDIA_VIEW_STYLES } from '@k-doc/editor';
+import { FOOTNOTE_STYLES, IMAGE_VIEW_STYLES, MEDIA_VIEW_STYLES, MERMAID_VIEW_STYLES, renderMermaid } from '@k-doc/editor';
 import { createAutocorrectPlugin, PROSEMIRROR_BASE_STYLES, type AutocorrectOptions } from '@k-doc/editor';
 import { createSnippetPlugin, SNIPPET_STYLES, type SnippetOptions } from '@k-doc/editor';
 import { installReplacementsDialog, REPLACEMENTS_DIALOG_STYLES, type ReplacementsDialog } from './replacements-dialog.js';
@@ -1488,7 +1489,7 @@ export class EditorShell {
         + BACKLINKS_PANEL_STYLES + HISTORY_PANEL_STYLES + METADATA_PANEL_STYLES + PROBLEMS_PANEL_STYLES + LINK_DEFINITIONS_PANEL_STYLES + REPLACEMENTS_DIALOG_STYLES + SNIPPETS_DIALOG_STYLES + VERSION_HISTORY_STYLES + WRITING_MODE_STYLES + ZEN_MODE_STYLES + PRESENTATION_STYLES + LINK_HOVER_CARD_STYLES
         + CODE_TOKEN_STYLES + RAW_SOURCE_STYLES
         + TAGS_PANEL_STYLES + LANGUAGE_PICKER_STYLES + SIDEBAR_STYLES
-        + COMMENT_STYLES + COMMENT_CARD_STYLES + COMMENTS_PANE_STYLES + LEADER_LINE_STYLES + SEARCH_STYLES + MATCH_SCROLLBAR_STYLES + COMMENT_NOTE_STYLES + CODE_COPY_STYLES + TABLE_GRIP_STYLES + FOLD_STYLES + FORMAT_PAINTER_STYLES + IMAGE_VIEW_STYLES + MEDIA_VIEW_STYLES + FOOTNOTE_STYLES + SNIPPET_STYLES
+        + COMMENT_STYLES + COMMENT_CARD_STYLES + COMMENTS_PANE_STYLES + LEADER_LINE_STYLES + SEARCH_STYLES + MATCH_SCROLLBAR_STYLES + COMMENT_NOTE_STYLES + CODE_COPY_STYLES + TABLE_GRIP_STYLES + FOLD_STYLES + FORMAT_PAINTER_STYLES + IMAGE_VIEW_STYLES + MEDIA_VIEW_STYLES + MERMAID_VIEW_STYLES + FOOTNOTE_STYLES + SNIPPET_STYLES
         + CHANGE_STYLES + REVIEW_PANE_STYLES + ORIGINAL_OVERLAY_STYLES
         + STATISTICS_DIALOG_STYLES
         + BRAND_STYLES
@@ -4159,9 +4160,11 @@ export class EditorShell {
       const document = this.documentSession.snapshot.document;
       // Local pictures are read and embedded first, so the exported file stands on its own (FR-13.1).
       const embedded = await this.embeddableImages(document);
+      // Mermaid diagrams are drawn as pictures in the exported copy; the reader's document is not changed.
+      const drawn = await drawDiagrams(document, renderMermaid);
       const path = await saveHtmlExport({
         fileService: this.fileService,
-        document,
+        document: drawn.document,
         title,
         suggestedName: `${title}.html`,
         imageSources: embedded.sources,
@@ -4180,7 +4183,9 @@ export class EditorShell {
         // Written: name the file, because an export with no feedback leaves the user unsure it happened.
         // Name any picture that could not be embedded, so a broken image in the file is not a surprise.
         const note = embedded.failed.length === 0 ? '' : ` ${embedded.failed.length} image(s) could not be embedded: ${embedded.failed.join(', ')}.`;
-        this.showMessage(`Exported to ${path}.${note}`);
+        // A diagram that could not be drawn is exported as its code, and the reader is told how many.
+        const diagramNote = drawn.failed === 0 ? '' : ` ${drawn.failed} diagram(s) could not be drawn and were written as code.`;
+        this.showMessage(`Exported to ${path}.${note}${diagramNote}`);
       }
     } catch (error: unknown) {
       // Check the caught value so the message shown is the real reason, not "[object Object]".
@@ -4235,9 +4240,11 @@ export class EditorShell {
     try {
       // A printout is styled by the same theme an export is (FR-13.8), read before the print dialog opens.
       const css = await this.exportThemes.css(this.settings.export.theme);
+      // Diagrams are drawn before the print dialog opens, so the printout shows pictures rather than their code.
+      const drawn = await drawDiagrams(this.documentSession.snapshot.document, renderMermaid);
       printDocument({
         win: window,
-        document: this.documentSession.snapshot.document,
+        document: drawn.document,
         title,
         setup: this.pageSetup,
         css,
