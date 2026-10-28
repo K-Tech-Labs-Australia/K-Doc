@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| **Doc Version** | 175 |
-| **Last Updated** | 2026-10-15 |
+| **Doc Version** | 176 |
+| **Last Updated** | 2026-10-28 |
 | **Version** | 0.1.0 (first public release) |
 | **Scope** | **Windows only, for now.** macOS and Linux are deferred, not cancelled: portability discipline stays (NFR-9) and nothing may assume Windows in `@k-doc/core`, but neither is a release target and neither is tested. |
 | **Requirements** | [docs/internal/PRELIM-SPEC.md](docs/internal/PRELIM-SPEC.md) — this document says *how*, that one says *what*; per-requirement status is in [docs/internal/FR-STATUS.md](docs/internal/FR-STATUS.md) |
@@ -6913,6 +6913,51 @@ from. `applyOverrides` uses an override only when a package ships nothing of its
 lines "licence copied from upstream". An override nothing needs is reported as unused. A shipped component with no
 licence text at all makes the generator exit 1, which fails the release build. `scripts/licence-overrides.test.mjs`
 checks that every folder exists, holds a licence file and has a recorded source.
+
+## 6dw. Mermaid diagrams (PRELIM-SPEC §4.4)
+
+A ```` ```mermaid ```` fence is drawn as its diagram in the K-Doc pane, in HTML export and in print. Nothing
+about the document changes: the fence stays an ordinary mdast `code` node and ProseMirror `codeBlock`, so the
+round-trip contract is untouched and §7's extension triple is not needed. Only how the block is *shown* changes.
+
+- **Renderer.** `packages/editor/src/diagrams/mermaid-renderer.ts`. `mermaid` (MIT, a dependency of
+  `@k-doc/editor`) is loaded by a dynamic `import()` the first time a diagram is drawn, so Vite splits it out
+  of the start-up bundle. `createMermaidRenderer(load, doc)` runs renders one at a time through a promise
+  queue, because Mermaid's configuration is global and `initialize` is called on every render to set the
+  theme. It also removes the scratch element Mermaid can leave in the body after a failed render. It uses
+  `securityLevel: 'strict'` and `htmlLabels: false`, so every label is SVG text. A render never rejects: it
+  returns `{ ok: true, svg }` or `{ ok: false, message }`, with the message capped at 500 characters.
+  `renderMermaid` is the shared, lazily created instance.
+- **The diagram is shown as a picture.** `svgToDataUri` turns the SVG into an `<img>` `data:` URI. Inside an
+  image, an SVG cannot run script or pick up the app's CSS, and the same `<img>` passes the export sanitiser
+  (§6l), which would strip inline SVG.
+- **Node view.** `packages/editor/src/prosemirror/mermaid-view.ts`. `createCodeBlockNodeView` is registered
+  for `codeBlock` in `ProseMirrorBinding` itself, beside the raw-source view, so every pane gets it. A
+  block whose language is not `mermaid` gets `PlainCodeBlockView`, the same `pre > code` the schema draws. A
+  Mermaid block is a `div.kdoc-mermaid` holding the editable `pre > code`, a non-editable preview `<img>`
+  and an error line. `update` returns `false` when the language changes, so ProseMirror rebuilds the block
+  as the other kind. An edit redraws after 300 ms. A result is dropped if a newer drawing has started or
+  the view is destroyed. A failed drawing keeps the last good picture and shows Mermaid's message under
+  it. An `IntersectionObserver` (400 px root margin) holds the first drawing until the block is near the
+  viewport (NFR-1), and without one the block draws straight away (jsdom). A `MutationObserver` on
+  `data-kdoc-theme` redraws in Mermaid's `dark` or `default` theme when the app theme changes. Mermaid
+  needs the DOM, so it cannot run in a worker as NFR-1 suggests.
+- **Edit mode is a decoration.** `createMermaidFocusPlugin` (built into the binding's plugin list) adds a
+  node decoration with class `kdoc-mermaid-editing` while the selection is inside one Mermaid block
+  (`mermaidBlockAt`). ProseMirror puts that class on the node view's outer element, and `MERMAID_VIEW_STYLES`
+  hides the `pre` when the class is absent. So the code shows above a live preview exactly while the caret
+  is in it. Pressing the mouse on the preview or the error puts the caret at the start of the code.
+  `stopEvent` keeps ProseMirror from handling that press itself.
+- **Export and print.** `packages/core/src/render/diagram-images.ts` (`mermaidSources`, `applyDiagramImages`)
+  is pure mdast: it collects each distinct Mermaid source and, in a `structuredClone`, swaps each one that was
+  drawn for a paragraph holding an image. `packages/app/src/files/diagram-export.ts` `drawDiagrams` renders
+  them in the light theme and returns a `KdocDocument` copy plus a failure count. The shell's `exportHtml`
+  and `print` pass that copy to `saveHtmlExport` / `printDocument`. `renderHtml` is unchanged. A diagram
+  that cannot be drawn is exported as its code, and the HTML export's status message says how many.
+
+Not done: Word export, Presentation mode, the Original view and the Markdown-flavour exports still show the
+source. Maths (KaTeX) is not rendered either. While focus is in the Source pane, a diagram the WYSIWYG
+selection is in stays open.
 
 ## 7. Extension Seam
 

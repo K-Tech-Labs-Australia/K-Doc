@@ -39,6 +39,8 @@ import { createImageNodeView, type ImageSourceLoader } from './image-view.js';
 import { createMediaNodeView, type MediaSourceLoader } from './media-view.js';
 import { createKdocKeymap } from './keymap.js';
 import { createFootnoteDefinitionView, createFootnoteNavigationPlugin } from './footnotes.js';
+import { createCodeBlockNodeView, createMermaidFocusPlugin } from './mermaid-view.js';
+import { renderMermaid, type DiagramRenderer } from '../diagrams/mermaid-renderer.js';
 import type { LinkRange } from './link.js';
 
 /**
@@ -101,6 +103,12 @@ export interface ProseMirrorBindingOptions {
    * given the address as written, which cannot reach a file beside the document.
    */
   readonly loadMedia?: MediaSourceLoader;
+
+  /**
+   * Draws a ```mermaid fence as a diagram. Left out, the shared Mermaid renderer is used, which loads the library
+   * the first time a document contains a diagram; tests pass a stand-in so no library is loaded.
+   */
+  readonly renderDiagram?: DiagramRenderer;
 
   /**
    * Clipboard handling for the K-Doc pane (FR-7.4).
@@ -197,6 +205,8 @@ export class ProseMirrorBinding {
       createMultiCaretPlugin(),
       // Clicking a footnote's number goes to its note, and the note's label goes back to the text.
       createFootnoteNavigationPlugin(),
+      // The caret inside a diagram's code opens it for editing; outside, only the diagram shows.
+      createMermaidFocusPlugin(),
       ...createKdocKeymap({
         session: this.session,
         schema: this.schema,
@@ -235,6 +245,8 @@ export class ProseMirrorBinding {
         ...createRawSourceNodeViews(),
         // A note is drawn with its number in front, outside the editable text.
         footnoteDefinition: createFootnoteDefinitionView(),
+        // A ```mermaid fence is drawn as its diagram (PRELIM-SPEC §4.4); every other fence keeps the schema's pre/code.
+        codeBlock: createCodeBlockNodeView({ render: options.renderDiagram ?? renderMermaid }),
         // Images go through the host's loader when one is given, so a picture beside the document can be shown.
         ...(options.loadImage === undefined ? {} : { image: createImageNodeView(options.loadImage) }),
 
