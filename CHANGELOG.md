@@ -8,6 +8,18 @@ The detailed development log from before the first public release is kept in
 [docs/internal/development-log.md](docs/internal/development-log.md). From 0.1.0 on, each release's notes are
 written by Release Please from the conventional commits merged since the last one.
 
+## [0.5.0](https://github.com/K-Tech-Labs-Australia/K-Doc/compare/v0.4.0...v0.5.0) (2026-10-29)
+
+
+### Features
+
+* Draw Mermaid diagrams in the K-Doc view, HTML export and print ([#14](https://github.com/K-Tech-Labs-Australia/K-Doc/issues/14)) ([baffbdc](https://github.com/K-Tech-Labs-Australia/K-Doc/commit/baffbdc2b1cd509a23cc9754569fdc1093eb2e90))
+
+
+### Bug Fixes
+
+* **editor:** Draw Mermaid diagrams flat, with labels cut into their lines ([#16](https://github.com/K-Tech-Labs-Australia/K-Doc/issues/16)) ([43d47f8](https://github.com/K-Tech-Labs-Australia/K-Doc/commit/43d47f8e71eb638418a85252ac0752813c1678c5))
+
 ## [0.4.0](https://github.com/K-Tech-Labs-Australia/K-Doc/compare/v0.3.0...v0.4.0) (2026-10-15)
 
 
