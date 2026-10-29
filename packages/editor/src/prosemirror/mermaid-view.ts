@@ -9,8 +9,8 @@
  *   - createCodeBlockNodeView: Creates a NodeViewConstructor rendering Mermaid blocks as interactive diagrams and other blocks as plain code.
  * @dataflow Document codeBlock nodes & user input -> MermaidView / PlainCodeBlockView -> DiagramRenderer.render -> SVG data URI -> img.src; selection changes -> createMermaidFocusPlugin -> MERMAID_EDITING_CLASS decoration.
  * @controlflow Mount node view -> schedule initial render on visibility/intersection -> debounce redraw on text edit -> update preview and error state; track caret position via plugin to toggle editing mode.
- * @version 1
- * @date 2026-10-28
+ * @version 2
+ * @date 2026-10-30
  */
 
 import { NodeSelection, Plugin, PluginKey, TextSelection } from 'prosemirror-state';
@@ -245,6 +245,7 @@ class MermaidView implements NodeView {
   private source: string;
   private drawnSource: string | null = null;
   private drawnTheme: DiagramTheme | null = null;
+  private drawnBackground: string | undefined = undefined;
   private visible: boolean;
   private timer: ReturnType<typeof setTimeout> | null = null;
   private generation = 0;
@@ -373,7 +374,8 @@ class MermaidView implements NodeView {
       });
       this.themeWatch.observe(doc.documentElement, {
         attributes: true,
-        attributeFilter: ['data-kdoc-theme'],
+        // Mode and colour theme both change the page colour that edge labels are filled with.
+        attributeFilter: ['data-kdoc-theme', 'data-kdoc-ui-theme'],
       });
     } else {
       // MutationObserver unavailable: theme changes are not tracked dynamically.
@@ -397,6 +399,36 @@ class MermaidView implements NodeView {
     } else {
       return 'light';
     }
+  }
+
+  /**
+   * Finds the colour painted behind the diagram.
+   *
+   * @purpose Reads the first non-transparent background colour from the block or its ancestors.
+   * @inputs None.
+   * @outputs string | undefined - A CSS colour, or undefined when nothing paints a background.
+   * @dataflow this.dom -> ancestor chain -> getComputedStyle().backgroundColor -> colour string.
+   * @controlflow Walk up from the block; return the first opaque colour; undefined at the root or without a window.
+   */
+  private background(): string | undefined {
+    const win = this.dom.ownerDocument.defaultView;
+    // Check if there is a window to compute styles in.
+    if (win === null) {
+      // No window (detached document): leave Mermaid's own label fill.
+      return undefined;
+    } else {
+      // Window available: walk up the ancestors below.
+    }
+    for (let el: Element | null = this.dom; el !== null; el = el.parentElement) {
+      const colour = win.getComputedStyle(el).backgroundColor;
+      // Check if this element paints a background (transparent is reported as rgba(0, 0, 0, 0)).
+      if (colour !== '' && colour !== 'transparent' && colour !== 'rgba(0, 0, 0, 0)') {
+        return colour;
+      } else {
+        // Transparent: the colour comes from further up.
+      }
+    }
+    return undefined;
   }
 
   /**
@@ -441,9 +473,10 @@ class MermaidView implements NodeView {
   private async draw(): Promise<void> {
     const src = this.source;
     const th = this.theme();
+    const bg = this.background();
 
-    // Check if the diagram source and theme are identical to the last rendered output.
-    if (src === this.drawnSource && th === this.drawnTheme) {
+    // Check if the diagram source, theme and page colour are identical to the last rendered output.
+    if (src === this.drawnSource && th === this.drawnTheme && bg === this.drawnBackground) {
       // Nothing changed since the last drawing; do not re-render.
       return;
     } else {
@@ -453,7 +486,7 @@ class MermaidView implements NodeView {
     this.generation += 1;
     const gen = this.generation;
 
-    const result = await this.options.render(src, th);
+    const result = await this.options.render(src, th, bg);
 
     // Check if the view was destroyed or if a newer drawing generation has started.
     if (this.destroyed || gen !== this.generation) {
@@ -465,6 +498,7 @@ class MermaidView implements NodeView {
 
     this.drawnSource = src;
     this.drawnTheme = th;
+    this.drawnBackground = bg;
     this.status.hidden = true;
 
     // Check if the diagram renderer successfully produced SVG output.

@@ -42,7 +42,7 @@ describe('drawDiagrams', () => {
 
     // Verify render was called exactly once with diagram source and light theme.
     expect(render).toHaveBeenCalledTimes(1);
-    expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light');
+    expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light', '#ffffff');
 
     // Verify returned document is a new object reference, not the input document.
     expect(result.document).not.toBe(input);
@@ -88,7 +88,7 @@ describe('drawDiagrams', () => {
 
     // Verify render was invoked with light theme.
     expect(render).toHaveBeenCalledTimes(1);
-    expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light');
+    expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light', '#ffffff');
 
     // Verify failed count is 1.
     expect(result.failed).toBe(1);
@@ -121,8 +121,8 @@ describe('drawDiagrams', () => {
 
     // Verify render was called twice in sequence with light theme.
     expect(render).toHaveBeenCalledTimes(2);
-    expect(render).toHaveBeenNthCalledWith(1, 'graph TD; A-->B', 'light');
-    expect(render).toHaveBeenNthCalledWith(2, 'graph LR; C-->D', 'light');
+    expect(render).toHaveBeenNthCalledWith(1, 'graph TD; A-->B', 'light', '#ffffff');
+    expect(render).toHaveBeenNthCalledWith(2, 'graph LR; C-->D', 'light', '#ffffff');
 
     // Verify failure count is 1.
     expect(result.failed).toBe(1);
@@ -175,7 +175,7 @@ describe('drawDiagrams', () => {
 
     // Verify render was invoked only once for deduplicated diagram source.
     expect(render).toHaveBeenCalledTimes(1);
-    expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light');
+    expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light', '#ffffff');
 
     // Verify failure count is 0.
     expect(result.failed).toBe(0);
@@ -272,7 +272,7 @@ describe('drawDiagrams', () => {
     const result: DrawnDiagrams = await drawDiagrams(input, render);
 
     expect(render).toHaveBeenCalledTimes(1);
-    expect(render).toHaveBeenCalledWith('graph LR; Alpha-->Beta', 'light');
+    expect(render).toHaveBeenCalledWith('graph LR; Alpha-->Beta', 'light', '#ffffff');
     expect(result.failed).toBe(0);
 
     const blockquote = result.document.root.children[0];

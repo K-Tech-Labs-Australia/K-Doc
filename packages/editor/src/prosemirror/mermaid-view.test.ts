@@ -476,7 +476,7 @@ describe('mermaid-view', () => {
       await vi.advanceTimersByTimeAsync(0);
 
       expect(render).toHaveBeenCalledTimes(1);
-      expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light');
+      expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light', undefined);
 
       const img = mount!.querySelector('img.kdoc-mermaid-image') as HTMLImageElement;
       expect(img.src).toBe(svgToDataUri('<svg id="diagram-1"/>'));
@@ -501,7 +501,22 @@ describe('mermaid-view', () => {
       await vi.advanceTimersByTimeAsync(0);
 
       expect(render).toHaveBeenCalledTimes(1);
-      expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'dark');
+      expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'dark', undefined);
+    });
+
+    it('passes the nearest painted ancestor background so edge labels match the page', async () => {
+      document.body.style.backgroundColor = 'rgb(16, 20, 24)';
+      try {
+        const render = vi.fn<DiagramRenderer>().mockResolvedValue({ ok: true, svg: '<svg/>' });
+        const doc = createTestDoc('graph TD; A-->B', 'after', 'mermaid');
+        createTestView(doc, { render, debounceMs: 10 });
+
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light', 'rgb(16, 20, 24)');
+      } finally {
+        document.body.style.backgroundColor = '';
+      }
     });
   });
 
@@ -553,7 +568,7 @@ describe('mermaid-view', () => {
       // Advance 1ms: debounce completes.
       await vi.advanceTimersByTimeAsync(1);
       expect(render).toHaveBeenCalledTimes(2);
-      expect(render).toHaveBeenLastCalledWith('grXaph TD; A-->B', 'light');
+      expect(render).toHaveBeenLastCalledWith('grXaph TD; A-->B', 'light', undefined);
     });
 
     it('uses default MERMAID_DEBOUNCE_MS when options.debounceMs is not provided', async () => {
@@ -596,7 +611,7 @@ describe('mermaid-view', () => {
       // Finish second debounce period.
       await vi.advanceTimersByTimeAsync(5);
       expect(render).toHaveBeenCalledTimes(2);
-      expect(render).toHaveBeenLastCalledWith('grXYaph TD; A-->B', 'light');
+      expect(render).toHaveBeenLastCalledWith('grXYaph TD; A-->B', 'light', undefined);
     });
 
     it('does not re-render when a transaction only alters selection', async () => {
@@ -931,7 +946,7 @@ describe('mermaid-view', () => {
         // Advance timers 0ms: render should now execute.
         await vi.advanceTimersByTimeAsync(0);
         expect(render).toHaveBeenCalledTimes(1);
-        expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light');
+        expect(render).toHaveBeenCalledWith('graph TD; A-->B', 'light', undefined);
 
         // Destroy view and verify observer disconnection.
         v.destroy();
@@ -961,7 +976,7 @@ describe('mermaid-view', () => {
       // Initial render in light theme.
       await vi.advanceTimersByTimeAsync(0);
       expect(render).toHaveBeenCalledTimes(1);
-      expect(render).toHaveBeenLastCalledWith('graph TD; A-->B', 'light');
+      expect(render).toHaveBeenLastCalledWith('graph TD; A-->B', 'light', undefined);
 
       // Update theme to dark mode.
       document.documentElement.dataset.kdocTheme = 'dark';
@@ -969,7 +984,7 @@ describe('mermaid-view', () => {
       // Advance timers 0ms to let MutationObserver and schedule(0) trigger re-render.
       await vi.advanceTimersByTimeAsync(0);
       expect(render).toHaveBeenCalledTimes(2);
-      expect(render).toHaveBeenLastCalledWith('graph TD; A-->B', 'dark');
+      expect(render).toHaveBeenLastCalledWith('graph TD; A-->B', 'dark', undefined);
     });
   });
 });

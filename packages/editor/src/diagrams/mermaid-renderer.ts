@@ -10,8 +10,8 @@
  *   - renderMermaid: Shared diagram renderer instance that lazily loads Mermaid on first use.
  * @dataflow Diagram source text & theme → sequential execution queue → MermaidApi.render → scratch DOM cleanup → DiagramResult.
  * @controlflow Queue promises sequentially → validate input → lazily import MermaidApi → initialize config per render → render SVG → clean up scratch DOM elements in finally block.
- * @version 1
- * @date 2026-10-28
+ * @version 2
+ * @date 2026-10-30
  */
 
 export type DiagramTheme = 'light' | 'dark';
@@ -20,14 +20,34 @@ export type DiagramResult =
   | { readonly ok: true; readonly svg: string }
   | { readonly ok: false; readonly message: string };
 
-export type DiagramRenderer = (source: string, theme: DiagramTheme) => Promise<DiagramResult>;
+/**
+ * Draws one diagram. background is the colour behind the diagram (any CSS colour); edge labels are
+ * filled with it so they read as gaps cut in the line. Leave it out to keep Mermaid's own fill.
+ */
+export type DiagramRenderer = (
+  source: string,
+  theme: DiagramTheme,
+  background?: string,
+) => Promise<DiagramResult>;
 
 export interface MermaidConfigSubset {
   readonly startOnLoad: boolean;
   readonly securityLevel: 'strict';
   readonly theme: 'default' | 'dark';
+  readonly look: 'classic';
+  readonly themeVariables: {
+    readonly dropShadow: 'none';
+    readonly useGradient: false;
+    readonly edgeLabelBackground?: string;
+  };
+  readonly themeCSS: string;
   readonly htmlLabels: boolean;
-  readonly flowchart: { readonly htmlLabels: boolean };
+  readonly flowchart: { readonly htmlLabels: boolean; readonly look: 'classic' };
+  readonly sequence: { readonly look: 'classic' };
+  readonly class: { readonly look: 'classic' };
+  readonly state: { readonly look: 'classic' };
+  readonly er: { readonly look: 'classic' };
+  readonly requirement: { readonly look: 'classic' };
   readonly suppressErrorRendering: boolean;
 }
 
@@ -39,6 +59,10 @@ export interface MermaidApi {
 export type MermaidLoader = () => Promise<MermaidApi>;
 
 export const MAX_ERROR_LENGTH = 500; // characters of a Mermaid error message shown inline
+
+// Mermaid fills edge-label boxes at half opacity, so the line shows through; a label that cuts a
+// clean gap in its line needs the box opaque.
+const OPAQUE_LABEL_CSS = '.edgeLabel rect { opacity: 1; }';
 
 /**
  * Checks whether a given language identifier string matches 'mermaid'.
@@ -124,11 +148,16 @@ export function createMermaidRenderer(load: MermaidLoader, doc: Document): Diagr
    * @purpose Renders a diagram with Mermaid, handling lazy loading, theme configuration, and DOM cleanup.
    * @inputs source - Mermaid diagram source syntax string.
    * @inputs theme - Color theme ('light' or 'dark').
+   * @inputs background - Optional CSS colour behind the diagram, used to fill edge labels.
    * @outputs Promise<DiagramResult> - DiagramResult containing either the rendered SVG or an error message.
    * @dataflow source & theme → Mermaid API initialization → render call → DOM element cleanup → DiagramResult.
    * @controlflow Check empty source guard → load MermaidApi (clearing cache on failure) → increment counter and generate unique id → initialize Mermaid config → render SVG → catch render errors → clean up scratch DOM elements in finally.
    */
-  async function run(source: string, theme: DiagramTheme): Promise<DiagramResult> {
+  async function run(
+    source: string,
+    theme: DiagramTheme,
+    background: string | undefined,
+  ): Promise<DiagramResult> {
     // Check if diagram source is empty or contains only whitespace.
     if (source.trim() === '') {
       // Return early with an error result without invoking the Mermaid loader.
@@ -159,8 +188,23 @@ export function createMermaidRenderer(load: MermaidLoader, doc: Document): Diagr
         securityLevel: 'strict',
         // Select Mermaid theme: use 'dark' for dark mode, or 'default' for light mode.
         theme: theme === 'dark' ? 'dark' : 'default',
+        // Mermaid 12 defaults to its 'neo' look, which adds drop shadows and gradients, and sets it
+        // again per diagram type; classic is flat. The shadow and gradient variables are switched off
+        // too, for the diagram types that read them whatever the look.
+        look: 'classic',
+        // Fill edge labels with the page colour when it is known, so a label cuts a gap in its line.
+        themeVariables:
+          background === undefined
+            ? { dropShadow: 'none', useGradient: false }
+            : { dropShadow: 'none', useGradient: false, edgeLabelBackground: background },
+        themeCSS: OPAQUE_LABEL_CSS,
         htmlLabels: false,
-        flowchart: { htmlLabels: false },
+        flowchart: { htmlLabels: false, look: 'classic' },
+        sequence: { look: 'classic' },
+        class: { look: 'classic' },
+        state: { look: 'classic' },
+        er: { look: 'classic' },
+        requirement: { look: 'classic' },
         suppressErrorRendering: true,
       });
 
@@ -180,8 +224,8 @@ export function createMermaidRenderer(load: MermaidLoader, doc: Document): Diagr
   // each waits for the one before. run never rejects, so the chain never breaks. initialize is called
   // on every render because the theme is global. The leftover-element removal is because Mermaid can
   // leave its temporary `d<id>` container in the body after a failed render.
-  return (source: string, theme: DiagramTheme): Promise<DiagramResult> => {
-    const next: Promise<DiagramResult> = queue.then(() => run(source, theme));
+  return (source: string, theme: DiagramTheme, background?: string): Promise<DiagramResult> => {
+    const next: Promise<DiagramResult> = queue.then(() => run(source, theme, background));
     queue = next;
     return next;
   };
@@ -212,6 +256,7 @@ let shared: DiagramRenderer | null = null;
  * @purpose Renders a Mermaid diagram source string to SVG using the shared lazy-loaded renderer.
  * @inputs source - Mermaid diagram syntax string.
  * @inputs theme - Diagram theme ('light' or 'dark').
+ * @inputs background - Optional CSS colour behind the diagram, used to fill edge labels.
  * @outputs Promise<DiagramResult> - Render result with SVG string on success, or error message on failure.
  * @dataflow source & theme → shared DiagramRenderer → DiagramResult.
  * @controlflow Lazily initialize shared renderer with loadMermaid and document → delegate render call to shared renderer.
@@ -219,6 +264,7 @@ let shared: DiagramRenderer | null = null;
 export const renderMermaid: DiagramRenderer = (
   source: string,
   theme: DiagramTheme,
+  background?: string,
 ): Promise<DiagramResult> => {
   // Check if the shared diagram renderer has been initialized.
   if (shared === null) {
@@ -227,5 +273,5 @@ export const renderMermaid: DiagramRenderer = (
   } else {
     // Shared renderer already initialized; reuse existing instance.
   }
-  return shared(source, theme);
+  return shared(source, theme, background);
 };
