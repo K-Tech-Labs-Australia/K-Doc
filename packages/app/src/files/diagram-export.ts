@@ -7,12 +7,15 @@
  *   - drawDiagrams: Renders Mermaid diagrams in a document and replaces diagram code nodes with image data URIs.
  * @dataflow KdocDocument.root -> mermaidSources -> DiagramRenderer renders SVG -> svgToDataUri -> applyDiagramImages -> exported KdocDocument.
  * @controlflow Extract diagram sources -> return original document if none found -> render diagrams sequentially in light theme -> build image data URI map -> clone AST with replaced diagram images -> return new document copy and failure count.
- * @version 1
- * @date 2026-10-28
+ * @version 2
+ * @date 2026-10-30
  */
 
 import { applyDiagramImages, mermaidSources, type KdocDocument } from '@k-doc/core';
 import { svgToDataUri, type DiagramRenderer } from '@k-doc/editor';
+
+// Page colour of HTML exports and printouts; every export theme prints on white.
+const EXPORT_BACKGROUND = '#ffffff';
 
 export interface DrawnDiagrams {
   /** The document to export: the original when it has no diagrams, otherwise a copy with each drawn diagram as a picture. */
@@ -52,7 +55,8 @@ export async function drawDiagrams(
   // Exports are always drawn in the light theme, because a page is printed or read on white whatever the app's theme is.
   // Diagrams are drawn one after another; the renderer queues them anyway.
   for (const source of sources) {
-    const result = await render(source, 'light');
+    // Exports are printed on white, so edge labels are filled white to cut a gap in their line.
+    const result = await render(source, 'light', EXPORT_BACKGROUND);
 
     // Check if the diagram was rendered successfully into an SVG string.
     if (result.ok) {

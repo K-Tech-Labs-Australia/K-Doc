@@ -170,8 +170,16 @@ describe('createMermaidRenderer', () => {
       startOnLoad: false,
       securityLevel: 'strict',
       theme: 'default',
+      look: 'classic',
+      themeVariables: { dropShadow: 'none', useGradient: false },
+      themeCSS: '.edgeLabel rect { opacity: 1; }',
       htmlLabels: false,
-      flowchart: { htmlLabels: false },
+      flowchart: { htmlLabels: false, look: 'classic' },
+      sequence: { look: 'classic' },
+      class: { look: 'classic' },
+      state: { look: 'classic' },
+      er: { look: 'classic' },
+      requirement: { look: 'classic' },
       suppressErrorRendering: true,
     });
 
@@ -179,12 +187,12 @@ describe('createMermaidRenderer', () => {
     expect(mockApi.render).toHaveBeenCalledWith('kdoc-mermaid-1', 'graph TD; A-->B;');
   });
 
-  it('renders a diagram successfully with dark theme mapped to dark', async () => {
+  it('renders a diagram successfully with dark theme mapped to dark and labels filled with the background', async () => {
     const mockApi = createMockMermaidApi('<svg>dark-diagram</svg>');
     const mockLoader = vi.fn<MermaidLoader>().mockResolvedValue(mockApi);
     const renderer = createMermaidRenderer(mockLoader, document);
 
-    const result = await renderer('graph TD; C-->D;', 'dark');
+    const result = await renderer('graph TD; C-->D;', 'dark', '#101418');
 
     // Verify successful diagram payload.
     expect(result).toEqual({ ok: true, svg: '<svg>dark-diagram</svg>' });
@@ -195,8 +203,16 @@ describe('createMermaidRenderer', () => {
       startOnLoad: false,
       securityLevel: 'strict',
       theme: 'dark',
+      look: 'classic',
+      themeVariables: { dropShadow: 'none', useGradient: false, edgeLabelBackground: '#101418' },
+      themeCSS: '.edgeLabel rect { opacity: 1; }',
       htmlLabels: false,
-      flowchart: { htmlLabels: false },
+      flowchart: { htmlLabels: false, look: 'classic' },
+      sequence: { look: 'classic' },
+      class: { look: 'classic' },
+      state: { look: 'classic' },
+      er: { look: 'classic' },
+      requirement: { look: 'classic' },
       suppressErrorRendering: true,
     });
 
