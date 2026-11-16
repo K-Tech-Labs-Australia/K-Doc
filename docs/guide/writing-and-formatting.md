@@ -244,6 +244,23 @@ Put the caret where the contents list should go and choose **Insert → Table of
 
 The list does not update by itself. After changing headings, choose **Insert → Table of Contents → Table of Contents…** again, or **Refresh Table of Contents**, to bring it up to date. The list is written between two hidden comments, `<!-- toc -->` and `<!-- /toc -->`, which is how K-Doc finds it again.
 
+## Draw a diagram
+
+Write a code block whose language is `mermaid`, and K-Doc draws it as a diagram using [Mermaid](https://mermaid.js.org/) syntax:
+
+````markdown
+```mermaid
+graph TD
+  A[Start] --> B{Is it working?}
+  B -->|Yes| C[Ship it]
+  B -->|No| D[Fix it]
+```
+````
+
+In the K-Doc view you see only the diagram. Click it, or move the caret into it, to show its code above a preview that redraws as you type. Move the caret out of the block to show the diagram alone again.
+
+If the code has a mistake, Mermaid's message appears under the diagram, and the last diagram that worked stays in place until you fix it. Diagrams follow the light or dark theme. The file keeps the code block exactly as you wrote it, so other Markdown tools can read it.
+
 ## Write maths
 
 K-Doc keeps inline maths (`$E = mc^2$`) and maths blocks (`$$ ... $$`) exactly as written. The K-Doc view shows them as their source text rather than as formatted equations; edit them in the Source view.

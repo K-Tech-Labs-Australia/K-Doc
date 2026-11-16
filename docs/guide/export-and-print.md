@@ -25,6 +25,8 @@ The result is a single `.html` file that opens in any browser. Pictures stored o
 
 K-Doc removes anything in the document that could run code, such as scripts, before it writes the file. Formatting, footnotes, image sizes and YouTube or Vimeo players are kept.
 
+Mermaid diagrams are embedded as pictures, drawn in the light theme. A diagram whose code has a mistake is written as its code instead, and the status bar says how many could not be drawn.
+
 The page is styled by the current export theme. See [Choose an export theme](#choose-an-export-theme).
 
 ## Export to Word
@@ -126,6 +128,8 @@ Replies are included with their authors. Resolved comments are always left out. 
 Choose **File → Print** or press `Ctrl+P`. K-Doc prints the document alone, without the toolbars or panels, styled by the current export theme.
 
 To save a PDF, print and choose **Save as PDF** as the destination. K-Doc has no separate PDF export.
+
+Mermaid diagrams are printed as pictures, in the light theme, just as in an HTML export.
 
 Pictures stored on your computer may not appear in a printout, because printing does not embed them the way **Export as HTML** does. If they are missing, export to HTML, open the file in your browser and print from there.
 

@@ -252,6 +252,10 @@ export {
 
 export { createCodeHighlightPlugin, codeHighlightPluginKey } from './prosemirror/code-highlight-plugin.js';
 export { createCodeCopyPlugin, codeCopyPluginKey, CODE_COPY_CLASS, CODE_COPY_STYLES } from './prosemirror/code-copy-plugin.js';
+export type { CodeBlockViewOptions } from './prosemirror/mermaid-view.js';
+export { createCodeBlockNodeView, createMermaidFocusPlugin, mermaidBlockAt, MERMAID_VIEW_STYLES } from './prosemirror/mermaid-view.js';
+export type { DiagramRenderer, DiagramResult, DiagramTheme } from './diagrams/mermaid-renderer.js';
+export { createMermaidRenderer, isMermaidLanguage, renderMermaid, svgToDataUri } from './diagrams/mermaid-renderer.js';
 
 export type { CommentNotePoint, CommentNoteMeta } from './prosemirror/comment-note-plugin.js';
 export {
