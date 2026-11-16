@@ -49,7 +49,7 @@ K-Doc/
 ├── package.json             npm workspace root; scripts for build/test/lint
 ├── tsconfig.base.json       Shared strict compiler options
 ├── start.cmd                Windows launcher for the dev app
-├── .github/workflows/       CI: type-check, Vitest, cargo test, clippy, audit
+├── .github/workflows/       CI: type-check, Vitest, cargo test, clippy, audit; releases; daily stats
 ├── packages/
 │   ├── core/                @k-doc/core — headless Markdown engine: parse, serialize, render, analysis
 │   ├── config/              @k-doc/config — settings schema, keymaps, theme tokens
@@ -6992,6 +6992,10 @@ writes its notes into `CHANGELOG.md`. `release-please-config.json` lists every v
 `k-doc` entry in `Cargo.lock`); `.release-please-manifest.json` holds the current version. A second job then builds the
 NSIS installer from the tag and uploads it to the release. The workspace packages depend on each other with `"*"`, so a
 version bump never detaches npm's workspace links (a `^0.x` range stops matching at the next minor version).
+`.github/workflows/collect-stats.yml` runs daily (and on demand) and appends release downloads, stars/forks/watchers
+and, when the `STATS_TOKEN` secret holds a token with Administration read access, the 14-day traffic (views, clones,
+referrers, popular pages) to date-keyed JSON files under `data/` on the history-less `stats` branch; it never touches
+`master`.
 
 ---
 
